@@ -64,3 +64,8 @@ The workspace accepts `--adaptive-resolution` for all selected hosts. Each must 
 ### Per-device resource ceilings (v12)
 
 Choose `--negotiate-profile` and optional global `--max-height` / `--max-fps`. Repeat `--device-limit NAME=HEIGHT:FPS` for selected paired-device names to lower individual slots (e.g. host-2=720:30 and host-3=540:15). The defaults remain 1080p/60 FPS. Reject unknown/duplicate/malformed overrides or widening of the global ceiling; preserve each slot's independent settings across local stop/reactivation. Existing protocols remain selectable; mixed versions remain unsupported. See [BOUNDED-MEDIA.md](BOUNDED-MEDIA.md).
+
+
+### Measured workspace capacity
+
+With v12 `--auto-profile`, one local calibration covers the selected software modes and geometry tiers before starting the workspace. The conservative serial time budget is divided by the number of selected slots; each slot's manual override remains its upper bound. No measured multicore throughput guarantee, hardware-required path or new remote permission. See [RUNTIME-CAPABILITIES.md](RUNTIME-CAPABILITIES.md).

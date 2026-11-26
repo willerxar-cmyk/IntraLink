@@ -157,3 +157,22 @@ fn bounded_profile_cli_rejects_invalid_limits_before_session_start() {
         );
     }
 }
+
+#[cfg(all(
+    feature = "desktop-preview",
+    any(target_os = "windows", target_os = "linux")
+))]
+#[test]
+fn calibration_cli_is_explicit_and_validated_before_connection() {
+    let help = stdout(&["desktop-profile-check", "--help"]);
+    assert!(help.contains("--slots") && help.contains("--hardware"));
+    for command in ["view-desktop", "workspace"] {
+        assert!(stdout(&[command, "--help"]).contains("--auto-profile"));
+        let output = Command::new(env!("CARGO_BIN_EXE_intralink"))
+            .args([command, "--device", "test", "--auto-profile"])
+            .output()
+            .expect("Validate auto-profile flag");
+        assert!(!output.status.success());
+        assert!(String::from_utf8_lossy(&output.stderr).contains("--negotiate-profile"));
+    }
+}

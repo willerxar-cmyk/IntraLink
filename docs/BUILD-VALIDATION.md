@@ -39,3 +39,8 @@ The mandatory independent harness includes capabilities mask and deterministic i
 ### Bounded v12 validation
 
 Run the portable harness and locked CPU/NVENC workspace tests with strict CPU/WGC/NVENC Clippy. Include exact profile intersections, hostile limit/selection cases, per-slot override and CLI tests, and three independently paired loopback hosts using different negotiated resolution/FPS ceilings. Validate WGC Release without NVIDIA dependencies and retain existing protocol/security regressions. Physical sessions are a separate gate.
+
+
+### Runtime capability gate
+
+Run calibration pure-policy and generated-codec tests, actual CLI validation, independent CPU/NVENC workspace suites and strict CPU/WGC/NVENC Clippy. Build locked independent WGC Release; run `desktop-profile-check --slots 1`, `--slots 3`, `--slots 8`, and `--hardware`. Record actual timings, observed recommended ceilings, per-adapter configuration and conversion outcomes separately. No timing-sensitive unit test assertions; physical streaming remains separate.

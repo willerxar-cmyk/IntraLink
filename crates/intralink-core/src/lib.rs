@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 
 pub mod adaptive;
+pub mod calibration;
 pub mod canvas;
 pub mod capabilities;
 pub mod desktop;

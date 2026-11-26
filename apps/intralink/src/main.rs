@@ -108,6 +108,12 @@ enum Command {
         #[arg(long)]
         json: bool,
     },
+    /// Measure software decoding and optionally inventory local Windows video adapters.
+    #[cfg(all(
+        feature = "desktop-preview",
+        any(target_os = "windows", target_os = "linux")
+    ))]
+    DesktopProfileCheck(desktop::ProfileCheckArgs),
     /// Query local Linux VA-API video capabilities; no network or screen capture.
     #[cfg(all(feature = "vaapi-probe", target_os = "linux"))]
     MediaCapabilities,
@@ -518,6 +524,13 @@ fn main() -> Result<()> {
     {
         return run_async(|| ddns::update(domain, *ip, *ipv6, *interval));
     }
+    #[cfg(all(
+        feature = "desktop-preview",
+        any(target_os = "windows", target_os = "linux")
+    ))]
+    if let Command::DesktopProfileCheck(args) = cli.command {
+        return args.run();
+    }
     let path = local::vault_path(cli.vault.as_deref())?;
     match cli.command {
         #[cfg(feature = "resource-monitor")]
@@ -528,6 +541,11 @@ fn main() -> Result<()> {
         } => run_async(|| resources::report(interval_ms, samples, json)),
         #[cfg(all(feature = "vaapi-probe", target_os = "linux"))]
         Command::MediaCapabilities => vaapi::report(),
+        #[cfg(all(
+            feature = "desktop-preview",
+            any(target_os = "windows", target_os = "linux")
+        ))]
+        Command::DesktopProfileCheck(args) => args.run(),
         Command::Init { role } => local::initialize(&path, role.into()),
         Command::Identity => local::identity(&path),
         Command::Pair {
@@ -731,7 +749,7 @@ fn main() -> Result<()> {
             negotiate_codec,
             limits,
         } => {
-            let mode = limits.mode(codec.into(), adaptive_resolution, negotiate_codec)?;
+            let mode = limits.single_mode(codec.into(), adaptive_resolution, negotiate_codec)?;
             run_async(|| {
                 journal::run(
                     &path,
@@ -756,17 +774,15 @@ fn main() -> Result<()> {
             local_monitor,
             all_live,
         } => {
-            let mode = limits.mode(codec.into(), adaptive_resolution, negotiate_codec)?;
+            let modes = limits.workspace_modes(
+                codec.into(),
+                adaptive_resolution,
+                negotiate_codec,
+                &device,
+                &device_limit,
+            )?;
             run_async(|| {
-                desktop::workspace::run(
-                    &path,
-                    &device,
-                    mode,
-                    &device_limit,
-                    fullscreen,
-                    local_monitor,
-                    all_live,
-                )
+                desktop::workspace::run(&path, &device, modes, fullscreen, local_monitor, all_live)
             })
         }
         Command::Diagnose { device, wan_ip } => {

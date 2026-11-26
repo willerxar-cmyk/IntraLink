@@ -15,7 +15,7 @@ use windows::{
     core::Interface,
 };
 
-fn enumerate_adapters() -> Result<Vec<(u32, IDXGIAdapter1)>> {
+pub(crate) fn enumerate_adapters() -> Result<Vec<(u32, IDXGIAdapter1)>> {
     // SAFETY: DXGI returns a live COM factory of the requested interface.
     let factory: IDXGIFactory1 = unsafe { CreateDXGIFactory1()? };
     let mut adapters = Vec::new();
@@ -84,9 +84,23 @@ pub(crate) fn create_video_device(
             selected = Some(adapter);
         }
     }
-    let selected: IDXGIAdapter = selected
-        .context("Requested non-software adapter unavailable or vendor mismatch")?
-        .cast()?;
+    create_video_device_on(
+        &selected.context("Requested non-software adapter unavailable or vendor mismatch")?,
+    )
+}
+
+/// The selected adapter handle is retained from the current enumeration,
+/// avoiding a second enumeration or a vendor-based guess.
+pub(crate) fn create_video_device_on(
+    adapter: &IDXGIAdapter1,
+) -> Result<(ID3D11Device, ID3D11DeviceContext)> {
+    // SAFETY: live adapter, descriptor is copied by DXGI.
+    let desc = unsafe { adapter.GetDesc1()? };
+    ensure!(
+        desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE.0 as u32 == 0,
+        "Software adapter is not a hardware capability"
+    );
+    let selected: IDXGIAdapter = adapter.cast()?;
     let mut device = None;
     let mut context = None;
     // SAFETY: explicit adapter, UNKNOWN driver type, valid feature levels

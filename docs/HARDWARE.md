@@ -131,3 +131,8 @@ The new developer example `restricted_decoder_probe --decode-luid HIGH:LOW` reus
 ### Optional acceleration policy (2026-11-26)
 
 CUDA/NVENC/NVDEC are optional NVIDIA-specific capabilities. Normal sharing and decoding use the required CPU baseline, `desktop-preview` with Compact/Tiles/JPEG, and neither NVIDIA library is present in that feature graph. Capture and scaling may use native OS APIs independently of the codec; hardware-backed WGC is not a CUDA requirement. Other vendor/OS codecs must be independently qualified (D3D11/Media Foundation or oneVPL, AMD AMF/VA-API, Apple VideoToolbox, Android MediaCodec). Negotiate only verified compatible codec profiles; preserve a software path and do not silently substitute an unsafe decoder or weaken a requested isolation policy. See `ARCHITECTURE.md` and `DESKTOP.md`.
+
+
+### Runtime capability inventory and measured receiver profile
+
+`desktop-profile-check` uses generated JPEG/Compact/Tiles data and the actual software decoder. `--slots` applies a conservative serial decode budget; `--auto-profile` on a v12 viewer/workspace limits its offer to measured local capability. `desktop-profile-check --hardware` on Windows WGC enumerates exact DXGI adapter handles, confirms created-device LUID, queries driver-advertised NV12 decoder configurations and separately verifies actual generated 1080p NV12 conversion. No arbitrary native bitstream or remote hardware codec enabled. CPU baseline is independent of this diagnostic. See [RUNTIME-CAPABILITIES.md](RUNTIME-CAPABILITIES.md).

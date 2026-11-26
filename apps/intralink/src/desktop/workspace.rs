@@ -383,13 +383,15 @@ fn update_priorities(sessions: &[Option<Session>], policy: &WorkspacePolicy) {
 pub async fn run(
     path: &Path,
     names: &[String],
-    mode: ViewMode,
-    device_limits: &[String],
+    modes: Vec<ViewMode>,
     mut fullscreen: bool,
     mut monitor_id: Option<u32>,
     all_live: bool,
 ) -> Result<()> {
-    let modes = super::receive_limits::slot_modes(names, mode, device_limits)?;
+    ensure!(
+        modes.len() == names.len(),
+        "Missing workspace receiver profiles"
+    );
     require_graphical_terminal()?;
     let mut policy =
         WorkspacePolicy::new(names.len(), all_live).context("Select 1-8 distinct hosts")?;

@@ -17,10 +17,59 @@ pub struct ReceiveProfileArgs {
     /// Receiver FPS ceiling, 1-60 (default 60).
     #[arg(long, requires = "negotiate_profile", value_parser = clap::value_parser!(u32).range(1..=60))]
     max_fps: Option<u32>,
+    /// Measure local software decoding and reduce the requested profile if needed.
+    #[arg(long, requires = "negotiate_profile")]
+    auto_profile: bool,
 }
 
 impl ReceiveProfileArgs {
-    pub fn mode(self, codec: CodecMode, adaptive: bool, negotiated: bool) -> Result<ViewMode> {
+    pub fn single_mode(
+        self,
+        codec: CodecMode,
+        adaptive: bool,
+        negotiated: bool,
+    ) -> Result<ViewMode> {
+        let mode = self.mode(codec, adaptive, negotiated)?;
+        if !self.auto_profile {
+            return Ok(mode);
+        }
+        let calibrated =
+            super::calibration::measure(codec, mode.limits)?.recommend(mode.limits, 1)?;
+        println!(
+            "Measured receiver ceiling: {}p/{} FPS",
+            calibrated.height(),
+            calibrated.fps()
+        );
+        Ok(mode.with_limits(calibrated))
+    }
+
+    pub fn workspace_modes(
+        self,
+        codec: CodecMode,
+        adaptive: bool,
+        negotiated: bool,
+        names: &[String],
+        overrides: &[String],
+    ) -> Result<Vec<ViewMode>> {
+        let base = self.mode(codec, adaptive, negotiated)?;
+        let mut modes = slot_modes(names, base, overrides)?;
+        if self.auto_profile {
+            let calibration = super::calibration::measure(codec, base.limits)?;
+            let slots = modes.len();
+            for (name, mode) in names.iter().zip(&mut modes) {
+                let selected = calibration.recommend(mode.limits, slots)?;
+                println!(
+                    "Measured receiver ceiling for {name}: {}p/{} FPS",
+                    selected.height(),
+                    selected.fps()
+                );
+                *mode = mode.with_limits(selected);
+            }
+        }
+        Ok(modes)
+    }
+
+    fn mode(self, codec: CodecMode, adaptive: bool, negotiated: bool) -> Result<ViewMode> {
         let limits = ReceiverLimits::new(
             self.max_height.unwrap_or(ReceiverLimits::MAX.height()),
             self.max_fps.unwrap_or(ReceiverLimits::MAX.fps()),

@@ -113,3 +113,8 @@ Use `--negotiate-codec` on both endpoints instead of `--adaptive-resolution` to 
 ## Bounded profile selection (v12)
 
 Use `--negotiate-profile` on both endpoints to negotiate viewer maximum height/FPS and software codec ceiling. Viewer `--max-height 720 --max-fps 30` cannot raise a locally approved Host cap. Defaults remain 1080p and 60 FPS. Adaptive recovery cannot exceed the selected ceiling. This opt-in mode preserves v8/v10/v11; no automatic downgrade or native H.264 exposure. See [BOUNDED-MEDIA.md](BOUNDED-MEDIA.md).
+
+
+## Optional measured receiver profile
+
+Use `--negotiate-profile --auto-profile` on a viewer/workspace to calibrate real CPU decoder work locally and choose bounded resolution/FPS before negotiation. The diagnostic `desktop-profile-check --slots N` reports measured tiers without screen capture or network; optional `--hardware` queries and tests native Windows video conversion in the WGC build. Existing Host/capture policy and manual v12 ceilings remain unchanged. See [RUNTIME-CAPABILITIES.md](RUNTIME-CAPABILITIES.md).

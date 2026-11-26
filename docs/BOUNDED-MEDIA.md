@@ -30,3 +30,8 @@ ALPN `intralink/view/12-bounded`. After verified pinned identity and local appro
 ## Validation scope
 
 Core tests enumerate every valid receiver height/FPS and multiple Host ceilings; malformed caps/selection, independent slot configuration and CLI failures are covered. Real authenticated loopback and three independently paired simultaneous sessions exercise differing height/FPS ceilings, lossless Compact reconstruction and preserved ordering. See the current validation evidence and handoff. Physical remote performance and independently qualified hardware codecs remain separate gates.
+
+
+### Optional measured receiver ceilings
+
+`--auto-profile` with `--negotiate-profile` measures the actual local software decoder and reduces the offered receiver profile within all manual ceilings, accounting conservatively for the number of selected slots. No wire changes or hardware identity transmission. See [RUNTIME-CAPABILITIES.md](RUNTIME-CAPABILITIES.md).

@@ -103,3 +103,8 @@ Explicit v11 peers negotiate the richest mutually allowed implemented software c
 ### Bounded per-session receiver profiles (v12)
 
 Explicit v12 exchanges receiver resolution/FPS ceilings and software mode mask. Host and receiver independently compute the exact lower height/FPS and richest common software mode before capture. The selected profile bounds local adaptive recovery, capture scaling, frame budget and sender pacing. Each workspace target stores its own local ViewMode; its override can only lower the controller ceiling. Version-specific handshake code is split from the shared session loop. No vendor-dependent media requirement or new remote control permission. See [BOUNDED-MEDIA.md](BOUNDED-MEDIA.md).
+
+
+### Local runtime capability policy
+
+Portable CPU decode calibration measures representative production decoder work and selects bounded receiver limits before v12 negotiation. It shares a conservative serial budget across workspace targets and never widens a local cap. Optional native Windows inventory is separate: exact DXGI device identity, driver configuration advertisements and verified conversion are distinct evidence. Hardware identities/timings remain local and no native codec is advertised remotely. See [RUNTIME-CAPABILITIES.md](RUNTIME-CAPABILITIES.md).

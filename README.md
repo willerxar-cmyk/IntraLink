@@ -6,6 +6,8 @@ Version 0.22.0 — development preview. The complete locked Windows workspace ha
 
 ### v0.22 additions
 
+- Opt-in measured receiver ceilings (`--negotiate-profile --auto-profile`): production CPU decoder calibration and conservative workspace resource budget. Optional local `desktop-profile-check --hardware` inventories exact D3D11 adapter configurations and verifies native NV12 color conversion without enabling hardware codecs remotely. See [RUNTIME-CAPABILITIES.md](docs/RUNTIME-CAPABILITIES.md).
+
 - Opt-in v12 bounded media negotiation intersects both peers' resolution/FPS and software codec ceilings. Workspace slots support individual `--device-limit NAME=HEIGHT:FPS` overrides. Both endpoints pass `--negotiate-profile`; see [BOUNDED-MEDIA.md](docs/BOUNDED-MEDIA.md).
 
 - Opt-in v11 software codec negotiation selects the richest mutually allowed mode (Compact/Tiles/JPEG) and keeps adaptive geometry. Both peers pass `--negotiate-codec`. Explicit WGC GPU scaling now retargets its native output during resolution changes without reopening the source. See [NEGOTIATED-MEDIA.md](docs/NEGOTIATED-MEDIA.md).

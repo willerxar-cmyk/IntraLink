@@ -2,6 +2,8 @@
 
 ## 0.22.0 — shared endpoint and full application validation
 
+- Add opt-in local CPU decoder calibration to recommend bounded v12 receiver profiles, including workspace slots. Add vendor-neutral exact-adapter D3D11 inventory and independent generated 1080p NV12 conversion verification; no automatic native codec enablement or wire changes.
+
 - Add opt-in v12 bounded profile intersection with receiver height/FPS ceilings and independent workspace per-device overrides. Split version-specific handshakes from the shared transport. Preserve existing wire formats and authorization.
 
 - Add opt-in v11 authenticated software capability selection and exact confirmation before capture; preserve v8/v10 and isolated v9. Retarget optional WGC GPU output at adaptive geometry transitions without changing capture source/device.

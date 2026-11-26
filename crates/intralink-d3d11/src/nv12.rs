@@ -83,11 +83,29 @@ pub fn verify_nv12(
     vendor: &str,
     adapter_index: Option<u32>,
 ) -> Result<()> {
-    ensure!(matches!(height, 540 | 1080), "Use height 540 or 1080");
+    validate_fixture_profile(height, samples)?;
+    let (device, context) = crate::adapter::create_video_device(vendor, adapter_index)?;
+    verify_nv12_on(height, samples, device, context)
+}
+
+fn validate_fixture_profile(height: u16, samples: u16) -> Result<()> {
+    ensure!(
+        matches!(height, 540 | 720 | 1080),
+        "Use height 540, 720 or 1080"
+    );
     ensure!((1..=180).contains(&samples), "Use 1-180 samples");
+    Ok(())
+}
+
+pub(crate) fn verify_nv12_on(
+    height: u16,
+    samples: u16,
+    device: ID3D11Device,
+    context: ID3D11DeviceContext,
+) -> Result<()> {
+    validate_fixture_profile(height, samples)?;
     let size = (u32::from(height) * 16 / 9, u32::from(height));
     let (w, h) = (size.0 as usize, size.1 as usize);
-    let (device, context) = crate::adapter::create_video_device(vendor, adapter_index)?;
     let dxgi: IDXGIDevice = device.cast()?;
     // SAFETY: live COM interfaces are queried, not modified.
     let adapter = unsafe { dxgi.GetAdapter()?.GetDesc()? };

@@ -35,6 +35,10 @@ mod adapter;
 
 #[cfg(all(target_os = "windows", feature = "readback"))]
 pub use adapter::list_video_adapters;
+#[cfg(all(target_os = "windows", feature = "readback"))]
+mod capability_probe;
+#[cfg(all(target_os = "windows", feature = "readback"))]
+pub use capability_probe::probe_video_capabilities;
 
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 mod nvenc;

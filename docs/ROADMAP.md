@@ -127,3 +127,8 @@ Opt-in v11 software codec intersection and adaptive geometry are implemented, as
 ### Bounded viewer profile checkpoint
 
 v12 opt-in profile intersection adds receiver height/FPS ceilings and independently configured workspace slots while retaining adaptive geometry and CPU baseline. Next validate physical v12 multi-device performance and recovery, introduce explicit measured platform capability selection, qualify independent hardware codecs and software alternatives, and complete decoder isolation. No mandatory GPU or CUDA; previous versions remain supported.
+
+
+### Runtime capability checkpoint
+
+Opt-in real CPU decoder calibration and local vendor-neutral Windows D3D11 capability inventory are implemented. Distinguish driver advertisement from actual verified conversion and from qualified hardware codec execution. Next measure concurrent receiver throughput instead of conservative serial division, implement local Host capture/encode selection with consent and exact source/device verification, qualify physical multi-device sessions and platform-specific codec adapters/decoder containment. Keep CPU baseline and do not advertise native codecs from capability inventory alone.

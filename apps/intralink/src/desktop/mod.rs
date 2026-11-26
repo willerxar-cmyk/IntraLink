@@ -1,5 +1,7 @@
 //! Experimental Windows/X11 screen viewing. Local approval is session-specific.
+mod calibration;
 mod codec;
+pub use calibration::ProfileCheckArgs;
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 pub mod decoder_ipc;
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
