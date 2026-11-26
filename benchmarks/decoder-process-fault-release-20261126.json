@@ -1,0 +1,7 @@
+{
+  "parent_pid": 29512,
+  "decoder_pid": 32360,
+  "parent_exit": 1,
+  "passed": true,
+  "output": "decoder_process_started, pid=32360, private_job=true\nselected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0\nselected_wgc_resources_released\nselected_d3d11_device_released\nselected_winrt_apartment_released\nwgc_stream_source=cancelled, delivered=14, encoded=14, resources_released=true\ndecoder worker failed: Decoder IPC response closed or exceeded line budget\nError: decoder worker failed\n\nCaused by:\n    Decoder IPC response closed or exceeded line budget\n"
+}

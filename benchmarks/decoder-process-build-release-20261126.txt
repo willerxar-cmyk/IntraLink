@@ -1,0 +1,529 @@
+[Reading last 524 lines (total: 524 lines)]
+
+    Checking smallvec v1.16.6
+    Checking windows v0.62.2
+    Checking icu_normalizer v2.4.0
+    Checking hyper v1.13.0
+    Checking parking_lot_core v0.9.12
+    Checking parking_lot v0.12.5
+    Checking idna_adapter v1.2.2
+    Checking idna v1.1.0
+    Checking url v2.5.9
+    Checking hyper-util v0.1.21
+    Checking tower-http v0.6.11
+    Checking iroh-base v1.5.0
+    Checking hyper-rustls v0.27.10
+    Checking reqwest v0.13.5
+    Checking reqwest v0.12.28
+    Checking n0-dns-resolver v0.1.1
+    Checking iroh-dns v1.5.0
+    Checking iroh-relay v1.5.0
+    Checking wmi v0.18.4
+    Checking windows-capture v2.0.1
+    Checking xcap v0.9.10
+    Checking sysinfo v0.40.4
+    Checking netwatch v0.20.2
+    Checking intralink-d3d11 v0.22.0 (D:\IntraLink\crates\intralink-d3d11)
+    Checking iroh v1.5.0
+    Checking intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+    Checking intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+    Checking intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 31.95s
+    Checking windows-future v0.3.2
+    Checking intralink-d3d11 v0.22.0 (D:\IntraLink\crates\intralink-d3d11)
+    Checking windows v0.62.2
+    Checking wmi v0.18.4
+    Checking sysinfo v0.40.4
+    Checking xcap v0.9.10
+    Checking netwatch v0.20.2
+    Checking iroh v1.5.0
+    Checking intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+    Checking intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+    Checking intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 39.24s
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling windows-link v0.2.1
+   Compiling cfg-if v1.0.5
+   Compiling log v0.4.35
+   Compiling pin-project-lite v0.2.18
+   Compiling typenum v1.20.1
+   Compiling version_check v0.9.5
+   Compiling futures-core v0.3.34
+   Compiling subtle v2.6.1
+   Compiling serde_core v1.0.229
+   Compiling bytes v1.12.2
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling futures-sink v0.3.34
+   Compiling memchr v2.8.3
+   Compiling serde v1.0.229
+   Compiling cfg_aliases v0.2.2
+   Compiling futures-io v0.3.34
+   Compiling windows-sys v0.61.2
+   Compiling getrandom v0.2.17
+   Compiling slab v0.4.12
+   Compiling futures-channel v0.3.34
+   Compiling once_cell v1.21.4
+   Compiling futures-task v0.3.34
+   Compiling smallvec v1.16.6
+   Compiling stable_deref_trait v1.2.1
+   Compiling rand_core v0.6.4
+   Compiling rand_core v0.10.1
+   Compiling windows-strings v0.5.1
+   Compiling windows-result v0.4.1
+   Compiling itoa v1.0.19
+   Compiling thiserror v2.0.21
+   Compiling litemap v0.8.3
+   Compiling tracing-core v0.1.36
+   Compiling generic-array v0.14.7
+   Compiling writeable v0.6.4
+   Compiling untrusted v0.9.0
+   Compiling utf_types v1.0.0
+   Compiling libc v0.2.191
+   Compiling cpufeatures v0.3.1
+   Compiling rustls v0.23.46
+   Compiling cc v1.11.3
+   Compiling icu_normalizer_data v2.4.0
+   Compiling icu_properties_data v2.4.0
+   Compiling unicode-segmentation v1.13.3
+   Compiling utf8_iter v1.1.0
+   Compiling percent-encoding v2.3.2
+   Compiling http v1.5.0
+   Compiling unicode-xid v0.2.6
+   Compiling httparse v1.10.1
+   Compiling getrandom v0.4.3
+   Compiling base64ct v1.8.3
+   Compiling cpufeatures v0.2.17
+   Compiling convert_case v0.10.0
+   Compiling bitflags v2.13.2
+   Compiling autocfg v1.5.1
+   Compiling fastrand v2.5.0
+   Compiling hybrid-array v0.4.15
+   Compiling form_urlencoded v1.2.3
+   Compiling ipnet v2.12.2
+   Compiling tower-service v0.3.3
+   Compiling atomic-waker v1.1.2
+   Compiling try-lock v0.2.5
+   Compiling syn v3.0.10
+   Compiling syn v2.0.119
+   Compiling want v0.3.2
+   Compiling pem-rfc7468 v1.0.0
+   Compiling chacha20 v0.10.2
+   Compiling windows-threading v0.2.1
+   Compiling opaque-debug v0.3.1
+   Compiling httpdate v1.0.3
+   Compiling num-traits v0.2.19
+   Compiling heck v0.5.0
+   Compiling semver v1.0.28
+   Compiling const-oid v0.10.3
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling http-body v1.1.0
+   Compiling n0-future v0.3.2
+   Compiling crypto-common v0.1.7
+   Compiling inout v0.1.4
+   Compiling universal-hash v0.5.1
+   Compiling rand v0.10.4
+   Compiling sync_wrapper v1.0.2
+   Compiling rustc_version v0.4.1
+   Compiling cordyceps v0.3.5
+   Compiling base64 v0.23.1
+   Compiling tower-layer v0.3.3
+   Compiling parking v2.2.1
+   Compiling fixedbitset v0.5.9
+   Compiling spin v0.10.1
+   Compiling diatomic-waker v0.2.3
+   Compiling futures-lite v2.6.1
+   Compiling rustversion v1.0.23
+   Compiling hashbrown v0.17.2
+   Compiling curve25519-dalek v5.0.0
+   Compiling foldhash v0.2.0
+   Compiling winnow v1.0.5
+   Compiling base16ct v1.0.0
+   Compiling futures-buffered v0.2.14
+   Compiling digest v0.11.3
+   Compiling equivalent v1.0.3
+   Compiling polyval v0.6.2
+   Compiling aead v0.5.2
+   Compiling http-body-util v0.1.5
+   Compiling signature v3.0.0
+   Compiling noq-udp v1.5.0
+   Compiling ring v0.17.14
+   Compiling ipconfig v0.3.4
+   Compiling widestring v1.2.1
+   Compiling toml_datetime v1.1.3+spec-1.1.0
+   Compiling indexmap v2.14.2
+   Compiling data-encoding v2.11.1
+   Compiling portable-atomic v1.15.0
+   Compiling rustc-hash v2.1.3
+   Compiling crossbeam-utils v0.8.23
+   Compiling scopeguard v1.2.0
+   Compiling ghash v0.5.1
+   Compiling sha2 v0.11.2
+   Compiling windows-registry v0.6.1
+   Compiling slotmap v1.1.1
+   Compiling n0-dns-resolver v0.1.1
+   Compiling simd-adler32 v0.3.10
+   Compiling crossbeam-epoch v0.9.21
+   Compiling winapi v0.3.9
+   Compiling toml_parser v1.1.7+spec-1.1.0
+   Compiling ryu v1.0.23
+   Compiling lru v0.18.5
+   Compiling lock_api v0.4.14
+   Compiling blake3 v1.8.7
+   Compiling simple-dns v0.13.1
+   Compiling rand_pcg v0.10.3
+   Compiling noq v1.5.0
+   Compiling iroh-dns v1.5.0
+   Compiling base64 v0.22.1
+   Compiling sorted-index-buffer v0.2.1
+   Compiling lru-slab v0.1.3
+   Compiling adler2 v2.0.1
+   Compiling netdev v0.47.0
+   Compiling identity-hash v0.1.0
+   Compiling toml_edit v0.25.21+spec-1.1.0
+   Compiling tinyvec v1.13.3
+   Compiling crc32fast v1.5.6
+   Compiling crossbeam-deque v0.8.8
+   Compiling arc-swap v1.9.5
+   Compiling iroh-relay v1.5.0
+   Compiling netwatch v0.20.2
+   Compiling rayon-core v1.13.0
+   Compiling anyhow v1.0.105
+   Compiling sha1_smol v1.0.1
+   Compiling constant_time_eq v0.4.2
+   Compiling arrayvec v0.7.8
+   Compiling parking_lot_core v0.9.12
+   Compiling proc-macro-crate v3.5.0
+   Compiling mac-addr v0.3.0
+   Compiling simdutf8 v0.1.5
+   Compiling miniz_oxide v0.9.1
+   Compiling lru v0.19.2
+   Compiling serde_bytes v0.11.19
+   Compiling block-buffer v0.10.4
+   Compiling iroh v1.5.0
+   Compiling zmij v1.0.23
+   Compiling seize v0.5.1
+   Compiling once_cell_polyfill v1.70.2
+   Compiling synstructure v0.14.0
+   Compiling utf8parse v0.2.2
+   Compiling anstyle v1.0.14
+   Compiling cmov v0.5.4
+   Compiling anstyle-parse v1.0.0
+   Compiling papaya v0.2.5
+   Compiling digest v0.10.7
+   Compiling ctutils v0.4.8
+   Compiling flate2 v1.1.11
+   Compiling miniz_oxide v0.8.9
+   Compiling fdeflate v0.3.7
+   Compiling libloading v0.9.0
+   Compiling ntapi v0.4.3
+   Compiling colorchoice v1.0.5
+   Compiling pxfm v0.1.30
+   Compiling mini-nvcodec v0.1.0
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling either v1.19.0
+   Compiling zune-core v0.5.3
+   Compiling serde_json v1.0.154
+   Compiling png v0.18.1
+   Compiling parking_lot v0.12.5
+   Compiling blake2 v0.10.6
+   Compiling rayon v1.12.0
+   Compiling zune-jpeg v0.5.15
+   Compiling spin v0.9.9
+   Compiling minifb v0.29.0
+   Compiling poly1305 v0.8.0
+   Compiling password-hash v0.5.0
+   Compiling litrs v1.1.0
+   Compiling strsim v0.11.1
+   Compiling clap_lex v1.1.2
+   Compiling bytemuck v1.25.2
+   Compiling option-ext v0.2.0
+   Compiling xcap v0.9.10
+   Compiling byteorder-lite v0.1.0
+   Compiling argon2 v0.5.3
+   Compiling flume v0.12.0
+   Compiling fs2 v0.4.3
+   Compiling zeroize_derive v1.5.0
+   Compiling tracing-attributes v0.1.31
+   Compiling windows-interface v0.59.3
+   Compiling windows-implement v0.60.2
+   Compiling derive_more-impl v2.1.1
+   Compiling n0-error-macros v1.0.3
+   Compiling spez v0.1.2
+   Compiling curve25519-dalek-derive v0.1.1
+   Compiling serde_derive v1.0.229
+   Compiling zerofrom-derive v0.1.8
+   Compiling yoke-derive v0.8.4
+   Compiling futures-macro v0.3.34
+   Compiling tokio-macros v2.7.2
+   Compiling zeroize v1.9.2
+   Compiling zerovec-derive v0.11.7
+   Compiling displaydoc v0.2.7
+   Compiling rustls-pki-types v1.16.0
+   Compiling thiserror-impl v2.0.21
+   Compiling windows-core v0.62.2
+   Compiling cipher v0.4.4
+   Compiling rustls-webpki v0.103.17
+   Compiling socket2 v0.6.5
+   Compiling mio v1.2.5
+   Compiling futures-util v0.3.34
+   Compiling tracing v0.1.44
+   Compiling windows-numerics v0.3.1
+   Compiling windows-collections v0.3.2
+   Compiling windows-future v0.3.2
+   Compiling n0-error v1.0.3
+   Compiling der v0.8.3
+   Compiling pin-project-internal v1.2.0
+   Compiling webpki-roots v1.0.12
+   Compiling tokio v1.54.1
+   Compiling ctr v0.9.2
+   Compiling zerofrom v0.1.8
+   Compiling yoke v0.8.4
+   Compiling aes v0.8.4
+   Compiling data-encoding-macro-internal v0.1.19
+   Compiling enum-assoc v1.4.2
+   Compiling zerovec v0.11.9
+   Compiling zerotrie v0.2.5
+   Compiling windows v0.62.2
+   Compiling data-encoding-macro v0.1.21
+   Compiling aes-gcm v0.10.3
+   Compiling strum_macros v0.28.0
+   Compiling cobs v0.3.0
+   Compiling postcard-derive v0.2.3
+   Compiling num_enum_derive v0.7.6
+   Compiling pin-project v1.2.0
+   Compiling tinystr v0.8.5
+   Compiling potential_utf v0.1.6
+   Compiling spki v0.8.1
+   Compiling iroh-metrics-derive v1.0.1
+   Compiling icu_locale_core v2.4.0
+   Compiling icu_collections v2.4.0
+   Compiling anstyle-wincon v3.0.11
+   Compiling pkcs8 v0.11.0
+   Compiling anstyle-query v1.1.5
+   Compiling anstream v1.0.0
+   Compiling mini-cuda v0.1.1
+   Compiling chacha20 v0.9.1
+   Compiling derive_more v2.1.1
+   Compiling moxcms v0.8.1
+   Compiling clap_builder v4.6.10
+   Compiling chacha20poly1305 v0.10.1
+   Compiling socket-pktinfo v0.4.2
+   Compiling dirs-sys v0.5.0
+   Compiling rtoolbox v0.0.6
+   Compiling if-addrs v0.15.0
+   Compiling num_enum v0.7.6
+   Compiling tempfile v3.27.0
+   Compiling serdect v0.4.3
+   Compiling icu_provider v2.4.0
+   Compiling ed25519 v3.0.0
+   Compiling futures-executor v0.3.34
+   Compiling chrono v0.4.45
+   Compiling icu_properties v2.4.0
+   Compiling icu_normalizer v2.4.0
+   Compiling futures v0.3.34
+   Compiling iroh-metrics v1.0.3
+   Compiling postcard v1.2.0
+   Compiling intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+   Compiling serde_urlencoded v0.7.1
+   Compiling clap_derive v4.6.9
+   Compiling document-features v0.2.12
+   Compiling web-time v1.1.0
+   Compiling strum v0.28.0
+   Compiling raw-window-handle v0.6.2
+   Compiling mdns-sd v0.21.7
+   Compiling ed25519-dalek v3.0.0
+   Compiling rpassword v7.5.5
+   Compiling fast_image_resize v6.2.0
+   Compiling rustls-platform-verifier v0.7.1
+   Compiling idna_adapter v1.2.2
+   Compiling noq-proto v1.5.0
+   Compiling directories v6.0.0
+   Compiling idna v1.1.0
+   Compiling qrcode v0.14.1
+   Compiling tokio-util v0.7.20
+   Compiling tokio-rustls v0.26.6
+   Compiling hyper v1.13.0
+   Compiling tower v0.5.3
+   Compiling backon v1.6.0
+   Compiling url v2.5.9
+   Compiling clap v4.6.10
+   Compiling tower-http v0.6.11
+   Compiling iroh-base v1.5.0
+   Compiling tokio-stream v0.1.19
+   Compiling tokio-websockets v0.13.3
+   Compiling image v0.25.10
+   Compiling n0-watcher v1.0.1
+   Compiling hyper-util v0.1.21
+   Compiling hyper-rustls v0.27.10
+   Compiling reqwest v0.13.5
+   Compiling reqwest v0.12.28
+   Compiling wmi v0.18.4
+   Compiling windows-capture v2.0.1
+   Compiling sysinfo v0.40.4
+   Compiling intralink-d3d11 v0.22.0 (D:\IntraLink\crates\intralink-d3d11)
+   Compiling intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+   Compiling intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+   Compiling intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `release` profile [optimized] target(s) in 5m 51s
+
+
+Length        : 15264256
+LastWriteTime : 26/11/2026 19:29:58
+
+
+
+decoder_process_started, pid=14976, private_job=true
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+gpu_preview_check=passed, presented=60, rgb_max_error=1, diagnostic_readback_bytes=960, cuda_d3d11_copy=true, upload_shader_present_p50_ms=1.659, p95_ms=3.789
+selected_wgc_resources_released
+nvdec_check=passed, submitted=60, decoded=60, displayed=60, sampled_yuv_max_error=0, map_and_sample_p50_ms=2.778
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=passed, frames=60, output=960x540, bytes=54725, idr=1, elapsed_ms=1768.691, source_fps=33.92, capture_p50_ms=12.430, encode_p50_ms=1.288, enqueue_p50_ms=0.015, encoder_pixel_readback=0
+decoder_process_exit=passed, pid=14976, exit=0, ipc_joined=true
+wgc_stream_viewer=passed, submitted=60, demand_to_decode_submit_p50_ms=18.881, p95_ms=36.341, steady_decode_submit_fps=55.56, worker_resources_released=true
+wgc_live_loopback=passed, resolution=960x540, frames=60, bytes=55205, elapsed_ms=2839.063, wire_pipeline_fps=21.13, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit=8, decode_queue=1, isolated_decoder=true
+pid=20584 actual_exit=0 status=ok
+decoder_process_started, pid=30184, private_job=true
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+gpu_preview_check=passed, presented=60, rgb_max_error=1, diagnostic_readback_bytes=960, cuda_d3d11_copy=true, upload_shader_present_p50_ms=1.160, p95_ms=1.423
+selected_wgc_resources_released
+nvdec_check=passed, submitted=60, decoded=60, displayed=60, sampled_yuv_max_error=0, map_and_sample_p50_ms=2.452
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=passed, frames=60, output=1280x720, bytes=31612, idr=1, elapsed_ms=1488.376, source_fps=40.31, capture_p50_ms=0.287, encode_p50_ms=1.450, enqueue_p50_ms=0.011, encoder_pixel_readback=0
+decoder_process_exit=passed, pid=30184, exit=0, ipc_joined=true
+wgc_stream_viewer=passed, submitted=60, demand_to_decode_submit_p50_ms=4.796, p95_ms=5.518, steady_decode_submit_fps=61.05, worker_resources_released=true
+wgc_live_loopback=passed, resolution=1280x720, frames=60, bytes=32092, elapsed_ms=2103.656, wire_pipeline_fps=28.52, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit=8, decode_queue=1, isolated_decoder=true
+pid=18544 actual_exit=0 status=ok
+decoder_process_started, pid=15340, private_job=true
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+selected_wgc_resources_released
+gpu_preview_check=passed, presented=180, rgb_max_error=3, diagnostic_readback_bytes=2880, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.873, p95_ms=1.307
+nvdec_check=passed, submitted=180, decoded=180, displayed=180, sampled_yuv_max_error=1, map_and_sample_p50_ms=2.896
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=passed, frames=180, output=1920x1080, bytes=108744, idr=3, elapsed_ms=3581.802, source_fps=50.25, capture_p50_ms=3.759, encode_p50_ms=2.154, enqueue_p50_ms=0.009, encoder_pixel_readback=0
+decoder_process_exit=passed, pid=15340, exit=0, ipc_joined=true
+wgc_stream_viewer=passed, submitted=180, demand_to_decode_submit_p50_ms=9.551, p95_ms=19.665, steady_decode_submit_fps=58.65, worker_resources_released=true
+wgc_live_loopback=passed, resolution=1920x1080, frames=180, bytes=110184, elapsed_ms=3928.369, wire_pipeline_fps=45.82, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit=8, decode_queue=1, isolated_decoder=true
+pid=26456 actual_exit=0 status=ok
+decoder_process_started, pid=6376, private_job=true
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+selected_wgc_resources_released
+gpu_preview_check=passed, presented=180, rgb_max_error=3, diagnostic_readback_bytes=2880, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.876, p95_ms=1.293
+nvdec_check=passed, submitted=180, decoded=180, displayed=180, sampled_yuv_max_error=1, map_and_sample_p50_ms=2.925
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=passed, frames=180, output=1920x1080, bytes=106668, idr=3, elapsed_ms=3386.040, source_fps=53.16, capture_p50_ms=0.271, encode_p50_ms=2.221, enqueue_p50_ms=0.008, encoder_pixel_readback=0
+decoder_process_exit=passed, pid=6376, exit=0, ipc_joined=true
+wgc_stream_viewer=passed, submitted=180, demand_to_decode_submit_p50_ms=6.417, p95_ms=18.668, steady_decode_submit_fps=58.65, worker_resources_released=true
+wgc_live_loopback=passed, resolution=1920x1080, frames=180, bytes=108108, elapsed_ms=3620.087, wire_pipeline_fps=49.72, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit=8, decode_queue=1, isolated_decoder=true
+pid=32440 actual_exit=0 status=ok
+decoder_process_started, pid=18176, private_job=true
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+selected_wgc_resources_released
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=cancelled, delivered=2, encoded=2, resources_released=true
+decoder_process_exit=passed, pid=18176, exit=0, ipc_joined=true
+wgc_stream_viewer=cancelled, submitted=1, worker_resources_released=true
+wgc_live_cancel=passed, requested=1, source_delivered=2, viewer_submitted=1, joined_workers=true, no_more_decode=true, isolated_decoder=true
+pid=32784 actual_exit=0 status=ok
+decoder_process_started, pid=24988, private_job=true
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+selected_wgc_resources_released
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=cancelled, delivered=10, encoded=10, resources_released=true
+decoder_process_exit=passed, pid=24988, exit=0, ipc_joined=true
+wgc_stream_viewer=cancelled, submitted=10, worker_resources_released=true
+wgc_live_cancel=passed, requested=10, source_delivered=10, viewer_submitted=10, joined_workers=true, no_more_decode=true, isolated_decoder=true
+pid=26724 actual_exit=0 status=ok
+decoder_process_started, pid=21300, private_job=true
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+selected_wgc_resources_released
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=cancelled, delivered=30, encoded=30, resources_released=true
+decoder_process_exit=passed, pid=21300, exit=0, ipc_joined=true
+wgc_stream_viewer=cancelled, submitted=30, worker_resources_released=true
+wgc_live_cancel=passed, requested=30, source_delivered=30, viewer_submitted=30, joined_workers=true, no_more_decode=true, isolated_decoder=true
+pid=25428 actual_exit=0 status=ok
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+gpu_preview_check=passed, presented=60, rgb_max_error=1, diagnostic_readback_bytes=960, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.912, p95_ms=1.303
+selected_wgc_resources_released
+nvdec_check=passed, submitted=60, decoded=60, displayed=60, sampled_yuv_max_error=0, map_and_sample_p50_ms=1.901
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=passed, frames=60, output=960x540, bytes=52644, idr=1, elapsed_ms=1338.654, source_fps=44.82, capture_p50_ms=0.240, encode_p50_ms=1.171, enqueue_p50_ms=0.007, encoder_pixel_readback=0
+wgc_stream_viewer=passed, submitted=60, demand_to_decode_submit_p50_ms=3.804, p95_ms=4.573, steady_decode_submit_fps=60.10, worker_resources_released=true
+wgc_live_loopback=passed, resolution=960x540, frames=60, bytes=53124, elapsed_ms=1639.855, wire_pipeline_fps=36.59, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit=8, decode_queue=1, isolated_decoder=false
+pid=22456 actual_exit=0 status=ok
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+gpu_preview_check=passed, presented=60, rgb_max_error=1, diagnostic_readback_bytes=960, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.854, p95_ms=1.270
+selected_wgc_resources_released
+nvdec_check=passed, submitted=60, decoded=60, displayed=60, sampled_yuv_max_error=0, map_and_sample_p50_ms=2.092
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=passed, frames=60, output=1280x720, bytes=33106, idr=1, elapsed_ms=1340.479, source_fps=44.76, capture_p50_ms=0.262, encode_p50_ms=1.447, enqueue_p50_ms=0.007, encoder_pixel_readback=0
+wgc_stream_viewer=passed, submitted=60, demand_to_decode_submit_p50_ms=4.502, p95_ms=15.956, steady_decode_submit_fps=59.93, worker_resources_released=true
+wgc_live_loopback=passed, resolution=1280x720, frames=60, bytes=33586, elapsed_ms=1576.268, wire_pipeline_fps=38.06, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit=8, decode_queue=1, isolated_decoder=false
+pid=26360 actual_exit=0 status=ok
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+gpu_preview_check=passed, presented=180, rgb_max_error=3, diagnostic_readback_bytes=2880, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.935, p95_ms=1.453
+selected_wgc_resources_released
+nvdec_check=passed, submitted=180, decoded=180, displayed=180, sampled_yuv_max_error=1, map_and_sample_p50_ms=3.054
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=passed, frames=180, output=1920x1080, bytes=105802, idr=3, elapsed_ms=3412.376, source_fps=52.75, capture_p50_ms=4.643, encode_p50_ms=2.246, enqueue_p50_ms=0.010, encoder_pixel_readback=0
+wgc_stream_viewer=passed, submitted=180, demand_to_decode_submit_p50_ms=10.446, p95_ms=21.491, steady_decode_submit_fps=58.28, worker_resources_released=true
+wgc_live_loopback=passed, resolution=1920x1080, frames=180, bytes=107242, elapsed_ms=3645.493, wire_pipeline_fps=49.38, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit=8, decode_queue=1, isolated_decoder=false
+pid=6072 actual_exit=0 status=ok
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+selected_wgc_resources_released
+gpu_preview_check=passed, presented=180, rgb_max_error=3, diagnostic_readback_bytes=2880, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.899, p95_ms=1.435
+nvdec_check=passed, submitted=180, decoded=180, displayed=180, sampled_yuv_max_error=1, map_and_sample_p50_ms=2.976
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=passed, frames=180, output=1920x1080, bytes=107969, idr=3, elapsed_ms=3378.641, source_fps=53.28, capture_p50_ms=0.337, encode_p50_ms=2.220, enqueue_p50_ms=0.009, encoder_pixel_readback=0
+wgc_stream_viewer=passed, submitted=180, demand_to_decode_submit_p50_ms=6.874, p95_ms=17.433, steady_decode_submit_fps=58.78, worker_resources_released=true
+wgc_live_loopback=passed, resolution=1920x1080, frames=180, bytes=109409, elapsed_ms=3619.124, wire_pipeline_fps=49.74, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit=8, decode_queue=1, isolated_decoder=false
+pid=33772 actual_exit=0 status=ok
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+selected_wgc_resources_released
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=cancelled, delivered=2, encoded=2, resources_released=true
+wgc_stream_viewer=cancelled, submitted=1, worker_resources_released=true
+wgc_live_cancel=passed, requested=1, source_delivered=2, viewer_submitted=1, joined_workers=true, no_more_decode=true, isolated_decoder=false
+pid=18228 actual_exit=0 status=ok
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+selected_wgc_resources_released
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=cancelled, delivered=10, encoded=10, resources_released=true
+wgc_stream_viewer=cancelled, submitted=10, worker_resources_released=true
+wgc_live_cancel=passed, requested=10, source_delivered=10, viewer_submitted=10, joined_workers=true, no_more_decode=true, isolated_decoder=false
+pid=30864 actual_exit=0 status=ok
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+selected_wgc_resources_released
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=cancelled, delivered=30, encoded=30, resources_released=true
+wgc_stream_viewer=cancelled, submitted=30, worker_resources_released=true
+wgc_live_cancel=passed, requested=30, source_delivered=30, viewer_submitted=30, joined_workers=true, no_more_decode=true, isolated_decoder=false
+pid=36196 actual_exit=0 status=ok
+nvenc_check=passed, size=1920x1080, frames=180, idr=4, payload_bytes=158564, gpu_nv12_to_h264=true, cpu_pixel_readbacks=0, convert_encode_p50_ms=3.194, p95_ms=3.769, p99_ms=3.919
+raw_hw_encode_status_counts={2: 180}; opaque driver field, not API return codes
+Synthetic native H.264 diagnostic; native_decoder=false; no network or desktop capture.
+nvdec_check=passed, submitted=180, decoded=180, displayed=180, sampled_yuv_max_error=1, map_and_sample_p50_ms=1.763
+h264_loopback_check=passed, resolution=1920x1080, frames=180, bytes=160004, elapsed_ms=3105.701, wire_rate_fps=57.96, profile_fps=60, precise_timer=true, authenticated_direct_quic=true, exact_fixture_match=true
+Pre-encoded synthetic loopback transfer followed by native decode; not live capture or network presentation.
+✅ Process completed with exit code 0 (runtime: 464.90s)
+
+[executed on device: DESKTOP-54A9GFC (af27c91c-6f94-4f61-a934-0c3dc3c2c0a6)]
