@@ -10,6 +10,7 @@ pub mod network;
 pub mod overview;
 pub mod pacing;
 pub mod presentation;
+pub mod quality;
 pub mod resources;
 pub mod telemetry;
 pub mod workspace;

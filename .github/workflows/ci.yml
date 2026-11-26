@@ -77,6 +77,15 @@ jobs:
       - name: Resolve dependencies when no lockfile exists
         shell: bash
         run: if [ ! -f Cargo.lock ]; then cargo generate-lockfile; fi
+      - name: Enforce portable desktop dependency boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          graph="$(cargo tree --locked -p intralink --no-default-features --features desktop-preview -e normal --prefix none)"
+          if grep -Eq '^mini-(cuda|nvcodec) ' <<< "$graph"; then
+            echo "NVIDIA codec dependency leaked into the portable desktop feature set" >&2
+            exit 1
+          fi
       - run: cargo clippy --locked -p intralink --features desktop-preview --all-targets -- -D warnings
       - run: cargo test --locked -p intralink --features desktop-preview
         if: ${{ !cancelled() && hashFiles('Cargo.lock') != '' }}

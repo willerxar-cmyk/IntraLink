@@ -108,3 +108,8 @@ See [HANDOFF.md](HANDOFF.md) and [APP-VALIDATION.md](APP-VALIDATION.md) for exac
 ### Restricted decoder investigation checkpoint (2026-11-26)
 
 Minimal strict-token worker startup, exact-LUID CUDA/CUVID capability and native headless 1080p trusted-fixture decoding now pass in Debug. Next isolate the presenter as a trusted process and qualify explicit shared GPU surfaces, real OS read/network denial (not merely token integrity) and hostile AVC input. The graphical same-executable restricted path and physical H.264 remain unqualified. Do not change the normal v8 protocol or release a remote H.264 capability until these gates pass.
+
+
+### Portable media direction (2026-11-26)
+
+Keep CPU Compact/Tiles/JPEG as the always-available media baseline on supported desktop targets. Default 1080p, selectable 720p/540p, adaptive JPEG quality; preserve 60 FPS as a target/ceiling rather than a universal guarantee. Next: add portable capability negotiation and versioned dynamic resolution/keyframe transitions, then qualify optional vendor/OS-native hardware codec backends and a CPU H.264 path independently. Do not make the isolated NVIDIA diagnostic a dependency of normal sharing. Retain consent, bounded ordered media and strict isolation gates. Platform coverage, physical network measurements and sustained multi-device 1080p60 remain open.

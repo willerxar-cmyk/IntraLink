@@ -277,12 +277,14 @@ pub(super) fn last_frame_banner(
     pixels: &[u32],
     dimensions: (usize, usize),
     output: &mut Vec<u32>,
-) -> anyhow::Result<()> {
+) -> std::io::Result<()> {
     let (width, height) = dimensions;
-    anyhow::ensure!(
-        width >= 320 && height >= 40 && width.checked_mul(height) == Some(pixels.len()),
-        "Invalid notice canvas"
-    );
+    if width < 320 || height < 40 || width.checked_mul(height) != Some(pixels.len()) {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "Invalid notice canvas",
+        ));
+    }
     output.clear();
     output.extend_from_slice(pixels);
     let scale = if width >= 1280 { 3 } else { 2 };

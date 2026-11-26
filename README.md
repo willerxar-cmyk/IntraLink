@@ -6,6 +6,8 @@ Version 0.22.0 — development preview. The complete locked Windows workspace ha
 
 ### v0.22 additions
 
+- Portable media baseline: `desktop-preview` supports CPU Compact/Tiles/JPEG without CUDA. Normal Host defaults to 1080p, with selectable 720p/540p and bounded adaptive JPEG quality. `--fixed-quality` disables adaptation; hardware acceleration remains optional. See [DESKTOP.md](docs/DESKTOP.md).
+
 - Restricted headless NVDEC development diagnostic: the minimal worker starts under the existing reduced token, matches the exact CUDA LUID and decodes a fixed locally generated 1080p fixture. No physical H.264 sharing, complete OS sandbox or shared GPU surface transport yet. See [SECURITY.md](docs/SECURITY.md) and [APP-VALIDATION.md](docs/APP-VALIDATION.md).
 
 - Shared workspace endpoint, independent cancellation, full Windows application Clippy and 114 tests passed. See [APP-VALIDATION.md](docs/APP-VALIDATION.md).

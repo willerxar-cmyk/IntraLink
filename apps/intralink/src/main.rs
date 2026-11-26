@@ -341,12 +341,15 @@ enum Command {
         seconds: u64,
         #[arg(long, default_value_t = 60, value_parser = clap::value_parser!(u32).range(1..=60))]
         fps: u32,
-        /// Output height: 540, 720 or 1080. Aspect ratio is preserved.
-        #[arg(long, default_value_t = 540)]
+        /// Output height: 540, 720 or 1080. Defaults to 1080; fixed during a session.
+        #[arg(long, default_value_t = 1080)]
         height: u16,
-        /// JPEG quality (35-90); lower values reduce bandwidth.
+        /// Maximum JPEG quality (35-90); adaptive by default.
         #[arg(long, default_value_t = 75, value_parser = clap::value_parser!(u8).range(35..=90))]
         quality: u8,
+        /// Keep the locally selected JPEG quality fixed instead of adapting to receipt pressure.
+        #[arg(long)]
+        fixed_quality: bool,
         /// Explicit compact tiles, basic tiles or independent JPEG mode. Must match the viewer.
         #[arg(long, value_enum, default_value = "compact")]
         codec: MediaMode,
@@ -646,6 +649,7 @@ fn main() -> Result<()> {
             fps,
             height,
             quality,
+            fixed_quality,
             codec,
         } => {
             let config = intralink_core::desktop::VideoConfig::new(height, fps, quality, seconds)
@@ -658,7 +662,15 @@ fn main() -> Result<()> {
                     &path,
                     record,
                     Operation::ViewHost,
-                    desktop::share(&path, &controller, bind, monitor, config, capture),
+                    desktop::share(
+                        &path,
+                        &controller,
+                        bind,
+                        monitor,
+                        config,
+                        capture,
+                        fixed_quality,
+                    ),
                 )
             })
         }

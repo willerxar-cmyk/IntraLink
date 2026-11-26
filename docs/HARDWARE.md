@@ -126,3 +126,8 @@ Initial presentation tests validated rendered colors but failed during process t
 ### Headless NVDEC under the reduced token (2026-11-26)
 
 The new developer example `restricted_decoder_probe --decode-luid HIGH:LOW` reuses the actual native parser/decoder and exact CUDA LUID match, without creating the optional D3D11 presenter. On the current RTX 3080 Ti Laptop LUID 00000000:00017777, Debug decoded six embedded native-generated 1920x1080 access units immediately (6/6/6, max sampled YUV error 1, map/sample p50 1.808 ms, child exit 0). No full-frame CPU readback; no new GPU sharing mechanism or physical desktop stream. Existing windowed presentation remains separate; shared resource handles and synchronization are the next native integration gate.
+
+
+### Optional acceleration policy (2026-11-26)
+
+CUDA/NVENC/NVDEC are optional NVIDIA-specific capabilities. Normal sharing and decoding use the required CPU baseline, `desktop-preview` with Compact/Tiles/JPEG, and neither NVIDIA library is present in that feature graph. Capture and scaling may use native OS APIs independently of the codec; hardware-backed WGC is not a CUDA requirement. Other vendor/OS codecs must be independently qualified (D3D11/Media Foundation or oneVPL, AMD AMF/VA-API, Apple VideoToolbox, Android MediaCodec). Negotiate only verified compatible codec profiles; preserve a software path and do not silently substitute an unsafe decoder or weaken a requested isolation policy. See `ARCHITECTURE.md` and `DESKTOP.md`.

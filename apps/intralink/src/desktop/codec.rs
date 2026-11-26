@@ -28,6 +28,7 @@ pub fn validate_source_size(width: u32, height: u32) -> Result<()> {
 /// Keep two bounded output-size canvases rather than a second native screenshot.
 pub struct Encoder {
     config: VideoConfig,
+    jpeg_quality: u8,
     resizer: super::resize::CanvasResizer,
     scratch: Vec<u8>,
     previous: Vec<u8>,
@@ -41,6 +42,7 @@ impl Encoder {
         let size = (config.width() * config.height() * 3) as usize;
         Self {
             config,
+            jpeg_quality: config.quality(),
             resizer: super::resize::CanvasResizer::default(),
             scratch: vec![0; size],
             previous: vec![0; size],
@@ -48,6 +50,16 @@ impl Encoder {
             last_keyframe_size: 0,
             deltas_since_keyframe: 0,
         }
+    }
+
+    /// JPEG quality may change without altering the negotiated canvas or tile state.
+    pub fn set_jpeg_quality(&mut self, quality: u8) -> Result<()> {
+        ensure!(
+            (intralink_core::quality::MIN_JPEG_QUALITY..=self.config.quality()).contains(&quality),
+            "JPEG quality outside the locally approved range"
+        );
+        self.jpeg_quality = quality;
+        Ok(())
     }
 
     pub fn encode(&mut self, frame: &RgbaImage, mut jpeg: Vec<u8>) -> Result<Capture> {
@@ -93,7 +105,7 @@ impl Encoder {
                 if !exact {
                     jpeg.clear();
                     jpeg.push(JPEG_TAG);
-                    JpegEncoder::new_with_quality(&mut jpeg, self.config.quality()).encode(
+                    JpegEncoder::new_with_quality(&mut jpeg, self.jpeg_quality).encode(
                         &self.scratch,
                         width,
                         height,
@@ -209,6 +221,44 @@ mod tests {
         let center = pixels[(config.width() * (config.height() / 2) + config.width() / 2) as usize];
         assert!((center >> 16) & 255 > 200);
         assert!(pixels[0] < 0x101010);
+        Ok(())
+    }
+
+    #[test]
+    fn adaptive_jpeg_quality_preserves_1080p_wire_config_and_reduces_payload() -> Result<()> {
+        let config = VideoConfig::new(1080, 60, 75, 30).unwrap();
+        let mut encoder = Encoder::new(config);
+        let mut decoder = Decoder::default();
+        let fixture = |phase: u32| {
+            RgbaImage::from_fn(config.width(), config.height(), |x, y| {
+                Rgba([
+                    ((x * 13 + y * 7 + phase) % 256) as u8,
+                    ((x * 3 + y * 11 + phase) % 256) as u8,
+                    ((x * 5 + y * 17 + phase) % 256) as u8,
+                    255,
+                ])
+            })
+        };
+        let first = fixture(0);
+        let high = changed(encoder.encode(&first, Vec::new())?);
+        assert_eq!(high[0], JPEG_TAG);
+        assert!(encoder.set_jpeg_quality(76).is_err());
+        assert!(encoder.set_jpeg_quality(34).is_err());
+        encoder.set_jpeg_quality(35)?;
+        assert!(matches!(
+            encoder.encode(&first, Vec::new())?,
+            Capture::Repeat(_)
+        ));
+        let low = changed(encoder.encode(&fixture(1), Vec::new())?);
+        assert_eq!(low[0], JPEG_TAG);
+        assert!(
+            low.len() < high.len(),
+            "lower JPEG quality must reduce this fixture"
+        );
+        let mut pixels = Vec::new();
+        decoder.decode_into(config, &high, &mut pixels)?;
+        decoder.decode_into(config, &low, &mut pixels)?;
+        assert_eq!(pixels.len(), (1920 * 1080) as usize);
         Ok(())
     }
 

@@ -1,0 +1,334 @@
+running 79 tests
+test canvas::tests::invalid_lengths_and_dimensions_leave_output_unchanged ... ok
+test desktop::tests::requests_and_acknowledgments_are_exact ... ok
+test desktop::tests::credit_is_bounded_and_receipts_are_ordered ... ok
+test canvas::tests::odd_bars_are_centered_and_old_content_is_erased ... ok
+test desktop::tests::lengths_are_bounded_before_allocation ... ok
+test desktop::tests::configuration_is_bounded_and_versioned ... ok
+test h264::parameters::tests::rbsp_escape_rules_and_exp_golomb_limits ... ok
+test h264::parameters::tests::native_parameter_sets_match_exact_profiles ... ok
+test h264::parameters::tests::truncated_parameter_sets_and_extra_rbsp_are_rejected ... ok
+test h264::tests::envelope_rejects_limits_and_unknown_flags ... ok
+test h264::tests::profile_and_wire_version_are_exact ... ok
+test h264::tests::state_rejects_missing_base_gaps_and_gop_expiration_atomically ... ok
+test h264::tests::rejects_missing_headers_b_slices_and_multiple_pictures ... ok
+test journal::tests::maximal_numeric_values_fit_reserved_line_budget ... ok
+test journal::tests::rejects_duplicate_wrong_and_out_of_order_end_records ... ok
+test desktop::tests::priority_feedback_is_ordered_and_cannot_grant_credit ... ok
+test canvas::tests::full_size_overwrites_every_byte_and_ignores_alpha ... ok
+test h264::tests::rejected_parameter_change_does_not_advance_state ... ok
+test journal::tests::roundtrip_preserves_unknown_cancelled_and_completed_outcomes ... ok
+test media::compact::tests::palette_padding_and_invalid_index_are_rejected ... ok
+test journal::tests::rejects_truncation_control_fields_and_unbounded_input ... ok
+test media::compact::tests::runs_must_cover_the_exact_tile ... ok
+test h264::tests::every_truncation_and_mutation_is_bounded ... ok
+test media::tests::budget_exhaustion_never_emits_partial_updates ... ok
+test network::tests::comparison_is_family_aware_and_normalizes_mapped_values ... ok
+test network::tests::each_family_is_bounded_and_selection_is_idempotent ... ok
+test network::tests::malformed_or_unsupported_destinations_are_not_attempted ... ok
+test network::tests::mapped_addresses_are_deduplicated_before_family_limits ... ok
+test network::tests::private_and_shared_ip_labels_do_not_assert_reachability ... ok
+test network::tests::scan_budget_is_bounded_even_for_duplicate_answers ... ok
+test overview::tests::every_layout_has_nonoverlapping_cards_and_distinct_controls ... ok
+test overview::tests::pointer_mapping_respects_bars_and_nonfinite_input ... ok
+test pacing::tests::intermittent_changes_do_not_enter_idle_mode ... ok
+test pacing::tests::sixty_fps_and_background_cadence ... ok
+test pacing::tests::slower_profiles_are_never_accelerated_or_delayed ... ok
+test presentation::tests::allocation_is_reused_when_no_snapshot_is_held ... ok
+test pacing::tests::static_scene_slows_in_two_bounded_steps ... ok
+test media::tests::malformed_later_compact_tile_cannot_apply_earlier_tile ... ok
+test presentation::tests::concurrent_presentation_keeps_immutable_pixels ... ok
+test presentation::tests::failed_decode_poisoning_preserves_old_snapshot_but_hides_partial_update ... ok
+test presentation::tests::invalid_geometry_is_rejected_before_decoding ... ok
+test presentation::tests::short_decode_cannot_be_published ... ok
+test presentation::tests::unchanged_or_older_sequence_never_creates_a_snapshot ... ok
+test quality::tests::pressure_is_bounded_and_background_does_not_signal_recovery ... ok
+test quality::tests::recovery_is_slower_and_never_exceeds_approved_quality ... ok
+test quality::tests::static_and_neutral_interrupt_streaks_and_floor_is_safe ... ok
+test media::tests::malformed_updates_do_not_mutate_pixels ... ok
+test quality::tests::sustained_high_pressure_reduces_quality_and_floor_is_enforced ... ok
+test resources::tests::cpu_never_reports_unavailable_or_nonfinite_data_as_a_measurement ... ok
+test resources::tests::memory_is_checked_and_used_cannot_underflow ... ok
+test telemetry::tests::actual_elapsed_time_and_distinct_rates ... ok
+test telemetry::tests::resets_never_report_old_session_rates ... ok
+test telemetry::tests::stages_are_independent_and_payload_is_counted_once ... ok
+test telemetry::tests::concurrent_updates_are_not_lost ... ok
+test overview::tests::invalid_geometry_and_source_leave_canvas_unchanged ... ok
+test workspace::tests::bounds_and_all_eight_slots ... ok
+test workspace::tests::inactive_is_distinct_from_background_and_all_live ... ok
+test media::tests::invalid_keyframes_never_resize_or_mutate_existing_canvas ... ok
+test workspace::tests::three_live_devices_switch_focus_without_deactivation ... ok
+test yuv::tests::averages_chroma_and_preserves_stride_padding ... ok
+test yuv::tests::black_white_and_neutral_grays ... ok
+test yuv::tests::primary_color_vectors ... ok
+test yuv::tests::invalid_layouts_are_atomic ... ok
+test media::tests::compact_records_are_rejected_by_basic_tiles_and_jpeg ... ok
+test viewer_overview::tests::local_notice_preserves_original_pixels_and_reuses_scratch ... ok
+test overview::tests::thumbnail_preserves_aspect_and_does_not_touch_other_cards ... ok
+test media::tests::keyframe_budget_and_mode_fail_closed ... ok
+test desktop::tests::credit_cannot_exceed_absolute_sequence_budget ... ok
+test viewer_overview::tests::disconnected_card_removes_all_previous_pixels ... ok
+test viewer_overview::tests::busy_decoder_retains_thumbnail_but_session_restart_invalidates_it ... ok
+test media::tests::edge_tiles_round_trip_and_solid_tiles_are_nine_bytes ... ok
+test media::tests::uniform_row_comparison_preserves_nonuniform_edge_tiles ... ok
+test viewer_overview::tests::all_supported_card_counts_render_in_one_reusable_canvas ... ok
+test media::tests::lossless_keyframe_and_following_delta_preserve_every_pixel ... ok
+test media::tests::ordered_deltas_reconstruct_changed_tiles_and_restore_pixels ... ok
+test media::tests::compact_selects_smallest_exact_tile_representation ... ok
+test media::tests::compact_never_exceeds_basic_payload_under_same_budget ... ok
+test media::tests::compact_palette_cardinalities_and_edge_geometry_round_trip ... ok
+test media::tests::lossless_uniform_keyframes_have_full_coverage_at_all_resolutions ... ok
+
+test result: ok. 79 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+   Compiling smallvec v1.16.6
+   Compiling windows-future v0.3.2
+   Compiling intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+   Compiling intralink-d3d11 v0.22.0 (D:\IntraLink\crates\intralink-d3d11)
+   Compiling icu_normalizer v2.4.0
+   Compiling hyper v1.13.0
+   Compiling windows v0.62.2
+   Compiling idna_adapter v1.2.2
+   Compiling idna v1.1.0
+   Compiling url v2.5.9
+   Compiling hyper-util v0.1.21
+   Compiling tower-http v0.6.11
+   Compiling iroh-base v1.5.0
+   Compiling hyper-rustls v0.27.10
+   Compiling reqwest v0.13.5
+   Compiling reqwest v0.12.28
+   Compiling n0-dns-resolver v0.1.1
+   Compiling iroh-dns v1.5.0
+   Compiling iroh-relay v1.5.0
+   Compiling wmi v0.18.4
+   Compiling sysinfo v0.40.4
+   Compiling xcap v0.9.10
+   Compiling netwatch v0.20.2
+   Compiling iroh v1.5.0
+   Compiling intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+   Compiling intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+   Compiling intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 10s
+     Running unittests src\main.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink-90fb4d22137b938a.exe)
+
+running 31 tests
+test ddns::tests::update_address_modes ... ok
+test desktop::host_capture::tests::explicit_backend_never_silently_falls_back ... ok
+test desktop::host_capture::tests::identity_requires_same_display_name_geometry_position_and_rotation ... ok
+test desktop::resize::tests::invalid_geometry_is_atomic_and_exact_size_skips_resize ... ok
+test desktop::resize::tests::aspect_and_rounding ... ok
+test desktop::resize::tests::opaque_screen_colors_and_reused_buffer ... ok
+test desktop::source_status::tests::no_update_notice_is_delayed_and_only_observed_pixels_clear_it ... ok
+test discovery::tests::discovery_is_restricted_to_private_ipv4_hints ... ok
+test desktop::resize::tests::downsampling_preserves_antialiasing ... ok
+test resources::tests::missing_cpu_is_not_printed_as_idle_and_ram_uses_bytes ... ok
+test resources::tests::json_distinguishes_missing_metrics_from_zero_usage ... ok
+test routing::tests::address_classes_do_not_claim_reachability ... ok
+test routing::tests::candidates_are_bounded_unique_and_dual_stack ... ok
+test routing::tests::numeric_routes_are_normalized_without_dns ... ok
+test desktop::overview::tests::local_notice_preserves_original_pixels_and_reuses_scratch ... ok
+test journal::tests::opt_out_does_not_create_file_and_corruption_blocks_operation ... ok
+test desktop::overview::tests::disconnected_card_removes_all_previous_pixels ... ok
+test desktop::overview::tests::busy_decoder_retains_thumbnail_but_session_restart_invalidates_it ... ok
+test journal::tests::full_or_busy_journal_is_not_overwritten ... ok
+test desktop::overview::tests::all_supported_card_counts_render_in_one_reusable_canvas ... ok
+test journal::tests::wrapper_records_completion_and_preserves_command_error ... ok
+test journal::tests::recording_persists_and_interruption_is_unknown ... ok
+test desktop::codec::tests::compact_hybrid_decodes_palette_after_lossless_keyframe_and_rejects_mode_switch ... ok
+test desktop::codec::tests::malformed_oversized_and_wrong_dimensions_are_rejected ... ok
+test desktop::codec::tests::codec_round_trip_and_letterbox ... ok
+test desktop::codec::tests::hybrid_uses_ordered_tiles_after_keyframe ... ok
+test desktop::codec::tests::static_pixels_skip_encoding_and_change_triggers_new_jpeg ... ok
+test desktop::codec::tests::compact_exact_then_jpeg_then_exact_refresh ... ok
+test desktop::media_check::tests::static_markers_distinguish_final_update_from_stale_frame ... ok
+test desktop::media_check::tests::fixture_markers_survive_animation_and_reject_wrong_content ... ok
+test desktop::codec::tests::adaptive_jpeg_quality_preserves_1080p_wire_config_and_reduces_payload ... ok
+
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.94s
+
+     Running tests\cli_smoke.rs (D:\IntraLink-validation-v020\target\debug\deps\cli_smoke-1c0ef86a98894d41.exe)
+
+running 2 tests
+test portable_share_defaults_to_1080p_and_adaptive_quality ... ok
+test cli_help_and_version_exit_successfully ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests\decoder_process.rs (D:\IntraLink-validation-v020\target\debug\deps\decoder_process-40a46346605a0957.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_core-3e3e99ad2bbf7776.exe)
+
+running 78 tests
+test canvas::tests::full_size_overwrites_every_byte_and_ignores_alpha ... ok
+test canvas::tests::invalid_lengths_and_dimensions_leave_output_unchanged ... ok
+test h264::tests::rejects_missing_headers_b_slices_and_multiple_pictures ... ok
+test journal::tests::maximal_numeric_values_fit_reserved_line_budget ... ok
+test desktop::tests::priority_feedback_is_ordered_and_cannot_grant_credit ... ok
+test desktop::tests::requests_and_acknowledgments_are_exact ... ok
+test h264::parameters::tests::rbsp_escape_rules_and_exp_golomb_limits ... ok
+test h264::tests::envelope_rejects_limits_and_unknown_flags ... ok
+test h264::tests::rejected_parameter_change_does_not_advance_state ... ok
+test desktop::tests::lengths_are_bounded_before_allocation ... ok
+test canvas::tests::odd_bars_are_centered_and_old_content_is_erased ... ok
+test h264::tests::state_rejects_missing_base_gaps_and_gop_expiration_atomically ... ok
+test h264::tests::profile_and_wire_version_are_exact ... ok
+test journal::tests::rejects_duplicate_wrong_and_out_of_order_end_records ... ok
+test desktop::tests::configuration_is_bounded_and_versioned ... ok
+test desktop::tests::credit_is_bounded_and_receipts_are_ordered ... ok
+test h264::parameters::tests::truncated_parameter_sets_and_extra_rbsp_are_rejected ... ok
+test media::compact::tests::palette_padding_and_invalid_index_are_rejected ... ok
+test h264::parameters::tests::native_parameter_sets_match_exact_profiles ... ok
+test journal::tests::roundtrip_preserves_unknown_cancelled_and_completed_outcomes ... ok
+test h264::tests::every_truncation_and_mutation_is_bounded ... ok
+test journal::tests::rejects_truncation_control_fields_and_unbounded_input ... ok
+test media::compact::tests::runs_must_cover_the_exact_tile ... ok
+test media::tests::budget_exhaustion_never_emits_partial_updates ... ok
+test network::tests::comparison_is_family_aware_and_normalizes_mapped_values ... ok
+test network::tests::each_family_is_bounded_and_selection_is_idempotent ... ok
+test network::tests::malformed_or_unsupported_destinations_are_not_attempted ... ok
+test network::tests::mapped_addresses_are_deduplicated_before_family_limits ... ok
+test network::tests::private_and_shared_ip_labels_do_not_assert_reachability ... ok
+test network::tests::scan_budget_is_bounded_even_for_duplicate_answers ... ok
+test media::tests::malformed_later_compact_tile_cannot_apply_earlier_tile ... ok
+test overview::tests::every_layout_has_nonoverlapping_cards_and_distinct_controls ... ok
+test media::tests::invalid_keyframes_never_resize_or_mutate_existing_canvas ... ok
+test overview::tests::pointer_mapping_respects_bars_and_nonfinite_input ... ok
+test pacing::tests::intermittent_changes_do_not_enter_idle_mode ... ok
+test pacing::tests::sixty_fps_and_background_cadence ... ok
+test pacing::tests::slower_profiles_are_never_accelerated_or_delayed ... ok
+test pacing::tests::static_scene_slows_in_two_bounded_steps ... ok
+test presentation::tests::allocation_is_reused_when_no_snapshot_is_held ... ok
+test presentation::tests::concurrent_presentation_keeps_immutable_pixels ... ok
+test presentation::tests::failed_decode_poisoning_preserves_old_snapshot_but_hides_partial_update ... ok
+test presentation::tests::invalid_geometry_is_rejected_before_decoding ... ok
+test presentation::tests::short_decode_cannot_be_published ... ok
+test presentation::tests::unchanged_or_older_sequence_never_creates_a_snapshot ... ok
+test quality::tests::pressure_is_bounded_and_background_does_not_signal_recovery ... ok
+test quality::tests::recovery_is_slower_and_never_exceeds_approved_quality ... ok
+test resources::tests::cpu_never_reports_unavailable_or_nonfinite_data_as_a_measurement ... ok
+test quality::tests::static_and_neutral_interrupt_streaks_and_floor_is_safe ... ok
+test quality::tests::sustained_high_pressure_reduces_quality_and_floor_is_enforced ... ok
+test resources::tests::memory_is_checked_and_used_cannot_underflow ... ok
+test telemetry::tests::actual_elapsed_time_and_distinct_rates ... ok
+test telemetry::tests::resets_never_report_old_session_rates ... ok
+test telemetry::tests::stages_are_independent_and_payload_is_counted_once ... ok
+test telemetry::tests::concurrent_updates_are_not_lost ... ok
+test media::tests::compact_records_are_rejected_by_basic_tiles_and_jpeg ... ok
+test tests::accepts_only_single_duckdns_label ... ok
+test workspace::tests::bounds_and_all_eight_slots ... ok
+test workspace::tests::inactive_is_distinct_from_background_and_all_live ... ok
+test tests::only_exact_probe_is_valid ... ok
+test tests::roles_are_directional ... ok
+test yuv::tests::averages_chroma_and_preserves_stride_padding ... ok
+test workspace::tests::three_live_devices_switch_focus_without_deactivation ... ok
+test yuv::tests::primary_color_vectors ... ok
+test media::tests::malformed_updates_do_not_mutate_pixels ... ok
+test yuv::tests::invalid_layouts_are_atomic ... ok
+test yuv::tests::black_white_and_neutral_grays ... ok
+test overview::tests::invalid_geometry_and_source_leave_canvas_unchanged ... ok
+test desktop::tests::credit_cannot_exceed_absolute_sequence_budget ... ok
+test overview::tests::thumbnail_preserves_aspect_and_does_not_touch_other_cards ... ok
+test media::tests::keyframe_budget_and_mode_fail_closed ... ok
+test media::tests::edge_tiles_round_trip_and_solid_tiles_are_nine_bytes ... ok
+test media::tests::uniform_row_comparison_preserves_nonuniform_edge_tiles ... ok
+test media::tests::lossless_keyframe_and_following_delta_preserve_every_pixel ... ok
+test media::tests::compact_selects_smallest_exact_tile_representation ... ok
+test media::tests::compact_never_exceeds_basic_payload_under_same_budget ... ok
+test media::tests::ordered_deltas_reconstruct_changed_tiles_and_restore_pixels ... ok
+test media::tests::compact_palette_cardinalities_and_edge_geometry_round_trip ... ok
+test media::tests::lossless_uniform_keyframes_have_full_coverage_at_all_resolutions ... ok
+
+test result: ok. 78 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_d3d11-46f1f58284437b22.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_transport-212ab32856368cdd.exe)
+
+running 26 tests
+test desktop::tests::payload_preparation_preserves_allocation_and_rejects_invalid_sizes ... ok
+test desktop::h264_tests::separate_alpn_and_non_loopback_routes_are_rejected ... ok
+test desktop::tests::repeat_before_first_frame_is_rejected ... ok
+test desktop::h264_tests::early_local_timer_does_not_grant_next_capture ... ok
+test desktop::h264_tests::unapproved_identity_never_requests_h264_capture ... ok
+test desktop::h264_tests::invalid_local_access_unit_never_reaches_consumer ... ok
+test desktop::tests::rejected_identity_never_requests_capture ... ok
+test desktop::h264_tests::invalid_peer_access_unit_is_rejected_before_consumer_and_ack ... ok
+test desktop::tests::no_update_before_first_frame_is_rejected_by_sender ... ok
+test desktop::tests::no_update_before_first_frame_is_rejected_by_receiver ... ok
+test desktop::h264_tests::unapproved_profile_never_requests_capture ... ok
+test desktop::tests::authorized_source_can_stop_without_capture ... ok
+test desktop::tests::mismatched_media_mode_never_requests_capture ... ok
+test tests::authorized_probe_on_loopback ... ok
+test tests::mapped_ipv4_route_uses_real_ipv4_transport ... ok
+test tests::unapproved_identity_is_rejected ... ok
+test tests::wrong_host_pin_is_rejected ... ok
+test tests::multiple_candidates_include_reachable_address ... ok
+test desktop::h264_tests::ordered_h264_records_keep_coded_sequence_distinct_from_receipts ... ok
+test desktop::tests::three_sessions_are_isolated_when_one_host_refuses ... ok
+test desktop::tests::changed_and_repeat_records_preserve_sequence_and_recycle_buffer ... ok
+test desktop::tests::receiver_reuses_consumed_payload_across_ordered_records ... ok
+test desktop::tests::no_update_is_ordered_but_never_decoded_or_counted_as_repeat ... ok
+test desktop::tests::credit_allows_bounded_records_before_ack_and_drains_at_end ... ok
+test desktop::tests::wrong_ack_cannot_exceed_credit_window ... ok
+test desktop::tests::diagnostic_protocol_cannot_open_view_listener ... ok
+
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.30s
+
+     Running tests\multi_host.rs (D:\IntraLink-validation-v020\target\debug\deps\multi_host-08cb10324155845e.exe)
+
+running 2 tests
+test one_controller_three_paired_hosts_keep_independent_compact_canvases ... ok
+test stopping_one_view_preserves_sibling_and_allows_later_connection ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.37s
+
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_vault-9bb03e2a191291b3.exe)
+
+running 11 tests
+test profile::tests::legacy_profile_fields_are_accepted ... ok
+test profile::tests::rejects_invalid_routes_and_self_pairing ... ok
+test profile::tests::role_isolation_and_revocation ... ok
+test profile::tests::canceled_or_replaced_offers_cannot_activate ... ok
+test invitation::tests::signed_codes_reject_tampering_and_wrong_kind ... ok
+test profile::tests::invitation_needs_both_approvals_and_cannot_be_reused ... ok
+test store::tests::save_rejects_corrupted_existing_ciphertext ... ok
+test store::tests::save_rejects_wrong_password_and_identity_without_overwriting ... ok
+test envelope::tests::roundtrip_and_reject_tampering ... ok
+test store::tests::persistent_identity_and_revocation ... ok
+test store::tests::pending_offer_and_replay_state_survive_vault_reopen ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 31.34s
+
+   Doc-tests intralink_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests intralink_d3d11
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests intralink_transport
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests intralink_vault
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+✅ Process completed with exit code 0 (runtime: 124.17s)

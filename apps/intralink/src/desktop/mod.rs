@@ -35,6 +35,7 @@ use intralink_core::{
     desktop::{CodecMode, VideoConfig, ViewPriority},
     journal::Outcome,
     media::{JPEG_TAG, LOSSLESS_KEYFRAME_TAG, TILE_TAG},
+    quality::AdaptiveQuality,
 };
 use intralink_transport::{
     bind_controller,
@@ -111,6 +112,7 @@ pub async fn share(
     monitor_id: u32,
     config: VideoConfig,
     backend: CaptureBackend,
+    fixed_quality: bool,
 ) -> Result<Outcome> {
     require_graphical_terminal()?;
     backend.validate()?;
@@ -139,6 +141,14 @@ pub async fn share(
         config.seconds()
     );
     println!("Explicit capture backend: {backend:?}");
+    if fixed_quality {
+        println!("JPEG quality: fixed at {}", config.quality());
+    } else {
+        println!(
+            "JPEG quality: adaptive, 35-{} (receipt pressure); resolution remains fixed for this session",
+            config.quality()
+        );
+    }
     approve(
         "Share the entire selected display with this exact controller for ONE read-only session? Close sensitive windows first. The recipient may save what they see. Ctrl+C stops the foreground process.",
     )?;
@@ -175,6 +185,7 @@ pub async fn share(
     });
     println!("Waiting at {local} for the approved peer (up to 120s). No capture has started.");
     let mut encoder = codec::Encoder::new(config);
+    let mut quality = (!fixed_quality).then(|| AdaptiveQuality::new(config));
     let mut active = false;
     let mut capture = None::<HostCapture>;
     let mut last_health_check = Instant::now();
@@ -254,6 +265,7 @@ pub async fn share(
                 || request.reply.is_closed() || task.is_finished() {
                 break;
             }
+            let receipt_pressure = request.receipt_pressure;
             let encoded = match observed? {
                 Some(frame) => {
                     let encode_started = Instant::now();
@@ -281,8 +293,16 @@ pub async fn share(
             if !indicator.is_open() || indicator.is_key_down(Key::Escape) {
                 break;
             }
+            let changed = matches!(&encoded, Capture::Frame(_));
             if request.reply.send(Ok(encoded)).is_err() {
                 break;
+            }
+            if let Some(policy) = quality.as_mut()
+                && let Some(next) = policy.observe(receipt_pressure, changed)
+            {
+                encoder.set_jpeg_quality(next)?;
+                println!("Adaptive JPEG target: {next} (receipt pressure: {receipt_pressure:?}); next JPEG keyframe");
+                indicator.set_title(&format!("IntraLink: SCREEN SHARING - JPEG target {next} - ESC to stop"));
             }
         }
         Ok::<(), anyhow::Error>(())

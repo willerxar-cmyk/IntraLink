@@ -244,6 +244,12 @@ async fn credit_allows_bounded_records_before_ack_and_drains_at_end() -> Result<
             let req = timeout(IO_LIMIT, requests.recv())
                 .await?
                 .context("Missing capture request")?;
+            let expected_pressure = match i {
+                0..=2 => ReceiptPressure::Low,
+                3..=5 => ReceiptPressure::Neutral,
+                _ => ReceiptPressure::High,
+            };
+            assert_eq!(req.receipt_pressure, expected_pressure);
             let mut data = req.buffer;
             data.push(i as u8);
             assert!(req.reply.send(Ok(Capture::Frame(data))).is_ok());
@@ -258,6 +264,8 @@ async fn credit_allows_bounded_records_before_ack_and_drains_at_end() -> Result<
         let req = timeout(IO_LIMIT, requests.recv())
             .await?
             .context("Missing next capture")?;
+        // Full-window pressure survives the wait for the next valid receipt.
+        assert_eq!(req.receipt_pressure, ReceiptPressure::High);
         let mut data = req.buffer;
         data.push(MAX_IN_FLIGHT_RECORDS as u8);
         assert!(req.reply.send(Ok(Capture::Frame(data))).is_ok());

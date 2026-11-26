@@ -52,3 +52,8 @@ The optional NVIDIA fixture now exposes a bounded collection of generated access
 ### Restricted headless fixture gate
 
 The existing NVDEC parser and native decoder can execute under the same reduced token without instantiating a graphics presenter. A developer-only example embeds six exact known generated 1080p NVENC packets; no arbitrary data input. The Debug diagnostic validated real immediate decode callbacks, order, sampled colors and teardown (6/6, exit 0). The v9 remote-content boundary remains unchanged. Cross-process surfaces, full hostile input containment and physical session qualification are still required.
+
+
+## Portable software baseline (2026-11-26)
+
+Compact/Tiles/JPEG are the required native desktop preview baseline and do not use CUDA. `desktop-preview` independently builds the CPU codec path; `wgc-preview` can add D3D11 capture/scaling and `nvenc-preview` adds NVIDIA-specific diagnostics. Do not interpret NVIDIA hardware qualification as a universal decoder. Future H.264 hardware negotiation must verify actual encode/decode capability on both sides, not the GPU vendor alone. The optional headless NVIDIA worker remains limited to its trusted fixture; other hardware and software H.264 implementations are not qualified. Keep the software v8 path available and explicit, not a hidden downgrade from a selected hardware or security mode. Adaptive JPEG quality is a local bounded policy; it does not alter lossless tiles or enable a new codec.

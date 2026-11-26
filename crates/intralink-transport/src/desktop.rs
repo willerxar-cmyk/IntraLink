@@ -7,7 +7,7 @@ use intralink_core::desktop::{
     REPEAT, REQUEST_BYTES, Record, VideoConfig, ViewPriority, ack_with_priority, frame_header,
     parse_length, request,
 };
-use intralink_core::{h264, pacing::CapturePacer};
+use intralink_core::{h264, pacing::CapturePacer, quality::ReceiptPressure};
 use iroh::{Endpoint, EndpointAddr, EndpointId, SecretKey, endpoint::Connection};
 use tokio::{
     sync::{mpsc, oneshot},
@@ -24,6 +24,8 @@ const ACCEPT_LIMIT: Duration = Duration::from_secs(120);
 pub struct CaptureRequest {
     pub buffer: Vec<u8>,
     pub reply: oneshot::Sender<Result<Capture>>,
+    /// Local transport observation, never a new remotely supplied command.
+    pub receipt_pressure: ReceiptPressure,
 }
 
 pub enum Capture {
@@ -300,6 +302,8 @@ async fn serve_media<W: PacerWait>(
                 while let Ok(received) = receipt_rx.try_recv() {
                     ensure!(credit.acknowledge(received), "Invalid frame acknowledgment");
                 }
+                let receipt_pressure =
+                    ReceiptPressure::from_backlog(credit.outstanding(), credit.priority());
                 if !credit.has_credit() {
                     let remaining = deadline.saturating_duration_since(Instant::now());
                     if remaining.is_zero() {
@@ -321,7 +325,11 @@ async fn serve_media<W: PacerWait>(
                 let (reply, response) = oneshot::channel();
                 let frame = timeout(remaining.min(IO_LIMIT), async {
                     source
-                        .send(CaptureRequest { buffer, reply })
+                        .send(CaptureRequest {
+                            buffer,
+                            reply,
+                            receipt_pressure,
+                        })
                         .await
                         .map_err(|_| anyhow::anyhow!("Local capture source stopped"))?;
                     response.await.context("Local capture response dropped")?

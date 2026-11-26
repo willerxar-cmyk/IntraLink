@@ -50,3 +50,16 @@ fn h264_diagnostic_help_does_not_initialize_driver_or_network() {
     let share = stdout(&["share-desktop", "--help"]);
     assert!(!share.contains("h264"));
 }
+
+#[cfg(all(
+    feature = "desktop-preview",
+    any(target_os = "windows", target_os = "linux")
+))]
+#[test]
+fn portable_share_defaults_to_1080p_and_adaptive_quality() {
+    let help = stdout(&["share-desktop", "--help"]);
+    assert!(help.contains("--height") && help.contains("[default: 1080]"));
+    assert!(help.contains("--fixed-quality") && help.contains("adaptive by default"));
+    assert!(help.contains("[default: snapshot]") && help.contains("[default: compact]"));
+    assert!(!help.contains("h264"));
+}

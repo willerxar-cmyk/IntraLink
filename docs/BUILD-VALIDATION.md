@@ -20,3 +20,8 @@ When multiple supported feature flags are requested, the runner also checks them
 ### Isolate build outputs on a shared development machine
 
 PowerShell: set `$env:CARGO_TARGET_DIR = Join-Path (Get-Location) "target"` before running Cargo or the validation runner. This avoids waiting on another project using a globally configured target directory. The v0.19 Windows validation was limited to an isolated workspace containing `intralink-core` and the actual overview renderer used by the portable harness. Its dependency resolution cannot substitute for the complete workspace lockfile.
+
+
+### Mandatory independent software media gate (2026-11-26)
+
+Run the Windows/Linux `desktop-preview,resource-monitor` build, Clippy with `-D warnings` and workspace tests without `nvenc-preview`; inspect `cargo tree --locked -p intralink --no-default-features --features desktop-preview,resource-monitor -e normal` to ensure no mini-cuda or mini-nvcodec dependencies. On Windows execute the actual generated-window `desktop-media-check --height 1080 --samples 60 --codec compact` and lower-resolution alternative with the CPU-only codec executable. The native OS capture path may still use platform graphics APIs; no NVIDIA codec runtime is required. Preserve a separately named portable Release artifact, and validate optional accelerated builds separately. The dependency-free media harness now includes the H.264 protocol and portable quality policy modules; the local overview banner uses a standard-library error instead of a registry dependency, preserving actual source coverage.
