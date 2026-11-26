@@ -443,6 +443,23 @@ impl Decoder {
         self.parse(&mut packet)
     }
 
+    /// The restricted low-latency profile promises an immediate display
+    /// callback for every coded access unit. Do not return transport credit
+    /// for a buffered or missing picture.
+    pub(crate) fn submit_immediate(&mut self, packet: &[u8]) -> Result<()> {
+        ensure!(
+            self.state.submitted == self.state.displayed,
+            "Unexpected delayed native picture"
+        );
+        self.submit(packet)?;
+        ensure!(
+            self.state.submitted == self.state.decoded
+                && self.state.submitted == self.state.displayed,
+            "Native decoder did not display the submitted picture immediately"
+        );
+        Ok(())
+    }
+
     fn parse(&mut self, packet: &mut CUVIDSOURCEDATAPACKET) -> Result<()> {
         let parse = self.state.api.parse;
         // SAFETY: no Rust reference to callback state is held while the live

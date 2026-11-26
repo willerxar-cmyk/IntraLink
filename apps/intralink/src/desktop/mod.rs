@@ -1,6 +1,10 @@
 //! Experimental Windows/X11 screen viewing. Local approval is session-specific.
 mod codec;
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
+pub mod decoder_ipc;
+#[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
+mod decoder_process;
+#[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 pub mod h264_check;
 mod host_capture;
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]

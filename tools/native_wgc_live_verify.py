@@ -2,16 +2,19 @@
 """Require actual process exits for the continuous owned-window GPU/QUIC diagnostic."""
 import argparse
 import json
+import re
 from pathlib import Path
 import subprocess
 import time
 
 
-def verify(exe, adapter, height, frames, cancel):
+def verify(exe, adapter, height, frames, cancel, isolated):
     command = [str(exe), "desktop-wgc-live-check", "--height", str(height),
                "--samples", str(frames), "--adapter-index", str(adapter)]
     if cancel is not None:
         command += ["--cancel-after", str(cancel)]
+    if isolated:
+        command.append("--isolated-decoder")
     started = time.perf_counter()
     child = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -43,11 +46,19 @@ def verify(exe, adapter, height, frames, cancel):
                  "selected_d3d11_device_released",
                  "selected_winrt_apartment_released",
                  "worker_resources_released=true", "joined_workers=true"]
+    child_pid = None
+    if isolated:
+        required.append("isolated_decoder=true")
+        starts = re.findall(r"^decoder_process_started, pid=(\d+), private_job=true$", output, re.MULTILINE)
+        exits = re.findall(r"^decoder_process_exit=passed, pid=(\d+), exit=0, ipc_joined=true$", output, re.MULTILINE)
+        if len(starts) == 1 and starts == exits and int(starts[0]) != child.pid:
+            child_pid = int(starts[0])
     status = "ok" if child.returncode == 0 and all(
         marker in output for marker in required
-    ) else "failed"
+    ) and (not isolated or child_pid is not None) else "failed"
     return {"pid": child.pid, "height": height, "frames": frames,
-            "cancel_after": cancel, "status": status, "exit": child.returncode,
+            "cancel_after": cancel, "isolated_decoder": isolated, "decoder_pid": child_pid,
+            "status": status, "exit": child.returncode,
             "elapsed_s": round(time.perf_counter() - started, 3), "output": output}
 
 
@@ -56,6 +67,7 @@ def main():
     parser.add_argument("--executable", required=True, type=Path)
     parser.add_argument("--adapter-index", required=True, type=int)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--isolated-decoder", action="store_true")
     args = parser.parse_args()
     if not args.executable.is_file() or not 0 <= args.adapter_index < 64:
         parser.error("Specify an existing executable and current NVIDIA DXGI index")
@@ -67,7 +79,7 @@ def main():
     results = []
     for height, frames, cancel in profiles:
         result = verify(args.executable.resolve(), args.adapter_index,
-                        height, frames, cancel)
+                        height, frames, cancel, args.isolated_decoder)
         results.append(result)
         print(result["output"], end="", flush=True)
         print(f"pid={result['pid']} actual_exit={result['exit']} status={result['status']}",

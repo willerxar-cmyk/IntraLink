@@ -34,6 +34,9 @@ impl TrustedWgcPacket {
     pub fn bytes(&self) -> &[u8] {
         &self.payload
     }
+    pub fn elapsed_since_demand(&self) -> Duration {
+        self.started.elapsed()
+    }
 }
 
 enum Sink<'a> {
@@ -303,21 +306,10 @@ pub fn verify_wgc_stream<F>(
 where
     F: FnOnce() -> Result<bool>,
 {
-    ensure!(
-        matches!(height, 540 | 720 | 1080) && (1..=180).contains(&samples),
-        "Invalid diagnostic profile"
-    );
-    let size = (u32::from(height) * 16 / 9, u32::from(height));
-    // The apartment and device are created and destroyed on this worker,
-    // independently of the selected WGC encoder device.
-    let apartment = Apartment::new()?;
-    let (device, context) = create_video_device("nvidia", adapter_index)?;
-    let mut decoder = Decoder::with_pattern(&device, size, FixturePattern::Quadrants)?;
-    decoder.enable_preview(&device)?;
     let mut timings = Vec::with_capacity(usize::from(samples));
     let mut first_submit = None::<Instant>;
     let mut last_submit = None::<Instant>;
-    let operation = (|| {
+    let submitted = with_preview_decoder(height, samples, adapter_index, |decoder| {
         for sequence in 1..=u32::from(samples) {
             let Some((packet, accepted)) = next()? else {
                 break;
@@ -326,7 +318,7 @@ where
                 packet.sequence == sequence,
                 "Native packet sequence mismatch"
             );
-            decoder.submit(&packet.payload)?;
+            decoder.submit_immediate(&packet.payload)?;
             let submitted_at = Instant::now();
             first_submit.get_or_insert(submitted_at);
             last_submit = Some(submitted_at);
@@ -335,25 +327,8 @@ where
                 break;
             }
         }
-        Ok::<(), anyhow::Error>(())
-    })();
-    let submitted = timings.len();
-    let cleanup = if operation.is_ok() && submitted == usize::from(samples) {
-        decoder.finish()
-    } else {
-        decoder.abort()
-    };
-    // SAFETY: the decoder and its presenter are closed, and this context
-    // belongs only to the diagnostic viewer worker.
-    unsafe {
-        context.ClearState();
-        context.Flush();
-    }
-    drop(context);
-    drop(device);
-    drop(apartment);
-    cleanup?;
-    operation?;
+        Ok(timings.len())
+    })?;
     if submitted != usize::from(samples) {
         println!(
             "wgc_stream_viewer=cancelled, submitted={submitted}, worker_resources_released=true"
@@ -373,4 +348,70 @@ where
         "wgc_stream_viewer=passed, submitted={samples}, demand_to_decode_submit_p50_ms={p50:.3}, p95_ms={p95:.3}, steady_decode_submit_fps={steady_fps:.2}, worker_resources_released=true"
     );
     Ok(submitted)
+}
+
+/// Restricted local child entry point. The application validates every IPC
+/// envelope independently; the parent submits only byte-verified native
+/// origin tokens. A job is mandatory, but is not a security sandbox.
+pub fn verify_isolated_decoder(
+    height: u16,
+    samples: u16,
+    adapter_index: Option<u32>,
+    ready: impl FnOnce() -> Result<()>,
+    mut next: impl FnMut() -> Result<Option<Vec<u8>>>,
+    mut accepted: impl FnMut(u32) -> Result<()>,
+) -> Result<usize> {
+    crate::decoder_job::require_decoder_job()?;
+    with_preview_decoder(height, samples, adapter_index, |decoder| {
+        ready()?;
+        let mut submitted = 0;
+        for sequence in 1..=u32::from(samples) {
+            let Some(packet) = next()? else {
+                break;
+            };
+            decoder.submit_immediate(&packet)?;
+            submitted += 1;
+            accepted(sequence)?;
+        }
+        Ok(submitted)
+    })
+}
+
+/// Native ownership and cleanup common to both diagnostic viewer modes.
+fn with_preview_decoder(
+    height: u16,
+    samples: u16,
+    adapter_index: Option<u32>,
+    run: impl FnOnce(&mut Decoder) -> Result<usize>,
+) -> Result<usize> {
+    ensure!(
+        matches!(height, 540 | 720 | 1080) && (1..=180).contains(&samples),
+        "Invalid diagnostic profile"
+    );
+    let size = (u32::from(height) * 16 / 9, u32::from(height));
+    let apartment = Apartment::new()?;
+    let (device, context) = create_video_device("nvidia", adapter_index)?;
+    let mut decoder = Decoder::with_pattern(&device, size, FixturePattern::Quadrants)?;
+    let operation = decoder
+        .enable_preview(&device)
+        .and_then(|()| run(&mut decoder));
+    let cleanup = if operation
+        .as_ref()
+        .is_ok_and(|submitted| *submitted == usize::from(samples))
+    {
+        decoder.finish()
+    } else {
+        decoder.abort()
+    };
+    // SAFETY: the decoder and its presenter are closed, and this context
+    // belongs only to the current native owner.
+    unsafe {
+        context.ClearState();
+        context.Flush();
+    }
+    drop(context);
+    drop(device);
+    drop(apartment);
+    cleanup?;
+    operation
 }

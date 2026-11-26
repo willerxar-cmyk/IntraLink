@@ -247,7 +247,13 @@ enum Command {
         /// Cancel the local diagnostic viewer after this many successful native submissions.
         #[arg(long)]
         cancel_after: Option<u16>,
+        /// Run native decoding in a private supervised process.
+        #[arg(long)]
+        isolated_decoder: bool,
     },
+    #[cfg(all(feature = "nvenc-preview", target_os = "windows"))]
+    #[command(hide = true)]
+    DesktopDecoderWorker,
     /// Transfer native-generated H.264 access units over isolated authenticated QUIC.
     #[cfg(all(feature = "nvenc-preview", target_os = "windows"))]
     DesktopH264Check {
@@ -407,6 +413,13 @@ where
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
+    #[cfg(all(feature = "nvenc-preview", target_os = "windows"))]
+    if matches!(&cli.command, Command::DesktopDecoderWorker) {
+        if cli.record_session || cli.vault.is_some() {
+            bail!("Decoder worker cannot access a vault or session journal");
+        }
+        return desktop::decoder_ipc::child();
+    }
     let session_command = matches!(
         &cli.command,
         Command::Listen { .. } | Command::Connect { .. }
@@ -557,9 +570,18 @@ fn main() -> Result<()> {
             samples,
             adapter_index,
             cancel_after,
+            isolated_decoder,
         } => run_async(|| {
-            desktop::media_check::wgc_live_check(height, samples, adapter_index, cancel_after)
+            desktop::media_check::wgc_live_check(
+                height,
+                samples,
+                adapter_index,
+                cancel_after,
+                isolated_decoder,
+            )
         }),
+        #[cfg(all(feature = "nvenc-preview", target_os = "windows"))]
+        Command::DesktopDecoderWorker => bail!("Decoder worker must use the private IPC entry"),
         #[cfg(all(feature = "nvenc-preview", target_os = "windows"))]
         Command::DesktopH264Check {
             height,

@@ -32,7 +32,7 @@ use tokio::sync::{mpsc, oneshot};
 
 use super::precise_timer::TimerWorker;
 
-type DecodeJob = (TrustedWgcPacket, oneshot::Sender<()>);
+pub(super) type DecodeJob = (TrustedWgcPacket, oneshot::Sender<()>);
 
 fn source_worker(
     pid: u32,
@@ -138,6 +138,7 @@ pub(super) async fn run(
     samples: u16,
     adapter_index: Option<u32>,
     cancel_after: Option<u16>,
+    isolated_decoder: bool,
 ) -> Result<()> {
     ensure!((1..=180).contains(&samples), "Use 1-180 generated frames");
     ensure!(
@@ -146,6 +147,7 @@ pub(super) async fn run(
     );
     let profile = Profile::new(height, FIXTURE_FPS, 30, FIXTURE_BITRATE)
         .context("Invalid live diagnostic profile")?;
+    let decoder_start = super::decoder_ipc::Start::new(profile, samples, adapter_index)?;
     let mut waiter = TimerWorker::start()?;
     tokio::time::timeout(Duration::from_secs(2), waiter.ready())
         .await
@@ -169,7 +171,11 @@ pub(super) async fn run(
         let capture_worker = thread::Builder::new().name("intralink-wgc-source".into())
             .spawn(move || source_worker(pid,title,height,samples,adapter_index,requests,expected))?;
         let decode_worker = match thread::Builder::new().name("intralink-gpu-viewer".into())
-            .spawn(move || viewer_worker(height,samples,adapter_index,jobs)) {
+            .spawn(move || if isolated_decoder {
+                super::decoder_process::run(decoder_start,jobs)
+            } else {
+                viewer_worker(height,samples,adapter_index,jobs)
+            }) {
             Ok(worker) => worker,
             Err(error) => {
                 drop(source);
@@ -223,14 +229,14 @@ pub(super) async fn run(
                 && delivered>=submitted
                 && delivered<=submitted+MAX_IN_FLIGHT_RECORDS,
                 "Cancellation did not stop ordered GPU workers within credit");
-            println!("wgc_live_cancel=passed, requested={stop}, source_delivered={delivered}, viewer_submitted={submitted}, joined_workers=true, no_more_decode=true");
+            println!("wgc_live_cancel=passed, requested={stop}, source_delivered={delivered}, viewer_submitted={submitted}, joined_workers=true, no_more_decode=true, isolated_decoder={isolated_decoder}");
             return Ok(());
         }
         let (served,viewed)=transport?;
         ensure!(delivered==usize::from(samples) && submitted==delivered,"Native worker frame counts mismatch");
         ensure!(served==viewed && served.frames==usize::from(samples)
             && served.repeats==0 && served.no_updates==0,"Live diagnostic frame counts mismatch");
-        println!("wgc_live_loopback=passed, resolution={}x{}, frames={}, bytes={}, elapsed_ms={:.3}, wire_pipeline_fps={:.2}, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit={}, decode_queue=1",
+        println!("wgc_live_loopback=passed, resolution={}x{}, frames={}, bytes={}, elapsed_ms={:.3}, wire_pipeline_fps={:.2}, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit={}, decode_queue=1, isolated_decoder={isolated_decoder}",
             profile.width(),profile.height(),served.frames,served.media_bytes,elapsed.as_secs_f64()*1000.0,
             f64::from(samples)/elapsed.as_secs_f64(),MAX_IN_FLIGHT_RECORDS);
         Ok::<(),anyhow::Error>(())

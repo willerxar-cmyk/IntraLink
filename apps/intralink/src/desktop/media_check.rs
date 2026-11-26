@@ -229,6 +229,7 @@ pub async fn wgc_live_check(
     samples: u16,
     adapter_index: Option<u32>,
     cancel_after: Option<u16>,
+    isolated_decoder: bool,
 ) -> Result<()> {
     ensure!(
         cancel_after.is_none_or(|count| count > 0 && count < samples),
@@ -242,6 +243,7 @@ pub async fn wgc_live_check(
         samples,
         adapter_index,
         cancel_after,
+        isolated_decoder,
     )
     .await
 }

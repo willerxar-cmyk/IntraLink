@@ -58,7 +58,10 @@ mod selected_wgc;
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 mod wgc_codec;
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
-pub use wgc_codec::{TrustedWgcPacket, stream_wgc_fixture, verify_wgc_codec, verify_wgc_stream};
+pub use wgc_codec::{
+    TrustedWgcPacket, stream_wgc_fixture, verify_isolated_decoder, verify_wgc_codec,
+    verify_wgc_stream,
+};
 
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 mod cuda_planes;
@@ -71,3 +74,8 @@ mod gpu_present;
 
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 mod driver_library;
+
+#[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
+mod decoder_job;
+#[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
+pub use decoder_job::DecoderJob;

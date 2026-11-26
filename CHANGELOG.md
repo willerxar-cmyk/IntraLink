@@ -210,3 +210,7 @@
 - Add bounded SPS/PPS parsing and exact level/geometry/SDR/FPS checks to the isolated v9 profile; correct RBSP escape fixtures and strict lint.
 - Reuse selected NVIDIA WGC encoder and native NVDEC/DXGI paths in independent thread-owned continuous loopback workers with bounded demand, origin tokens and ordered native submission receipts. Verify exact locally generated packet bytes before native decode; no arbitrary remote AVC.
 - Add native cancellation/teardown gate, per-run source and steady native-submit timing, exact wire-origin regression and CLI checks. Preserve normal v8 behavior. Archive the unlinked preliminary source draft outside the active workspace.
+
+### Supervised decoder process (development)
+- Add explicit --isolated-decoder diagnostic using a separate owned executable, private bounded IPC and a Windows Job Object with kill-on-close and one-process limit. Keep current local generated-origin verification and v9 validation on both sides.
+- Require immediate ordered native display callbacks before receipt, reject invalid bootstrap/record/response limits, and supervise actual child exit and cancellation. No arbitrary remote AVC or physical sharing exposure.
