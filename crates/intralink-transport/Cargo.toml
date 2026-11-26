@@ -1,0 +1,18 @@
+[package]
+name = "intralink-transport"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+iroh.workspace = true
+tokio.workspace = true
+intralink-core.workspace = true
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+intralink-vault.workspace = true

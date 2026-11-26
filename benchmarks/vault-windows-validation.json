@@ -1,0 +1,42 @@
+{
+  "version": "0.20.0",
+  "date": "2026-11-26",
+  "platform": "Windows x86_64 MSVC",
+  "rustc": "1.96.0",
+  "scope": "Isolated Cargo workspace: actual intralink-core and intralink-vault; not the full application or transport crate.",
+  "validation_directory": "D:\\IntraLink-validation-v020\\IntraLink",
+  "vault_archive_sha256": "d3e1a968d0893a6277527be665c471db4be7e58e3d4b414c52ab380ce26cadad",
+  "vault_test": {
+    "command": "cargo test -p intralink-vault",
+    "passed": 11,
+    "failed": 0,
+    "elapsed_s": 20.59
+  },
+  "clippy": {
+    "command": "cargo clippy --locked --workspace --all-targets -- -D warnings",
+    "exit_code": 0
+  },
+  "joint_tests": {
+    "command": "cargo test --locked --workspace",
+    "core_passed": 65,
+    "vault_passed": 11,
+    "failed": 0,
+    "exit_code": 0,
+    "core_elapsed_s": 0.18,
+    "vault_elapsed_s": 18.97,
+    "total_runtime_s": 20.94
+  },
+  "sha256": {
+    "crates/intralink-vault/src/envelope.rs": "daef2ecd7b7e50872aa21eeb00288e87107d4b580d07cd3f7dab36b6862981e3",
+    "crates/intralink-vault/src/invitation.rs": "2a18527dfa8209e68b3748e61619f57af83ded542652b042f320ab66543205da",
+    "crates/intralink-vault/src/lib.rs": "99652bffdfdbfb9e11e8ce8a07f1300d4d846074defd9bfe467382f33b9bf81e",
+    "crates/intralink-vault/src/profile.rs": "6f66f058be5e96e6e70dc9c8b75836b6f2922680282150b29c006fff296b6e98",
+    "crates/intralink-vault/src/store.rs": "5ab54113ff97493aebf6549aba4c549514476e061954489f440f157e10b5a0c4"
+  },
+  "limitations": [
+    "No full application lockfile or native integration build.",
+    "No transport tests executed in this revision.",
+    "No independent security audit, native keystore, or crash recovery certification.",
+    "Additional KDF cost during vault saves; media hot path unchanged."
+  ]
+}

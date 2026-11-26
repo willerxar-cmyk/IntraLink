@@ -1,0 +1,80 @@
+{
+  "version": "0.21.0",
+  "platform": "Windows x64",
+  "rustc": "1.96.0",
+  "iroh": "1.5.0",
+  "validation_workspace": "D:/IntraLink-validation-v021/IntraLink",
+  "scope": "Isolated three-library Cargo workspace; actual sources, no native GUI/capture",
+  "transport_transfer_sha256_before_corrections": "d0bb1990885a21e8c5621038be03bec3910f5000d4dceded461e2b97a054689d",
+  "transport_source_sha256": {
+    "crates/intralink-transport/Cargo.toml": "a0ccec5400b6aecde2752c62d5f8095199933f0b4a3f580887b5dec2174aa370",
+    "crates/intralink-transport/src/lib.rs": "7b06be5a4acceb38ce49498c59f66df6365a43799a4f81a755c46a55dfa6cbeb",
+    "crates/intralink-transport/src/desktop.rs": "a5588bd3d6f60c41a63708f9852d5a24c246e415c32efdd17cba9986bca92676",
+    "crates/intralink-transport/src/desktop/tests.rs": "35edc317bc613ec989463a375983a104515abda99b81df7545f7688859281974",
+    "crates/intralink-transport/tests/multi_host.rs": "6d6b4a8cc0f535b1ee04bc1d2bdb424d898c1970e4d5fbc8d4eb57a6f79e836d"
+  },
+  "initial_errors": {
+    "code": "E0716",
+    "count": 8,
+    "scope": "existing asynchronous tests",
+    "resolution": "Stable address slices and bound array; no diagnostic suppression. Also corrected the new test address slice before rerun."
+  },
+  "checks": [
+    {
+      "command": "cargo test --locked -p intralink-transport",
+      "exit_code": 0,
+      "unit_tests_passed": 16,
+      "integration_tests_passed": 1,
+      "failed": 0,
+      "unit_seconds": 13.19,
+      "integration_seconds": 1.46,
+      "process_seconds": 21.29
+    },
+    {
+      "command": "cargo clippy --locked --workspace --all-targets -- -D warnings",
+      "exit_code": 0,
+      "seconds": 11.48
+    },
+    {
+      "command": "cargo test --locked --workspace",
+      "exit_code": 0,
+      "core_passed": 65,
+      "transport_unit_passed": 16,
+      "transport_integration_passed": 1,
+      "vault_passed": 11,
+      "total_passed": 93,
+      "failed": 0,
+      "core_seconds": 0.16,
+      "transport_unit_seconds": 13.13,
+      "transport_integration_seconds": 1.46,
+      "vault_seconds": 19.19
+    }
+  ],
+  "multi_host_test": {
+    "name": "one_controller_three_paired_hosts_keep_independent_compact_canvases",
+    "transport": "QUIC loopback",
+    "controller_endpoints": 1,
+    "hosts": 3,
+    "resolution": [
+      960,
+      540
+    ],
+    "max_fps_configured": 60,
+    "frames_per_host": 8,
+    "frames_total": 24,
+    "all_final_pixels_checked": true,
+    "priorities": [
+      "foreground",
+      "background",
+      "foreground"
+    ],
+    "native_capture": false,
+    "sustained_fps_measured": false
+  },
+  "limitations": [
+    "Only three libraries compiled in this revision; not the full native application.",
+    "Shared endpoint validated in integration test only; GUI still uses per-session endpoints.",
+    "Full application lockfile, rustfmt gate, platform features, native consent/cancellation, actual multi-device streaming, WAN/NAT traversal, GPU codecs and sustained FPS not validated.",
+    "No independent security audit."
+  ]
+}

@@ -1,0 +1,30 @@
+﻿profile: 540p compact
+local_media_check,mode=Compact,resolution=960x540,samples=60,changed=60,payload_bytes=184596,elapsed_s=5.150,capture_fps=11.65,changed_fps=11.65
+source_resolution=1641x924
+capture: count=60, p50_ms=60.682, p95_ms=71.233, p99_ms=84.503
+encode: count=60, p50_ms=24.522, p95_ms=32.045, p99_ms=39.518
+decode_changed: count=60, p50_ms=0.008, p95_ms=0.014, p99_ms=0.631
+native_buffer_submission: count=60, p50_ms=0.406, p95_ms=0.503, p99_ms=1.499
+local_pipeline: count=60, p50_ms=84.177, p95_ms=101.022, p99_ms=119.463
+No desktop capture, remote connection, or image recording performed.
+exit_code=0
+profile: 1080p compact
+local_media_check,mode=Compact,resolution=1920x1080,samples=30,changed=30,payload_bytes=148796,elapsed_s=16.558,capture_fps=1.81,changed_fps=1.81
+source_resolution=3321x1869
+capture: count=30, p50_ms=442.277, p95_ms=515.210, p99_ms=523.008
+encode: count=30, p50_ms=117.487, p95_ms=150.026, p99_ms=150.455
+decode_changed: count=30, p50_ms=0.018, p95_ms=0.053, p99_ms=2.205
+native_buffer_submission: count=30, p50_ms=1.249, p95_ms=1.968, p99_ms=2.858
+local_pipeline: count=30, p50_ms=572.563, p95_ms=639.621, p99_ms=640.693
+No desktop capture, remote connection, or image recording performed.
+exit_code=0
+profile: 540p jpeg
+local_media_check,mode=Jpeg,resolution=960x540,samples=60,changed=60,payload_bytes=1484083,elapsed_s=5.846,capture_fps=10.26,changed_fps=10.26
+source_resolution=1641x924
+capture: count=60, p50_ms=63.037, p95_ms=75.701, p99_ms=81.635
+encode: count=60, p50_ms=34.730, p95_ms=42.136, p99_ms=55.530
+decode_changed: count=60, p50_ms=1.476, p95_ms=1.668, p99_ms=4.505
+native_buffer_submission: count=60, p50_ms=0.374, p95_ms=0.437, p99_ms=1.172
+local_pipeline: count=60, p50_ms=95.014, p95_ms=116.929, p99_ms=142.161
+No desktop capture, remote connection, or image recording performed.
+exit_code=0

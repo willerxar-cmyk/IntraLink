@@ -1,0 +1,212 @@
+# Changelog
+
+## 0.22.0 — shared endpoint and full application validation
+
+- Shared outbound-only endpoint and independent view cancellation. Full Windows combined-feature Clippy and 114 tests passed; sysinfo 0.40.4 resolves dependency conflict. See [APP-VALIDATION.md](docs/APP-VALIDATION.md).
+
+## 0.21.0 — authenticated transport and multi-host integration
+
+- Fix eight existing async-test address lifetime errors; use stable borrowed slices in the new integration test as well.
+- Add a three-host integration test using signed bilateral invitation grants, one controller endpoint, actual QUIC loopback streams and real Compact encoder/decoder. Verify each host reconstructs its own exact pixels, with foreground/background priorities.
+- The isolated Windows workspace passed 93 tests and Clippy with warnings denied. See [TRANSPORT-VALIDATION.md](docs/TRANSPORT-VALIDATION.md).
+- Add a test-only workspace dependency on the existing vault crate. No runtime dependency, remote privilege, or protocol changes. Native GUI and end-to-end performance remain separate validation gates.
+
+## 0.20.0 — authenticated vault updates and real cryptographic validation
+
+- Require a successful authenticated read of the existing vault before replacing it, and reject a change of installation identity or role. Preserve ciphertext on wrong passwords, mismatched identity and corruption.
+- Add two regression tests for failed saves. Run the real vault library tests and isolated core/vault Clippy gate on Windows with pinned Iroh 1.5.0 and actual cryptographic crates.
+- No new dependencies, remote permissions, envelope changes or wire-format changes. The additional Argon2id verification adds local save cost; it is not in the media path.
+
+## 0.19.0 — portable core validation and optimized solid tiles
+
+- Validate the complete portable harness and the isolated Cargo core library on Windows. Add an edge-tile regression for uniform rows of different colors.
+- Compare complete RGB rows after validating the first uniform row; preserve the v7 wire format, exact reconstruction and existing budgets. Fix the Clippy palette-selection diagnostic.
+- Run optimized CPU codec microbenchmarks before and after the change. See [CORE-VALIDATION.md](docs/CORE-VALIDATION.md) for scope, evidence and remaining native gates.
+
+## 0.18.0 — workspace observations and stable thumbnails
+
+- Add local per-session counters for changed records, decoded frames, distinct successful native presentation submissions, media payload bytes and stage timings; sample rates from actual monotonic elapsed time. No remote telemetry.
+- Reuse the last valid thumbnail on contention or unchanged sequences, invalidate on session reuse/stop, reserve a metrics footer and preserve the bounded overview canvas.
+- Five new tests and 34 selected regression tests passed in a standalone Windows Rust harness. The full workspace and end-to-end performance remain unverified. No dependency, privilege or protocol changes.
+
+## 0.17.0 — local visual device overview
+
+- Add the pointer-selectable overview for one to eight existing workspace slots, separate selection and per-slot activation controls, adaptive/all-live and fullscreen controls, and Tab/Escape navigation. No remote input is sent.
+- Render local thumbnails from immutable decoded snapshots using one lazily allocated 960x540 canvas. Refresh at a nominal 10 FPS while open plus user actions; clear on close and disconnect; preserve the existing 60 FPS ceiling.
+- Six new dependency-free tests and six presentation regression tests passed on Windows with warnings denied. Full native integration and Cargo gates remain open. No new dependency, vault or protocol change.
+
+## 0.16.0 — independent presentation and local displays
+
+- Release the shared canvas lock before native window presentation using immutable, reference-counted snapshots. Reuse the ordered decoder canvas when no snapshot overlaps; copy-on-write only on overlap. Fail closed after a failed decode and reject invalid geometry, lengths or ordering.
+- F12 cycles local fullscreen displays without changing host capture or network sessions. Preserve the existing window on a failed fullscreen/display transition.
+- Six exact Rust presentation tests passed on Windows with warnings denied. Execute the standalone three-surface 1080p microbenchmark; no native rendering, network or codec throughput claim. No new dependency, remote privilege, vault or protocol change.
+
+## 0.15.0 — multi-device workspace and 60 FPS ceiling
+
+- Add up to eight independent authorized view-only sessions, focus, activation, adaptive/background or all-live scheduling, per-session decoding and borderless fullscreen.
+- View ALPN v7, 60 FPS ceiling/default, 3600-second approved session ceiling, eight-record credit and ordered background priority. Remove the indicator's per-event sleep from the capture loop. Vault schema and diagnostic protocol unchanged.
+- Thirteen exact core tests compiled and passed on Windows with warnings denied. Full build, native UI, QUIC integration and FPS measurement are pending.
+
+## 0.14.0 — local session-attempt history
+
+- Add an opt-in, bounded local history for existing foreground diagnostic/view commands, with begin/end records, durable writes, file locking and explicit unknown outcomes for interrupted attempts. No payloads, peer IDs, credentials, addresses or telemetry.
+- Keep the encrypted vault and v6 protocol unchanged. No new workspace dependencies; the app reuses `fs2` and test-only `tempfile`.
+- Add four core tests and five file/CLI-wrapper test definitions. Rust builds and tests remain unexecuted; no production or tamper-proof audit claims.
+
+## 0.13.0 — adaptive capture and recycled receive allocations
+
+- Add dependency-free Rust static-scene pacing, limited to the existing maximum FPS and a 100 ms idle interval for faster profiles. Reset to the active interval after a changed record.
+- Reuse consumed compressed frame allocations through a nonblocking capacity-two return pool; retain strict ordering, exact bounded payload preparation and existing receipt credit. No new wire format, vault schema, privilege or dependency.
+- Add five regression test definitions and combined-feature local and CI checks. Rust compiler and registry unavailable; no Rust tests, benchmarks or native sessions executed.
+
+## 0.12.0 — direct routing reliability
+
+- Normalize mapped IPv4 addresses consistently before selecting and binding direct routes. Deduplicate and bound IPv4/IPv6 candidates without an auxiliary hash table. Reject unsupported scoped IPv6, unspecified, multicast and broadcast destinations. Resolve numeric addresses without DNS.
+- Use the same routing policy for diagnostics and desktop transport; add a same-family WAN comparison without external lookups or new permissions.
+- Add six dependency-free core tests, a numeric route test and an authenticated mapped-address loopback test. Vault, dependencies and wire format unchanged. Rust builds/tests not executed in the authoring environment.
+
+## 0.11.0 — local resource foundation and reproducible validation
+
+- Add optional `resource-monitor` feature for foreground local aggregate CPU and RAM sampling, bounded intervals and sample counts, human-readable or JSON Lines output; invalid metrics are unavailable rather than fabricated. No remote access.
+- Move letterbox copying to a checked, dependency-free safe Rust canvas module; avoid clearing pixels that will immediately be overwritten. Add regression tests for invalid geometry and reused buffers.
+- Add a standalone Rust validation runner with independent exit status reporting and an explicit initial dependency-resolution flag. Add CPU/RAM feature CI gates on desktop OSes.
+- Preserve v6 desktop protocol, vault and probe. No Rust compilation or native execution occurred in the authoring environment.
+
+## 0.10.0 — native media preparation and validation separation
+
+- Add optional Linux VA-API probe through cros-libva: enumerate real render nodes, query planned H.264/VP9/AV1 profiles and entrypoints, attempt default configuration creation and report errors explicitly. No hardware codec or protocol change.
+- Add allocation-free safe Rust RGB24-to-NV12 conversion with checked strides, BT.709 limited-range fixed-point conversion, chroma averaging and negative tests. No codec integration yet.
+- Separate CI formatting, dependency-free media, workspace, desktop and VA-API feature jobs; preserve real generated dependency-resolution artifacts for review and use locked checks afterward. Do not fabricate Cargo.lock.
+- Preserve v6 desktop protocol, vault and probe. Rust compilation, actual GPU probing and Rust tests remain unexecuted in the authoring environment.
+
+## 0.9.0 — exact Rust keyframes
+
+- Introduce Compact-only full-grid lossless keyframes, strict coverage validation and a bounded 128 KiB sender attempt; negotiated JPEG alternative for high-entropy scenes.
+- Preserve ordered deltas; clamp the delta budget to 32–512 KiB, skip scratch clears for full-size output and count lossless bases separately.
+- Move desktop protocol to ALPN v6; v5 peers must upgrade. Preserve vault schema and probe.
+- Add core and viewer test definitions and a Rust keyframe benchmark. No new crate dependencies or external runtime codec process. No Rust compilation or benchmark execution in this environment.
+
+## 0.8.0 — compact Rust media preview
+
+- Add exact 2–16-color packed palettes and bounded RGB runs to the absolute tile format. Use only the smallest representation; stop run counting once it cannot improve the chosen size. No new runtime dependencies.
+- Desktop ALPN v5 requires matching local codec selection; `compact` is the new CLI default. Basic tiles and JPEG remain explicit choices. No automatic downgrade. Vault and probe unchanged.
+- Add dependency-free rustc test harness and CI gate, adversarial codec and differential tests, and comparative Rust microbenchmark. All new Rust test and benchmark definitions are unexecuted in this environment.
+
+## 0.7.0 — native Rust media preview
+
+- Added dependency-free safe Rust RGB tile codec with 32x32 blocks, raw/solid updates, bounded encoding and pre-validated application. Hybrid JPEG keyframes; no automatic codec downgrade.
+- Desktop ALPN v4 negotiates matching locally selected codec mode; ordered capacity-one receiver preserves deltas; media counters and Rust synthetic benchmark added. No FFmpeg runtime.
+- Added codec and transport test definitions, updated documentation; no Rust compilation or benchmark execution. Vault and probe unchanged.
+
+## 0.6.0 — low latency preview
+
+- Desktop ALPN v3 and fixed three-record receipt credit; ordered acknowledgment validation and bounded final drain. Upgrade both peers; diagnostic and vault formats preserved.
+- New source tests for bounded delayed and invalid receipts. No new Rust dependencies.
+- Standalone local synthetic FFmpeg codec benchmark, CPU encode/decode and frame-count results, and failed NVENC/QSV/AMF initialization attempts. No GPU integration or IntraLink end-to-end performance claim.
+- Moved file/resource milestones behind the desktop transport and media validation gate. Rust build and tests remain unexecuted.
+
+## 0.5.0 — desktop efficiency preview
+
+- Replace desktop ALPN v1 with v2; host-selected 540p/720p/1080p, 1–30 FPS, JPEG quality 35–90, 60-second limit, consistent frame budget. Probe protocol and vault schema unchanged. Upgrade both desktop peers.
+- Compare scaled RGB canvases exactly; skip duplicate JPEG encoding/decoding with repeat records. Reuse encoder buffers, JPEG capacity and viewer pixels.
+- Demand-driven capture, receipt ACK per record, latest-frame mailbox and separate QUIC task; foreground native window remains responsive during network waits. Native capture/codec calls may still block their owning UI thread.
+- Report session counters and local capture/encode/decode timings; add negative ACK/repeat tests and a benchmark plan. No new external Rust dependencies. No compilation or measured performance claimed.
+
+## 0.4.0 — development preview
+
+- Added optional Windows/X11 display selection, native capture via XCap, JPEG letterboxing and bounded decoding, and minimal MiniFB viewer and sharing indicator. No frame recording or input forwarding.
+- Separate `intralink/view/1` ALPN with exact request, mutual pinned identity, one explicitly approved foreground session, capped frames, duration, and I/O. Existing pairing remains diagnostic-only until local consent for a view session.
+- Added protocol, codec and transport test source; separate desktop-feature CI and native prerequisites. Preserved existing vault format and diagnostic path. No Rust compilation, native capture test or performance measurement has run in the authoring environment.
+
+## 0.3.0 — development preview
+
+- Added offline Ed25519 enrollment offers and signed controller acceptances, targeted identities, expiring single-use host confirmation and bounded controller replay state. New CLI enrollment commands and optional terminal QR output.
+- Preserved v0.2 profile identity and grants with additive vault fields; older readers cannot open newly saved profiles.
+- Added opt-in mDNS IPv4 discovery, fresh DNS resolution per bounded attempt, and local address classification including RFC 6598 shared IPv4.
+- Added foreground DuckDNS IPv4 refresh; provider HTTP code isolated, token not persisted, redirects and proxies disabled.
+- Extended interactive listener wait to 120 seconds. No relay, NAT signaling, remote enrollment endpoint, automatic privileged operations, native keystore or GUI.
+- Added tests and validation instructions. No compiler or Rust runtime checks executed in authoring environment.
+
+## 0.2.0 — development preview
+
+- Added IntraVault with persistent Ed25519 identities, password encryption, directional peer grants, local approval and revocation, bounded authenticated profile format, staged ciphertext writes and exclusive local locking.
+- Replaced ephemeral CLI `host`/`probe` with `init`, `identity`, `pair`, `devices`, `revoke`, `listen` and `connect`.
+- Added bounded IPv4/IPv6 candidate selection and direct-only Iroh connection candidates. Added explicit dual-stack DDNS update option.
+- Added test source and updated security, architecture and usage documentation.
+- No Rust checks executed in the authoring environment. No GUI, remote control, background service or unattended agent is included.
+
+## 0.1.0
+
+- Initial temporary-identity direct diagnostic and one-shot DuckDNS update.
+
+## Unreleased maintenance (v0.22.0 source)
+
+- Consolidate the Windows source in `D:\IntraLink`, preserving the previous validation tree and locked archive.
+- Correct Rust formatting and repeat the full Windows application gates.
+- Add a local-only native window diagnostic for windowed and borderless fullscreen rendering, including a second local monitor when available.
+- Replace 1 ms idle capture-demand polling with an asynchronous receive and 8 ms UI event deadline; preserve explicit local consent and cancellation checks.
+- Preserve the v7 media protocol, vault envelope, locked dependency graph, and current remote privileges.
+
+- Add a Windows-only native local media diagnostic with bounded samples, fixture-only capture, DPI-aware geometry/marker validation, per-stage latency percentiles, payload and throughput metrics. Preserve the production protocol, vault, dependencies and privileges.
+- Record the measured local GDI-window pipeline baseline at 540p and 1080p; distinguish native source dimensions, output resolution and local sample throughput from physical remote streaming.
+
+- Replace the desktop CPU resize path with reusable RGBA8 SIMD antialiased bilinear convolution, preserve RGB regardless of unused alpha, and avoid resizing when the source already fits. Four new regression tests passed.
+- Add a Windows-only optional persistent WGC diagnostic adapter restricted to the generated child window, with bounded demand and explicit session shutdown; no new remote permissions or host capture backend changes.
+- Add a CI gate for the optional WGC feature and document measured CPU stage improvements and limitations. Resolve the pinned dependencies and keep existing dependency versions and protocol v7 unchanged.
+
+- Add the isolated optional `intralink-d3d11` native adapter with documented unsafe COM calls, checked RGBA8 texture/mapping geometry, retained staging resource and automatic unmap. Recycle the native RGBA allocation through the bounded WGC diagnostic channel; the application encoder borrows the input.
+- Add explicit strict `--gpu-scale` WGC diagnostic mode using the D3D11 video processor, retained input/output surfaces, queried SDR RGB format support and pre-readback aspect-preserving scaling. No CPU fallback on driver errors. No new external package versions or production sharing permissions.
+
+- Retain the most recent native WGC frame on the GPU independently of consumer demand. Coalesce notification wakes, track observed generations, eliminate a redundant video-processor input surface and preserve the final frame after idle changes. CPU readback remains demand-driven.
+- Add bounded cancellable waiting and separate no-new-sample reporting; do not treat absent native events as encoded repeat frames. Add a two-state static fixture and native idle/final-update diagnostic. No new external dependencies, network protocol changes or remote privileges.
+
+- Replace the static diagnostic's thin midpoint marker with two interior marker positions and exact checks of both the current marker and restored background. Add scaled positive and stale-frame negative assertions and contextual native errors. This changes the generated fixture only, not Host capture or authorization.
+
+### 0.22.0 development — mailbox lifecycle validation
+- Strengthened static marker validation with large solid-color regions, exact state identification and scaling regression checks.
+- Added explicit local cancellation and native WGC source closure checks to the fixture; verify that capture is rejected after closure and stop.
+- Preserved the existing Host backend and authorization flow. Intermediate binaries are retained as unqualified artifacts.
+
+- Final Windows verification: 121 tests, strict Clippy for both feature combinations, Rustfmt, Release build and all three native fixture diagnostics passed; physical device loss/topology and actual remote streaming remain open.
+
+### Native D3D11 ownership and geometry guard (v0.22.0 development)
+- Enable verified native immediate-context multithread protection in addition to the WGC handler lock. Check device removal before/after retention and before/after readback, and reject a context owned by a different device.
+- Add a local hardware diagnostic using two independent hardware D3D11 devices, initialized textures, foreign context/texture rejection, staging identity/geometry rejection, and unchanged output on invalid inputs. Add an owned-window resize fixture with an explicit parent-to-child pipe trigger, actual WGC callback failure observation and rejection after stop.
+- No new remote privileges or wire-format change. Actual GPU removal, full-display topology and the WGC Host remain separate gates.
+
+### Explicit WGC Host and desktop wire v8 (v0.22.0 development)
+- Add explicit `share-desktop --capture snapshot|wgc|wgc-gpu`. Keep snapshot as the default; unavailable native features, driver failures, ambiguous monitor IDs and changed display identity/geometry fail closed without automatic backend fallback.
+- Instantiate the persistent WGC mailbox only after the existing locally approved peer and matching view request produce capture demand. Preserve foreground stop, native capture-border defaults, source geometry checks and shutdown. Add a conservative 15-second no-new-readback watchdog.
+- Version the desktop ALPN/request to v8 and reserve a distinct bounded no-update record. Maintain ordered ACK credit, independent sessions, codec IDs and vault/probe compatibility. No-update is not a new frame or verified repeat; never permit it before the first changed record.
+- Add a per-session no-update notice on the viewer/workspace after one second of consecutive no-update records, including fullscreen and overview. The presentation-only notice uses a reused scratch canvas and never modifies the decoder surface.
+- Physical full-display WGC streaming, monitor loss, suspend/resume, actual GPU removal and sustained network performance remain separate acceptance gates.
+
+### Native GPU color conversion (development)
+- Share D3D11 video processor logic between RGBA scaling and GPU-resident NV12 BT.709 limited-range conversion; add bounded planar staging layout and borrowed native output surface.
+- Add real generated-color GPU round-trip diagnostic and explicit DXGI vendor/index selection with no software fallback, ambiguity or vendor mismatch.
+- Preserve v8 desktop transport and existing Compact/Tiles/JPEG codec behavior. Hardware video encoding/decoding remains pending.
+
+### Native NVENC H.264 preview (development)
+- Add the optional Windows nvenc-preview feature with fixed SDK 13.1 raw ABI bindings, System32-only driver loading, strict NVIDIA adapter/texture validation, low-latency H.264 configuration and bounded synchronous output.
+- Register the retained NV12 texture once; validate sequence, requested IDR/SPS/PPS and output size; fail closed on driver errors. Add generated-frame diagnostic with optional bounded clip export.
+- No changes to view v8, Host capture authorization, existing codecs, or default feature policy. Native decoder and production qualification remain pending.
+
+- Add a native NVIDIA CUDA/CUVID decoder diagnostic using the same adapter LUID, a private context, bounded H.264 sequence and picture callbacks, native decode status and sampled NV12 color validation. Explicitly record driver hardware status values and preserve independent decoder evidence. No remote bitstream decoder is exposed yet.
+
+### Isolated H.264 transport v9 (development)
+- Add a bounded H.264 profile and versioned access-unit envelope, strict sequence/IDR/parameter-set structure and coded GOP policy.
+- Share the existing v8 capture-demand/receipt engine with a separate, loopback-only v9 ALPN and exact profile offer/echo. Reject unauthorized identities or profiles before capture, malformed access units before delivery/acknowledgment, and keep coded/receipt sequences separate.
+- Add native fixture-to-QUIC-to-NVDEC diagnostic with exact generated-byte matching before driver submission; no live capture, new remote privileges or production H.264 advertisement.
+- Preserve previous v8 formats, codec choices, vault and probe. Native decoder safety for arbitrary input remains a separate gate.
+
+- Fix Windows Debug CLI entry-point stack overflow by parsing synchronously and constructing only the selected async command future. Add process-level CLI smoke tests.
+- Add optional private high-resolution waitable timer diagnostic using one native handle and one bounded joined worker; reject early/failed wait before another capture. No global timer-resolution setting, busy spin or change to v8 codec selection.
+
+### Selected-adapter WGC codec pipeline (development)
+- Create an explicitly selected NVIDIA D3D11-backed free-threaded WGC pool for only the generated child window; retain stable RGBA/NV12 GPU surfaces and encode/decode directly on the selected adapter. Validate geometry, timestamps, device ownership, source closure and cleanup.
+- Add local GPU presentation development using CUDA/D3D11 plane textures and a dedicated visible DXGI swap-chain window. Verify sampled colors; no arbitrary remote AVC or new remote permissions. Normal Host remains v8.
+
+### Restricted H.264 profile and simultaneous local GPU transport
+- Add bounded SPS/PPS parsing and exact level/geometry/SDR/FPS checks to the isolated v9 profile; correct RBSP escape fixtures and strict lint.
+- Reuse selected NVIDIA WGC encoder and native NVDEC/DXGI paths in independent thread-owned continuous loopback workers with bounded demand, origin tokens and ordered native submission receipts. Verify exact locally generated packet bytes before native decode; no arbitrary remote AVC.
+- Add native cancellation/teardown gate, per-run source and steady native-submit timing, exact wire-origin regression and CLI checks. Preserve normal v8 behavior. Archive the unlinked preliminary source draft outside the active workspace.

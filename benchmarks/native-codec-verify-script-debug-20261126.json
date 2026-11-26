@@ -1,0 +1,44 @@
+[
+  {
+    "resolution": "960x540",
+    "native_encoder_stdout": "nvenc_check=passed, size=960x540, frames=6, idr=2, payload_bytes=35522, gpu_nv12_to_h264=true, cpu_pixel_readbacks=0, convert_encode_p50_ms=1.614, p95_ms=3.296, p99_ms=3.296\nraw_hw_encode_status_counts={2: 6}; opaque driver field, not API return codes\nSynthetic native H.264 diagnostic; native_decoder=false; no network or desktop capture.\n",
+    "frames_verified": 6,
+    "max_sampled_yuv_error": 0,
+    "encoded_bytes": 35522,
+    "external_named_decoder": "h264_cuvid",
+    "decode_wall_s": 0.16719130000274163,
+    "stream": {
+      "codec_name": "h264",
+      "profile": "High",
+      "width": 960,
+      "height": 540,
+      "has_b_frames": 0,
+      "pix_fmt": "yuv420p",
+      "color_range": "tv",
+      "color_space": "bt709",
+      "color_transfer": "bt709",
+      "color_primaries": "bt709"
+    }
+  },
+  {
+    "resolution": "1920x1080",
+    "native_encoder_stdout": "nvenc_check=passed, size=1920x1080, frames=60, idr=2, payload_bytes=76071, gpu_nv12_to_h264=true, cpu_pixel_readbacks=0, convert_encode_p50_ms=3.014, p95_ms=3.658, p99_ms=4.355\nraw_hw_encode_status_counts={2: 60}; opaque driver field, not API return codes\nSynthetic native H.264 diagnostic; native_decoder=false; no network or desktop capture.\n",
+    "frames_verified": 60,
+    "max_sampled_yuv_error": 1,
+    "encoded_bytes": 76071,
+    "external_named_decoder": "h264_cuvid",
+    "decode_wall_s": 0.2650871000078041,
+    "stream": {
+      "codec_name": "h264",
+      "profile": "High",
+      "width": 1920,
+      "height": 1080,
+      "has_b_frames": 0,
+      "pix_fmt": "yuv420p",
+      "color_range": "tv",
+      "color_space": "bt709",
+      "color_transfer": "bt709",
+      "color_primaries": "bt709"
+    }
+  }
+]

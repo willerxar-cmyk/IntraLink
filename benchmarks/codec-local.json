@@ -1,0 +1,138 @@
+{
+  "method": "synthetic testsrc2 motion; separate lossless source; process wall time includes startup and disk I/O; profiles not quality-matched; no network, native capture or display",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "machine": "x86_64",
+  "logical_cpus": 5,
+  "ffmpeg": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "frames": 60,
+  "threads": 2,
+  "results": [
+    {
+      "profile": "mjpeg",
+      "encoder": "mjpeg",
+      "encoder_options": [
+        "-q:v",
+        "5",
+        "-pix_fmt",
+        "yuvj420p"
+      ],
+      "status": "ok",
+      "stream": {
+        "codec_name": "mjpeg",
+        "width": 1920,
+        "height": 1080,
+        "nb_read_frames": "60"
+      },
+      "frames": 60,
+      "container_bytes": 4654572,
+      "encode_wall_seconds": 0.383,
+      "decode_wall_seconds": 0.2624,
+      "encode_wall_fps": 156.65,
+      "decode_wall_fps": 228.7,
+      "container_mbit_per_second": 18.6183
+    },
+    {
+      "profile": "h264",
+      "encoder": "libx264",
+      "encoder_options": [
+        "-preset",
+        "ultrafast",
+        "-tune",
+        "zerolatency",
+        "-crf",
+        "23",
+        "-g",
+        "30",
+        "-bf",
+        "0",
+        "-pix_fmt",
+        "yuv420p"
+      ],
+      "status": "ok",
+      "stream": {
+        "codec_name": "h264",
+        "width": 1920,
+        "height": 1080,
+        "nb_read_frames": "60"
+      },
+      "frames": 60,
+      "container_bytes": 3914918,
+      "encode_wall_seconds": 0.3793,
+      "decode_wall_seconds": 0.1696,
+      "encode_wall_fps": 158.17,
+      "decode_wall_fps": 353.69,
+      "container_mbit_per_second": 15.6597
+    },
+    {
+      "profile": "vp9",
+      "encoder": "libvpx-vp9",
+      "encoder_options": [
+        "-deadline",
+        "realtime",
+        "-cpu-used",
+        "8",
+        "-lag-in-frames",
+        "0",
+        "-b:v",
+        "0",
+        "-crf",
+        "32",
+        "-g",
+        "30",
+        "-pix_fmt",
+        "yuv420p"
+      ],
+      "status": "ok",
+      "stream": {
+        "codec_name": "vp9",
+        "width": 1920,
+        "height": 1080,
+        "nb_read_frames": "60"
+      },
+      "frames": 60,
+      "container_bytes": 2178743,
+      "encode_wall_seconds": 0.8833,
+      "decode_wall_seconds": 0.2822,
+      "encode_wall_fps": 67.92,
+      "decode_wall_fps": 212.6,
+      "container_mbit_per_second": 8.715
+    },
+    {
+      "profile": "av1",
+      "encoder": "libaom-av1",
+      "encoder_options": [
+        "-usage",
+        "realtime",
+        "-cpu-used",
+        "8",
+        "-lag-in-frames",
+        "0",
+        "-b:v",
+        "0",
+        "-crf",
+        "35",
+        "-g",
+        "30",
+        "-pix_fmt",
+        "yuv420p"
+      ],
+      "status": "ok",
+      "stream": {
+        "codec_name": "av1",
+        "width": 1920,
+        "height": 1080,
+        "nb_read_frames": "60"
+      },
+      "frames": 60,
+      "container_bytes": 1507592,
+      "encode_wall_seconds": 1.3498,
+      "decode_wall_seconds": 0.2655,
+      "encode_wall_fps": 44.45,
+      "decode_wall_fps": 225.95,
+      "container_mbit_per_second": 6.0304
+    }
+  ]
+}

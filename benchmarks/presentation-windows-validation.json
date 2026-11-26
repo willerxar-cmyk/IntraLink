@@ -1,0 +1,48 @@
+{
+  "scope": "dependency-free presentation module and standalone synthetic CPU microbenchmark",
+  "platform": "x86_64-pc-windows-msvc",
+  "rustc": "1.96.0 (ac68faa20 2026-05-25)",
+  "commands": [
+    "rustc --edition=2024 --test -D warnings presentation.rs -o presentation-tests.exe",
+    "rustc --edition=2024 -D warnings -O tools/presentation_benchmark.rs -o presentation-benchmark.exe"
+  ],
+  "source_sha256": {
+    "crates/intralink-core/src/presentation.rs": "55d565b0c7fe98f3fa3eeb7053bfe5ef901a5d54e137e9bc341da79b074018fa",
+    "tools/presentation_benchmark.rs": "2013f7feace670e7962671406b81d9c3228f328ef3fd911c1de7dec09110961f"
+  },
+  "tests": {
+    "passed": 6,
+    "failed": 0,
+    "ignored": 0
+  },
+  "benchmark": {
+    "width": 1920,
+    "height": 1080,
+    "devices": 3,
+    "rounds": 240,
+    "updates_per_scenario": 720,
+    "workload": "one changed pixel per surface per round; select focus in round-robin; initialization outside measurement; one run per scenario",
+    "results": [
+      {
+        "forced_snapshot_overlap": false,
+        "copy_on_write_events": 0,
+        "elapsed_ms": 0.013,
+        "mean_us_per_round": 0.053
+      },
+      {
+        "forced_snapshot_overlap": true,
+        "copy_on_write_events": 240,
+        "elapsed_ms": 418.475,
+        "mean_us_per_round": 1743.645
+      }
+    ]
+  },
+  "not_run": [
+    "full Cargo workspace or Clippy",
+    "native GUI or monitor switching",
+    "QUIC integration",
+    "actual sustained FPS and latency",
+    "native hardware encoder or decoder",
+    "mobile"
+  ]
+}

@@ -1,0 +1,46 @@
+﻿profile: 540p before
+capture_backend=persistent_wgc
+local_media_check,mode=Compact,resolution=960x540,samples=180,changed=176,payload_bytes=310980,elapsed_s=3.194,capture_fps=56.35,changed_fps=55.10
+source_resolution=1656x933
+capture: count=180, p50_ms=9.493, p95_ms=20.203, p99_ms=29.049
+encode: count=180, p50_ms=2.764, p95_ms=3.945, p99_ms=5.902
+decode_changed: count=176, p50_ms=0.007, p95_ms=0.013, p99_ms=0.320
+native_buffer_submission: count=180, p50_ms=0.542, p95_ms=0.655, p99_ms=1.099
+local_pipeline: count=180, p50_ms=12.963, p95_ms=23.657, p99_ms=32.529
+No desktop capture, remote connection, or image recording performed.
+exit_code=0
+profile: 540p reused
+staging_allocations=1, rgba_allocations=1
+capture_backend=persistent_wgc
+local_media_check,mode=Compact,resolution=960x540,samples=180,changed=176,payload_bytes=308045,elapsed_s=3.162,capture_fps=56.92,changed_fps=55.66
+source_resolution=1656x933
+capture: count=180, p50_ms=10.297, p95_ms=18.453, p99_ms=28.567
+encode: count=180, p50_ms=2.226, p95_ms=2.441, p99_ms=4.295
+decode_changed: count=176, p50_ms=0.006, p95_ms=0.011, p99_ms=0.290
+native_buffer_submission: count=180, p50_ms=0.495, p95_ms=0.571, p99_ms=0.832
+local_pipeline: count=180, p50_ms=12.815, p95_ms=21.290, p99_ms=32.022
+No desktop capture, remote connection, or image recording performed.
+exit_code=0
+profile: 1080p before
+capture_backend=persistent_wgc
+local_media_check,mode=Compact,resolution=1920x1080,samples=180,changed=180,payload_bytes=362783,elapsed_s=6.825,capture_fps=26.37,changed_fps=26.37
+source_resolution=3336x1878
+capture: count=180, p50_ms=24.882, p95_ms=32.939, p99_ms=35.036
+encode: count=180, p50_ms=11.349, p95_ms=16.606, p99_ms=23.541
+decode_changed: count=180, p50_ms=0.009, p95_ms=0.019, p99_ms=0.910
+native_buffer_submission: count=180, p50_ms=0.973, p95_ms=2.004, p99_ms=2.533
+local_pipeline: count=180, p50_ms=37.784, p95_ms=48.120, p99_ms=60.346
+No desktop capture, remote connection, or image recording performed.
+exit_code=0
+profile: 1080p reused
+staging_allocations=1, rgba_allocations=1
+capture_backend=persistent_wgc
+local_media_check,mode=Compact,resolution=1920x1080,samples=180,changed=178,payload_bytes=349886,elapsed_s=4.881,capture_fps=36.88,changed_fps=36.47
+source_resolution=3336x1878
+capture: count=180, p50_ms=20.777, p95_ms=23.255, p99_ms=24.250
+encode: count=180, p50_ms=9.360, p95_ms=12.168, p99_ms=18.243
+decode_changed: count=178, p50_ms=0.008, p95_ms=0.015, p99_ms=1.071
+native_buffer_submission: count=180, p50_ms=1.000, p95_ms=1.540, p99_ms=1.732
+local_pipeline: count=180, p50_ms=30.515, p95_ms=34.836, p99_ms=38.893
+No desktop capture, remote connection, or image recording performed.
+exit_code=0

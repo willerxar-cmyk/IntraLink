@@ -1,0 +1,32 @@
+[
+  {
+    "pid": 20624,
+    "height": 540,
+    "frames": 60,
+    "present": false,
+    "status": "ok",
+    "exit": 0,
+    "elapsed_s": 1.664,
+    "output": "selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0\nnvdec_check=passed, submitted=60, decoded=60, displayed=60, sampled_yuv_max_error=0, map_and_sample_p50_ms=0.865\nselected_wgc_resources_released\nselected_d3d11_device_released\nselected_winrt_apartment_released\nwgc_codec_check=passed, native_source=1656x933, output=960x540, frames=60, idr=1, payload_bytes=51503, elapsed_ms=1242.916, local_fps=48.27, capture_p50_ms=14.584, capture_p95_ms=15.247, convert_encode_p50_ms=1.077, convert_encode_p95_ms=1.226, decode_submit_p50_ms=0.946, decode_submit_p95_ms=1.216, encoder_pixel_readback=0, explicit_nvidia_device=true, same_device=true, closed_capture_rejected=true, gpu_preview=false\nOwned moving test window, native hardware encode/decode and sampled color verification; optional local GPU presentation; not physical-display sharing or a network session.\n"
+  },
+  {
+    "pid": 19480,
+    "height": 720,
+    "frames": 60,
+    "present": false,
+    "status": "ok",
+    "exit": 0,
+    "elapsed_s": 1.638,
+    "output": "selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0\nnvdec_check=passed, submitted=60, decoded=60, displayed=60, sampled_yuv_max_error=0, map_and_sample_p50_ms=1.155\nselected_wgc_resources_released\nselected_d3d11_device_released\nselected_winrt_apartment_released\nwgc_codec_check=passed, native_source=2216x1248, output=1280x720, frames=60, idr=1, payload_bytes=31344, elapsed_ms=1246.180, local_fps=48.15, capture_p50_ms=13.989, capture_p95_ms=20.402, convert_encode_p50_ms=1.407, convert_encode_p95_ms=1.564, decode_submit_p50_ms=1.233, decode_submit_p95_ms=1.414, encoder_pixel_readback=0, explicit_nvidia_device=true, same_device=true, closed_capture_rejected=true, gpu_preview=false\nOwned moving test window, native hardware encode/decode and sampled color verification; optional local GPU presentation; not physical-display sharing or a network session.\n"
+  },
+  {
+    "pid": 21296,
+    "height": 1080,
+    "frames": 180,
+    "present": false,
+    "status": "ok",
+    "exit": 0,
+    "elapsed_s": 3.698,
+    "output": "selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0\nnvdec_check=passed, submitted=180, decoded=180, displayed=180, sampled_yuv_max_error=1, map_and_sample_p50_ms=2.021\nselected_wgc_resources_released\nselected_d3d11_device_released\nselected_winrt_apartment_released\nwgc_codec_check=passed, native_source=3336x1878, output=1920x1080, frames=180, idr=3, payload_bytes=107145, elapsed_ms=3290.532, local_fps=54.70, capture_p50_ms=12.342, capture_p95_ms=14.120, convert_encode_p50_ms=2.220, convert_encode_p95_ms=2.570, decode_submit_p50_ms=2.111, decode_submit_p95_ms=2.393, encoder_pixel_readback=0, explicit_nvidia_device=true, same_device=true, closed_capture_rejected=true, gpu_preview=false\nOwned moving test window, native hardware encode/decode and sampled color verification; optional local GPU presentation; not physical-display sharing or a network session.\n"
+  }
+]

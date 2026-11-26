@@ -1,0 +1,24 @@
+/target/
+.env
+.env.*
+*.key
+*.pem
+*.pfx
+*.p12
+*.db
+*.db-wal
+*.db-shm
+
+*.vault
+*.vault.lock
+
+# Standalone media test binary
+/intralink-media-tests.exe
+
+/intralink-validate.exe
+
+# Optional local session history (never commit user metadata)
+*.history
+
+# Local distribution artifacts
+/dist/

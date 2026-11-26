@@ -1,0 +1,52 @@
+[package]
+name = "intralink"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+default = []
+desktop-preview = ["dep:xcap", "dep:image", "dep:minifb", "dep:fast_image_resize"]
+wgc-preview = ["desktop-preview", "dep:windows-capture", "dep:intralink-d3d11"]
+nvenc-preview = ["wgc-preview", "intralink-d3d11/nvenc-preview"]
+vaapi-probe = ["dep:libva"]
+resource-monitor = ["dep:sysinfo", "dep:serde_json", "dep:serde"]
+
+[dependencies]
+anyhow.workspace = true
+mdns-sd.workspace = true
+qrcode.workspace = true
+clap.workspace = true
+iroh.workspace = true
+tokio.workspace = true
+reqwest.workspace = true
+rpassword.workspace = true
+zeroize.workspace = true
+intralink-core.workspace = true
+intralink-transport.workspace = true
+intralink-vault.workspace = true
+directories.workspace = true
+fs2.workspace = true
+sysinfo = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+
+[target.'cfg(any(target_os = "windows", target_os = "linux"))'.dependencies]
+xcap = { workspace = true, optional = true }
+image = { workspace = true, optional = true }
+fast_image_resize = { workspace = true, optional = true }
+minifb = { workspace = true, optional = true }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-capture = { workspace = true, optional = true }
+intralink-d3d11 = { workspace = true, optional = true, features = ["readback"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+libva = { workspace = true, optional = true }
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

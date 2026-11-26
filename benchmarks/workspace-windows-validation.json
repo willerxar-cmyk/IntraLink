@@ -1,0 +1,30 @@
+{
+  "scope": "dependency-free modules only",
+  "platform": "x86_64-pc-windows-msvc",
+  "rustc": "1.96.0 (ac68faa20 2026-05-25)",
+  "command": "rustc --edition=2024 --test -D warnings harness.rs -o workspace-tests.exe",
+  "result": {
+    "passed": 13,
+    "failed": 0,
+    "ignored": 0
+  },
+  "module_test_counts": {
+    "desktop": 6,
+    "pacing": 4,
+    "workspace": 3
+  },
+  "source_sha256": {
+    "crates/intralink-core/src/desktop.rs": "d45dbc03c78ec3d6195d6db01a3fa1059ddb6d788e9dc70592fd73a4dc5523ef",
+    "crates/intralink-core/src/pacing.rs": "5f55f95fa037068ef60019c649eeead9847e8b56899d948b04dfdab87e678916",
+    "crates/intralink-core/src/workspace.rs": "a53d998de4c947a1f226c08a03e62b0b571f15a748e5a4a87aafa52b907b72b6"
+  },
+  "not_run": [
+    "Cargo workspace",
+    "Clippy",
+    "native UI",
+    "QUIC integration",
+    "real transmission or FPS benchmark",
+    "GPU",
+    "mobile"
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "method": "synthetic testsrc2 motion; separate lossless source; process wall time includes startup and disk I/O; profiles not quality-matched; no network, native capture or display",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "machine": "x86_64",
+  "logical_cpus": 5,
+  "ffmpeg": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+  "width": 960,
+  "height": 540,
+  "fps": 15,
+  "frames": 15,
+  "threads": 2,
+  "results": [
+    {
+      "profile": "h264-nvenc",
+      "encoder": "h264_nvenc",
+      "encoder_options": [
+        "-preset",
+        "p1",
+        "-tune",
+        "ull",
+        "-g",
+        "30",
+        "-bf",
+        "0",
+        "-pix_fmt",
+        "yuv420p"
+      ],
+      "status": "encode_failed",
+      "error": "[h264_nvenc @ <address>] Cannot load libcuda.so.1\n[vost#0:0/h264_nvenc @ <address>] Error while opening encoder - maybe incorrect parameters such as bit_rate, rate, width or height.\n[vf#0:0 @ <address>] Error sending frames to consumers: Operation not permitted\n[vf#0:0 @ <address>] Task finished with error code: -1 (Operation not permitted)\n[vf#0:0 @ <address>] Terminating thread with return code -1 (Operation not permitted)\n[vost#0:0/h264_nvenc @ <address>] Could not open encoder before EOF\n[vost#0:0/h264_nvenc @ <address>] Task finished with error code: -22 (Invalid argument)\n[vost#0:0/h264_nvenc @ <address>] Terminating thread with return code -22 (Invalid argument)\n[out#0/matroska @ <address>] Nothing was written into output file, because at least one of its streams received no packets.\n"
+    },
+    {
+      "profile": "h264-qsv",
+      "encoder": "h264_qsv",
+      "encoder_options": [
+        "-preset",
+        "veryfast",
+        "-async_depth",
+        "1",
+        "-g",
+        "30",
+        "-bf",
+        "0",
+        "-pix_fmt",
+        "nv12"
+      ],
+      "status": "encode_failed",
+      "error": "[h264_qsv @ <address>] Error creating a MFX session: -9.\n[vost#0:0/h264_qsv @ <address>] Error while opening encoder - maybe incorrect parameters such as bit_rate, rate, width or height.\n[vf#0:0 @ <address>] Error sending frames to consumers: Unknown error occurred\n[vf#0:0 @ <address>] Task finished with error code: -1313558101 (Unknown error occurred)\n[vf#0:0 @ <address>] Terminating thread with return code -1313558101 (Unknown error occurred)\n[vost#0:0/h264_qsv @ <address>] Could not open encoder before EOF\n[vost#0:0/h264_qsv @ <address>] Task finished with error code: -22 (Invalid argument)\n[vost#0:0/h264_qsv @ <address>] Terminating thread with return code -22 (Invalid argument)\n[out#0/matroska @ <address>] Nothing was written into output file, because at least one of its streams received no packets.\n"
+    },
+    {
+      "profile": "h264-amf",
+      "encoder": "h264_amf",
+      "encoder_options": [
+        "-usage",
+        "ultralowlatency",
+        "-quality",
+        "speed",
+        "-g",
+        "30",
+        "-bf",
+        "0",
+        "-pix_fmt",
+        "nv12"
+      ],
+      "status": "encode_failed",
+      "error": "[vost#0:0 @ <address>] Unknown encoder 'h264_amf'\n[vost#0:0 @ <address>] Error selecting an encoder\nError opening output file <temp>/h264-amf.mkv.\nError opening output files: Encoder not found\n"
+    }
+  ]
+}

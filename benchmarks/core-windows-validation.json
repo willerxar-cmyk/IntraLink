@@ -1,0 +1,58 @@
+{
+  "version": "0.19.0",
+  "tested_cargo_package_version": "0.18.0 (version metadata only; candidate source hashes match)",
+  "date": "2026-11-26",
+  "platform": "Windows x86_64 MSVC",
+  "rustc": "1.96.0",
+  "remote_validation_directory": "D:\\IntraLink-validation-v019\\IntraLink",
+  "scope": "Actual complete portable harness and isolated core-only Cargo workspace; no full workspace/native application, network, GPU, or end-to-end FPS claim.",
+  "baseline": {
+    "portable_passed": 64,
+    "cargo_core_passed": 64,
+    "clippy_initial": "failed collapsible_if in media/compact.rs, fixed"
+  },
+  "candidate": {
+    "portable_passed": 65,
+    "portable_failed": 0,
+    "portable_elapsed_s": 0.44,
+    "cargo_core_passed": 65,
+    "cargo_core_failed": 0,
+    "cargo_core_elapsed_s": 0.61,
+    "clippy": "passed --locked --workspace --all-targets -- -D warnings (isolated core-only workspace)",
+    "release_examples": "built and both executed"
+  },
+  "paired_benchmark": {
+    "resolution": "1920x1080",
+    "iterations_per_scene": 41,
+    "command": "rustc --edition=2024 -D warnings -O codec_ab.rs -o codec-ab.exe",
+    "payload_equivalence": "exact bytes matched on all pairs; accepted keyframes reconstructed exactly",
+    "file": "codec-windows-interleaved.csv",
+    "uniform_median_old_us": 1453.6,
+    "uniform_median_new_us": 421.3,
+    "ui_like_median_old_us": 5595.2,
+    "ui_like_median_new_us": 5583.1,
+    "separate_run_timings": "confounded by variable machine load; unchanged paths also slowed"
+  },
+  "sha256": {
+    "apps/intralink/src/desktop/overview.rs": "7b7d2ad83c0481fdce32e631d468a662ec2cc67bb91638bcf58041b556b4e69e",
+    "crates/intralink-core/examples/keyframe_benchmark.rs": "19d815d89161ba7f6e5b5da5fad5d51d48fcd5e4665584a7d6ed5a3e5c9e575a",
+    "crates/intralink-core/examples/tile_benchmark.rs": "f5bdc33f6ace76c5259319ddbfc56ccbab6155b2c2de4c2ec3e91422cb3fd655",
+    "crates/intralink-core/src/canvas.rs": "489f3f68c3b49d9f74f1cc4e5cc6a79d0197f19b6aa1b70d5c820df93bd0b2ef",
+    "crates/intralink-core/src/desktop.rs": "d45dbc03c78ec3d6195d6db01a3fa1059ddb6d788e9dc70592fd73a4dc5523ef",
+    "crates/intralink-core/src/journal.rs": "d75d96e7b5d5b4c1fa61d65e31f85732d03b68945365ab8ea8ad02d75578a0c1",
+    "crates/intralink-core/src/lib.rs": "d7725b050a46fa932bdc6b22d94baabaaf8feed749a0febfda5d1b6e294a0f65",
+    "crates/intralink-core/src/media/compact.rs": "a9f61fa51f5173901e6e558019c5ee815924a51b6dbdba18344eccd2d5747db4",
+    "crates/intralink-core/src/media/tests.rs": "b431865ddff63d98d969c78d4e87d21e7b77c57622dcdea7f02b1f8d4ce5a49b",
+    "crates/intralink-core/src/media.rs": "e6f39365f75f4f9d0c4f75160d2e80595c6d7ebb3d08bf936a1d334fc1aee0ff",
+    "crates/intralink-core/src/media_harness.rs": "f86ce43118f67ea059ff85b6f7a467ff176744fe791d1003acad1795cda9cfd6",
+    "crates/intralink-core/src/network.rs": "351c779527b808d258e8f0c194df995c9b4d58118ae42c710c03c7e1761fe944",
+    "crates/intralink-core/src/overview.rs": "0b85b0ccc8809086854fef6df0ad71820a098c6ec388c527cb797854e3ab3c34",
+    "crates/intralink-core/src/pacing.rs": "5f55f95fa037068ef60019c649eeead9847e8b56899d948b04dfdab87e678916",
+    "crates/intralink-core/src/presentation.rs": "55d565b0c7fe98f3fa3eeb7053bfe5ef901a5d54e137e9bc341da79b074018fa",
+    "crates/intralink-core/src/resources.rs": "17de403f7e9f32349d5b2267d7c5c409ce0f0b59542508341533a734e2b260a4",
+    "crates/intralink-core/src/telemetry.rs": "ac6422c83e7a03cd28cb4e5d60b7028b567b8664a36db029117749b9557884dd",
+    "crates/intralink-core/src/workspace.rs": "a53d998de4c947a1f226c08a03e62b0b571f15a748e5a4a87aafa52b907b72b6",
+    "crates/intralink-core/src/yuv.rs": "70690c6ca396d0b219bda7601a28de84a38060a5199ad3a935e0cc2091d25de7",
+    "tools/codec_ab.rs": "b35b71cd438b61fa37da54af4008c1d70b59ad38615b670800b7624784d9fafd"
+  }
+}

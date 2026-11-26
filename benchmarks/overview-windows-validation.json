@@ -1,0 +1,27 @@
+{
+  "scope": "Actual isolated dependency-free geometry, renderer and presentation modules; not full workspace or GUI integration",
+  "platform": "x86_64-pc-windows-msvc",
+  "rustc": "1.96.0 (ac68faa20 2026-05-25)",
+  "remote_directory": "D:\\IntraLink-validation-v017",
+  "command": "rustc --edition=2024 --test -D warnings harness.rs -o viewer-tests.exe; .\\viewer-tests.exe",
+  "source_sha256": {
+    "crates/intralink-core/src/overview.rs": "bf762de7b4473e9928d995ba2795322482799a9b5998a0cba47f1c7a71521f93",
+    "apps/intralink/src/desktop/overview.rs": "f5a3115d9dceb8022841875dcbfe59ab7201a6b4b21a1ac249375be1deb9230c",
+    "crates/intralink-core/src/presentation.rs": "55d565b0c7fe98f3fa3eeb7053bfe5ef901a5d54e137e9bc341da79b074018fa"
+  },
+  "tests": {
+    "passed": 12,
+    "failed": 0,
+    "ignored": 0,
+    "new": 6,
+    "regression": 6,
+    "reported_duration_seconds": 0.03
+  },
+  "not_run": [
+    "full standalone media harness",
+    "full Cargo workspace, rustfmt and Clippy",
+    "native window/pointer/DPI and multiple-device QUIC integration",
+    "sustained FPS or performance benchmark",
+    "hardware encoders, remote input, mobile"
+  ]
+}

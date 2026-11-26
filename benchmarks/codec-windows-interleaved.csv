@@ -1,0 +1,4 @@
+scene,accepted,payload_bytes,old_median_us,new_median_us,old_p95_us,new_p95_us
+uniform,true,12243,1453.60,421.30,1576.80,452.90
+ui-like,true,46335,5595.20,5583.10,10750.70,10515.10
+high-entropy,false,0,40.60,40.70,40.90,40.80

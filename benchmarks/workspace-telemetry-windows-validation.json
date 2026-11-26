@@ -1,0 +1,29 @@
+{
+  "version": "0.18.0",
+  "date": "2026-11-26",
+  "platform": "Windows x86_64 MSVC",
+  "rustc": "1.96.0",
+  "command": "rustc --edition=2024 --test -D warnings harness.rs -o core-tests.exe; .\\core-tests.exe",
+  "test_result": {
+    "passed": 39,
+    "failed": 0,
+    "ignored": 0,
+    "new": 5,
+    "regressions": 34,
+    "reported_elapsed_seconds": 0.03
+  },
+  "scope": "Isolated portable modules and overview renderer only; no native capture, GUI, live network, full Cargo workspace or throughput benchmark.",
+  "remote_validation_directory": "D:\\IntraLink-validation-v018",
+  "sha256": {
+    "crates/intralink-core/src/desktop.rs": "d45dbc03c78ec3d6195d6db01a3fa1059ddb6d788e9dc70592fd73a4dc5523ef",
+    "crates/intralink-core/src/workspace.rs": "a53d998de4c947a1f226c08a03e62b0b571f15a748e5a4a87aafa52b907b72b6",
+    "crates/intralink-core/src/overview.rs": "0b85b0ccc8809086854fef6df0ad71820a098c6ec388c527cb797854e3ab3c34",
+    "crates/intralink-core/src/presentation.rs": "55d565b0c7fe98f3fa3eeb7053bfe5ef901a5d54e137e9bc341da79b074018fa",
+    "crates/intralink-core/src/telemetry.rs": "ac6422c83e7a03cd28cb4e5d60b7028b567b8664a36db029117749b9557884dd",
+    "crates/intralink-core/src/canvas.rs": "489f3f68c3b49d9f74f1cc4e5cc6a79d0197f19b6aa1b70d5c820df93bd0b2ef",
+    "crates/intralink-core/src/resources.rs": "17de403f7e9f32349d5b2267d7c5c409ce0f0b59542508341533a734e2b260a4",
+    "crates/intralink-core/src/yuv.rs": "70690c6ca396d0b219bda7601a28de84a38060a5199ad3a935e0cc2091d25de7",
+    "crates/intralink-core/src/pacing.rs": "5f55f95fa037068ef60019c649eeead9847e8b56899d948b04dfdab87e678916",
+    "apps/intralink/src/desktop/overview.rs": "7b7d2ad83c0481fdce32e631d468a662ec2cc67bb91638bcf58041b556b4e69e"
+  }
+}

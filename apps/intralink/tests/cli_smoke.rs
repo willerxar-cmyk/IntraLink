@@ -1,0 +1,52 @@
+//! Exercise the actual process entry point: a unit test cannot detect a
+//! Windows main-thread stack overflow before command dispatch.
+use std::process::Command;
+
+fn stdout(args: &[&str]) -> String {
+    let output = Command::new(env!("CARGO_BIN_EXE_intralink"))
+        .args(args)
+        .output()
+        .expect("Start IntraLink CLI");
+    assert!(
+        output.status.success(),
+        "{args:?}: status={:?}; stderr={}",
+        output.status,
+        String::from_utf8_lossy(&output.stderr)
+    );
+    String::from_utf8(output.stdout).expect("UTF-8 CLI output")
+}
+
+#[test]
+fn cli_help_and_version_exit_successfully() {
+    let help = stdout(&["--help"]);
+    assert!(help.contains("IntraLink") && help.contains("Commands"));
+    assert!(stdout(&["--version"]).contains(env!("CARGO_PKG_VERSION")));
+}
+
+#[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
+#[test]
+fn h264_diagnostic_help_does_not_initialize_driver_or_network() {
+    let help = stdout(&["desktop-h264-check", "--help"]);
+    assert!(
+        help.contains("--height") && help.contains("--samples") && help.contains("--adapter-index")
+    );
+    let live = stdout(&["desktop-wgc-live-check", "--help"]);
+    assert!(live.contains("--cancel-after") && live.contains("--samples"));
+    let invalid = Command::new(env!("CARGO_BIN_EXE_intralink"))
+        .args([
+            "desktop-wgc-live-check",
+            "--samples",
+            "10",
+            "--cancel-after",
+            "10",
+        ])
+        .output()
+        .expect("Start invalid live diagnostic command");
+    assert!(!invalid.status.success());
+    assert!(
+        String::from_utf8_lossy(&invalid.stderr)
+            .contains("Cancellation must precede the final frame")
+    );
+    let share = stdout(&["share-desktop", "--help"]);
+    assert!(!share.contains("h264"));
+}

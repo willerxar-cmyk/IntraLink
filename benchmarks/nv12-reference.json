@@ -1,0 +1,39 @@
+{
+  "method": "Independent Python/NumPy arithmetic reference check of coefficients and rounding; NOT an execution of Rust or a native/GPU benchmark.",
+  "rgb_sample_count": 140608,
+  "max_absolute_8bit_error_y_u_v": [
+    1,
+    0,
+    1
+  ],
+  "neutral_grays_checked": 256,
+  "chroma_groups_checked": 100000,
+  "max_chroma_error": 1,
+  "vectors": {
+    "[0, 0, 0]": [
+      16,
+      128,
+      128
+    ],
+    "[255, 255, 255]": [
+      235,
+      128,
+      128
+    ],
+    "[255, 0, 0]": [
+      63,
+      102,
+      240
+    ],
+    "[0, 255, 0]": [
+      173,
+      42,
+      26
+    ],
+    "[0, 0, 255]": [
+      32,
+      240,
+      118
+    ]
+  }
+}

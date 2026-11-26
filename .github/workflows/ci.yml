@@ -1,0 +1,174 @@
+name: Rust checks
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+  media-core:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: rustc --version --verbose
+      - name: Test actual media, protocol and color conversion without registry dependencies
+        run: |
+          rustc --edition=2024 --test -D warnings crates/intralink-core/src/media_harness.rs -o intralink-media-tests.exe
+          ./intralink-media-tests.exe
+  workspace:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - run: rustc --version --verbose
+      - run: cargo --version
+      # Until a reviewed Cargo.lock is committed, retain each runner's real
+      # resolution as evidence. Never overwrite a committed lockfile.
+      - name: Resolve dependencies when no lockfile exists
+        shell: bash
+        run: if [ ! -f Cargo.lock ]; then cargo generate-lockfile; fi
+      - run: cargo metadata --locked --format-version 1 > cargo-metadata.json
+        shell: bash
+      - run: cargo clippy --locked --workspace --all-targets -- -D warnings
+      - run: cargo test --locked --workspace
+        if: ${{ !cancelled() && hashFiles('Cargo.lock') != '' }}
+      - run: cargo build --locked --workspace --release
+        if: ${{ !cancelled() && hashFiles('Cargo.lock') != '' }}
+      - name: Preserve actual dependency resolution for review
+        if: ${{ !cancelled() && hashFiles('Cargo.lock') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-resolution-${{ matrix.os }}
+          path: |
+            Cargo.lock
+            cargo-metadata.json
+  desktop-preview:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: Install Linux desktop build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libclang-dev libxcb1-dev libxrandr-dev libdbus-1-dev libpipewire-0.3-dev libwayland-dev libegl-dev libx11-dev libxcursor-dev libxkbcommon-dev libxkbcommon-x11-dev
+      - name: Resolve dependencies when no lockfile exists
+        shell: bash
+        run: if [ ! -f Cargo.lock ]; then cargo generate-lockfile; fi
+      - run: cargo clippy --locked -p intralink --features desktop-preview --all-targets -- -D warnings
+      - run: cargo test --locked -p intralink --features desktop-preview
+        if: ${{ !cancelled() && hashFiles('Cargo.lock') != '' }}
+      - run: cargo build --locked -p intralink --features desktop-preview --release
+        if: ${{ !cancelled() && hashFiles('Cargo.lock') != '' }}
+  vaapi-probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: Install native VA-API development dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libclang-dev libva-dev
+          pkg-config --modversion libva
+          pkg-config --atleast-version=1.20.0 libva
+      - name: Resolve dependencies when no lockfile exists
+        shell: bash
+        run: if [ ! -f Cargo.lock ]; then cargo generate-lockfile; fi
+      - run: cargo clippy --locked -p intralink --features vaapi-probe --all-targets -- -D warnings
+      - run: cargo test --locked -p intralink --features vaapi-probe
+        if: ${{ !cancelled() && hashFiles('Cargo.lock') != '' }}
+      - run: cargo build --locked -p intralink --features vaapi-probe --release
+        if: ${{ !cancelled() && hashFiles('Cargo.lock') != '' }}
+      # A hosted runner need not expose a GPU; a successful build does not
+      # establish native driver or codec performance. Real-device gate is manual.
+  resource-monitor:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: Resolve dependencies when no lockfile exists
+        shell: bash
+        run: if [ ! -f Cargo.lock ]; then cargo generate-lockfile; fi
+      - run: cargo clippy --locked -p intralink --features resource-monitor --all-targets -- -D warnings
+      - run: cargo test --locked -p intralink --features resource-monitor
+        if: ${{ !cancelled() && hashFiles('Cargo.lock') != '' }}
+      - run: cargo build --locked -p intralink --features resource-monitor --release
+        if: ${{ !cancelled() && hashFiles('Cargo.lock') != '' }}
+      - name: Sample actual runner CPU and memory without network access
+        run: cargo run --locked -p intralink --features resource-monitor -- resources --samples 2 --json
+        if: ${{ !cancelled() && hashFiles('Cargo.lock') != '' }}
+  combined-desktop-features:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            features: desktop-preview,resource-monitor,vaapi-probe
+          - os: windows-latest
+            features: desktop-preview,resource-monitor
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: Install Linux native development dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libclang-dev libxcb1-dev libxrandr-dev libdbus-1-dev libpipewire-0.3-dev libwayland-dev libegl-dev libx11-dev libxcursor-dev libxkbcommon-dev libxkbcommon-x11-dev libva-dev
+          pkg-config --atleast-version=1.20.0 libva
+      - name: Resolve dependencies when no lockfile exists
+        shell: bash
+        run: if [ ! -f Cargo.lock ]; then cargo generate-lockfile; fi
+      - name: Check combined features
+        run: cargo clippy --locked -p intralink --features "${{ matrix.features }}" --all-targets -- -D warnings
+      - name: Test combined features
+        if: ${{ !cancelled() && hashFiles('Cargo.lock') != '' }}
+        run: cargo test --locked -p intralink --features "${{ matrix.features }}"
+      - name: Build combined release
+        if: ${{ !cancelled() && hashFiles('Cargo.lock') != '' }}
+        run: cargo build --locked -p intralink --features "${{ matrix.features }}" --release
+
+  windows-wgc-preview:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - run: cargo clippy --locked --workspace --all-targets --features intralink/wgc-preview,intralink/resource-monitor -- -D warnings
+      - run: cargo test --locked --workspace --features intralink/wgc-preview,intralink/resource-monitor
+      - run: cargo build --locked --release -p intralink --features wgc-preview,resource-monitor
+      # Native WGC capture requires a real interactive desktop. Do not claim
+      # hardware or graphical validation from the hosted CI build alone.

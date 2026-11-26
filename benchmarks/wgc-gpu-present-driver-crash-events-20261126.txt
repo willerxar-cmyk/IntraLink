@@ -1,0 +1,47 @@
+﻿
+
+TimeCreated : 26/11/2026 18:29:42
+Id          : 1000
+Message     : Nome do aplicativo com falha: intralink.exe, versão: 0.0.0.0, carimbo de data/hora: 0x6b086c7a
+              Nome do módulo com falha: nvdlistx.dll_unloaded, versão: 32.0.16.1060, carimbo de data/hora: 0x6a28a5d5
+              Código de exceção: 0xc0000005
+              Deslocamento de falha: 0x000000000001aba0
+              ID do processo com falha: 0x5DEC
+              Hora de início do aplicativo com falha: 0x1DD7DCBB8AE91CF
+              Caminho do aplicativo com falha: D:\IntraLink-validation-v020\target\debug\intralink.exe
+              Caminho do módulo com falha: nvdlistx.dll
+              ID do relatório: e9a42edc-c0a6-474a-b04c-3c181e86b491
+              Nome completo do pacote com falha: 
+              ID do aplicativo relativo ao pacote com falha: 
+
+TimeCreated : 26/11/2026 18:28:02
+Id          : 1000
+Message     : Nome do aplicativo com falha: intralink.exe, versão: 0.0.0.0, carimbo de data/hora: 0x6b086c0f
+              Nome do módulo com falha: nvdlistx.dll_unloaded, versão: 32.0.16.1060, carimbo de data/hora: 0x6a28a5d5
+              Código de exceção: 0xc0000005
+              Deslocamento de falha: 0x000000000001aba0
+              ID do processo com falha: 0x75C0
+              Hora de início do aplicativo com falha: 0x1DD7DCB7C3ED641
+              Caminho do aplicativo com falha: D:\IntraLink-validation-v020\target\debug\intralink.exe
+              Caminho do módulo com falha: nvdlistx.dll
+              ID do relatório: 3b0f249f-0d39-4e5a-861c-6da5fc41ff4d
+              Nome completo do pacote com falha: 
+              ID do aplicativo relativo ao pacote com falha: 
+
+TimeCreated : 26/11/2026 18:27:45
+Id          : 1000
+Message     : Nome do aplicativo com falha: intralink.exe, versão: 0.0.0.0, carimbo de data/hora: 0x6b086c0f
+              Nome do módulo com falha: nvdlistx.dll_unloaded, versão: 32.0.16.1060, carimbo de data/hora: 0x6a28a5d5
+              Código de exceção: 0xc0000005
+              Deslocamento de falha: 0x000000000001aba0
+              ID do processo com falha: 0x18E8
+              Hora de início do aplicativo com falha: 0x1DD7DCB727B782A
+              Caminho do aplicativo com falha: D:\IntraLink-validation-v020\target\debug\intralink.exe
+              Caminho do módulo com falha: nvdlistx.dll
+              ID do relatório: c1f56e5e-6ae5-4796-964f-7bd3903ce5fc
+              Nome completo do pacote com falha: 
+              ID do aplicativo relativo ao pacote com falha: 
+
+
+
+

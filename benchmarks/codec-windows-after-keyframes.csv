@@ -1,0 +1,10 @@
+resolution,scene,accepted,payload_bytes,encode_mean_us,decode_mean_us
+960x540,uniform,true,3063,217.18,124.24
+960x540,ui-like,true,14686,6039.32,225.38
+960x540,high-entropy,false,0,111.39,n/a
+1280x720,uniform,true,5523,926.11,234.96
+1280x720,ui-like,true,20277,10227.42,745.80
+1280x720,high-entropy,false,0,98.20,n/a
+1920x1080,uniform,true,12243,1387.14,852.75
+1920x1080,ui-like,true,46335,16413.96,928.81
+1920x1080,high-entropy,false,0,103.44,n/a

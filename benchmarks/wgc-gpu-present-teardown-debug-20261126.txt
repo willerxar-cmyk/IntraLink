@@ -1,0 +1,57 @@
+pid=24044 height=540 frames=6 exit=3221225477 elapsed_s=45.041
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+gpu_preview_check=passed, presented=6, rgb_max_error=1, diagnostic_readback_bytes=96, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.574, p95_ms=1.371
+nvdec_check=passed, submitted=6, decoded=6, displayed=6, sampled_yuv_max_error=0, map_and_sample_p50_ms=1.498
+wgc_codec_check=passed, native_source=1656x933, output=960x540, frames=6, idr=1, payload_bytes=13250, elapsed_ms=256.075, local_fps=23.43, capture_p50_ms=13.772, capture_p95_ms=158.090, convert_encode_p50_ms=0.951, convert_encode_p95_ms=24.561, decode_submit_p50_ms=1.557, decode_submit_p95_ms=12.724, encoder_pixel_readback=0, explicit_nvidia_device=true, same_device=true, closed_capture_rejected=true, gpu_preview=true
+Owned moving test window, native hardware encode/decode and sampled color verification; optional local GPU presentation; not physical-display sharing or a network session.
+
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+gpu_preview_check=passed, presented=60, rgb_max_error=1, diagnostic_readback_bytes=960, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.618, p95_ms=0.936
+nvdec_check=passed, submitted=60, decoded=60, displayed=60, sampled_yuv_max_error=0, map_and_sample_p50_ms=1.511
+selected_wgc_resources_released
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_codec_check=passed, native_source=1656x933, output=960x540, frames=60, idr=1, payload_bytes=51041, elapsed_ms=1187.779, local_fps=50.51, capture_p50_ms=13.873, capture_p95_ms=15.067, convert_encode_p50_ms=1.081, convert_encode_p95_ms=1.345, decode_submit_p50_ms=1.571, decode_submit_p95_ms=1.989, encoder_pixel_readback=0, explicit_nvidia_device=true, same_device=true, closed_capture_rejected=true, gpu_preview=true
+Owned moving test window, native hardware encode/decode and sampled color verification; optional local GPU presentation; not physical-display sharing or a network session.
+
+actual_exit=0
+pid=26772 height=540 frames=60 exit=0 elapsed_s=1.545
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+gpu_preview_check=passed, presented=60, rgb_max_error=1, diagnostic_readback_bytes=960, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.621, p95_ms=1.049
+nvdec_check=passed, submitted=60, decoded=60, displayed=60, sampled_yuv_max_error=0, map_and_sample_p50_ms=1.586
+selected_wgc_resources_released
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_codec_check=passed, native_source=1656x933, output=960x540, frames=60, idr=1, payload_bytes=51530, elapsed_ms=1160.870, local_fps=51.69, capture_p50_ms=13.810, capture_p95_ms=14.832, convert_encode_p50_ms=1.147, convert_encode_p95_ms=1.393, decode_submit_p50_ms=1.650, decode_submit_p95_ms=2.185, encoder_pixel_readback=0, explicit_nvidia_device=true, same_device=true, closed_capture_rejected=true, gpu_preview=true
+Owned moving test window, native hardware encode/decode and sampled color verification; optional local GPU presentation; not physical-display sharing or a network session.
+
+pid=23052 height=720 frames=60 exit=0 elapsed_s=1.579
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+gpu_preview_check=passed, presented=60, rgb_max_error=1, diagnostic_readback_bytes=960, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.654, p95_ms=1.385
+nvdec_check=passed, submitted=60, decoded=60, displayed=60, sampled_yuv_max_error=0, map_and_sample_p50_ms=1.839
+selected_wgc_resources_released
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_codec_check=passed, native_source=2216x1248, output=1280x720, frames=60, idr=1, payload_bytes=33401, elapsed_ms=1195.502, local_fps=50.19, capture_p50_ms=13.409, capture_p95_ms=14.262, convert_encode_p50_ms=1.385, convert_encode_p95_ms=1.686, decode_submit_p50_ms=1.908, decode_submit_p95_ms=3.412, encoder_pixel_readback=0, explicit_nvidia_device=true, same_device=true, closed_capture_rejected=true, gpu_preview=true
+Owned moving test window, native hardware encode/decode and sampled color verification; optional local GPU presentation; not physical-display sharing or a network session.
+
+pid=24872 height=1080 frames=180 exit=0 elapsed_s=3.638
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+gpu_preview_check=passed, presented=180, rgb_max_error=3, diagnostic_readback_bytes=2880, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.776, p95_ms=1.866
+nvdec_check=passed, submitted=180, decoded=180, displayed=180, sampled_yuv_max_error=1, map_and_sample_p50_ms=2.797
+selected_wgc_resources_released
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_codec_check=passed, native_source=3336x1878, output=1920x1080, frames=180, idr=3, payload_bytes=107363, elapsed_ms=3231.304, local_fps=55.71, capture_p50_ms=11.454, capture_p95_ms=12.471, convert_encode_p50_ms=2.248, convert_encode_p95_ms=2.585, decode_submit_p50_ms=2.876, decode_submit_p95_ms=4.574, encoder_pixel_readback=0, explicit_nvidia_device=true, same_device=true, closed_capture_rejected=true, gpu_preview=true
+Owned moving test window, native hardware encode/decode and sampled color verification; optional local GPU presentation; not physical-display sharing or a network session.
+
+pid=29092 height=1080 frames=180 exit=0 elapsed_s=3.654
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+gpu_preview_check=passed, presented=180, rgb_max_error=3, diagnostic_readback_bytes=2880, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.729, p95_ms=0.996
+nvdec_check=passed, submitted=180, decoded=180, displayed=180, sampled_yuv_max_error=1, map_and_sample_p50_ms=2.710
+selected_wgc_resources_released
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_codec_check=passed, native_source=3336x1878, output=1920x1080, frames=180, idr=3, payload_bytes=106094, elapsed_ms=3237.666, local_fps=55.60, capture_p50_ms=11.676, capture_p95_ms=12.437, convert_encode_p50_ms=2.199, convert_encode_p95_ms=2.676, decode_submit_p50_ms=2.776, decode_submit_p95_ms=3.244, encoder_pixel_readback=0, explicit_nvidia_device=true, same_device=true, closed_capture_rejected=true, gpu_preview=true
+Owned moving test window, native hardware encode/decode and sampled color verification; optional local GPU presentation; not physical-display sharing or a network session.
+
