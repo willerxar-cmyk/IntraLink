@@ -47,3 +47,8 @@ Current v8 continues to negotiate only the existing explicit tile/JPEG modes. Do
 ## H.264 v9 loopback diagnostic
 
 The optional NVIDIA fixture now exposes a bounded collection of generated access units and the exact originating D3D11 device. A new `desktop-h264-check` command uses authenticated Iroh QUIC loopback, an exact agreed v9 H.264 profile and per-endpoint structural guards. It validates byte identity and order before submitting received samples to native NVDEC. Encoding is performed before transfer and decoding after transfer; timings are not live capture-to-display latency or a sustained physical-network benchmark. See [PROTOCOL.md](PROTOCOL.md). Existing production-preview Host and viewer commands remain v8-only.
+
+
+### Restricted headless fixture gate
+
+The existing NVDEC parser and native decoder can execute under the same reduced token without instantiating a graphics presenter. A developer-only example embeds six exact known generated 1080p NVENC packets; no arbitrary data input. The Debug diagnostic validated real immediate decode callbacks, order, sampled colors and teardown (6/6, exit 0). The v9 remote-content boundary remains unchanged. Cross-process surfaces, full hostile input containment and physical session qualification are still required.

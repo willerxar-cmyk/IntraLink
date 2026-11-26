@@ -103,3 +103,8 @@ Full Windows workspace, real loopback multi-host sessions, WGC generated-window 
 4. Only after security and consent gates, implement individually scoped input, remote monitor selection, file/audio/resource capabilities and native secure storage/live revocation. Direct connectivity/NAT traversal, signed packaging, CI, license/security review and production qualification remain open.
 
 See [HANDOFF.md](HANDOFF.md) and [APP-VALIDATION.md](APP-VALIDATION.md) for exact completed/pending gate results rather than assuming historical roadmap milestones are current.
+
+
+### Restricted decoder investigation checkpoint (2026-11-26)
+
+Minimal strict-token worker startup, exact-LUID CUDA/CUVID capability and native headless 1080p trusted-fixture decoding now pass in Debug. Next isolate the presenter as a trusted process and qualify explicit shared GPU surfaces, real OS read/network denial (not merely token integrity) and hostile AVC input. The graphical same-executable restricted path and physical H.264 remain unqualified. Do not change the normal v8 protocol or release a remote H.264 capability until these gates pass.

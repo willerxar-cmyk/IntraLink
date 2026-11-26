@@ -6,6 +6,8 @@ Version 0.22.0 — development preview. The complete locked Windows workspace ha
 
 ### v0.22 additions
 
+- Restricted headless NVDEC development diagnostic: the minimal worker starts under the existing reduced token, matches the exact CUDA LUID and decodes a fixed locally generated 1080p fixture. No physical H.264 sharing, complete OS sandbox or shared GPU surface transport yet. See [SECURITY.md](docs/SECURITY.md) and [APP-VALIDATION.md](docs/APP-VALIDATION.md).
+
 - Shared workspace endpoint, independent cancellation, full Windows application Clippy and 114 tests passed. See [APP-VALIDATION.md](docs/APP-VALIDATION.md).
 - Windows maintenance: locked Release build, formatting and repeated test gates passed. `intralink desktop-check` passed local windowed and primary 4K fullscreen buffer submission; it does not capture or transmit the desktop. Host capture demand now wakes asynchronously. See [DESKTOP.md](docs/DESKTOP.md).
 - Windows native local media diagnostic: `intralink desktop-media-check --height 1080 --samples 30 --codec compact` exercises isolated window capture, CPU codecs and local native buffer submission. See [PERFORMANCE.md](docs/PERFORMANCE.md) for measured bottlenecks and limits.

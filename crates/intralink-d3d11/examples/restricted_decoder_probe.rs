@@ -1,5 +1,5 @@
-//! Developer-only startup and CUDA capability probes. The worker has no
-//! GUI, vault, network session, parser, or bitstream input.
+//! Developer-only startup, CUDA capability and embedded decode probes.
+//! No GUI, vault, network session or caller-supplied bitstream input.
 #![forbid(unsafe_code)]
 
 #[cfg(all(windows, feature = "nvenc-preview"))]
@@ -7,6 +7,7 @@ fn main() -> anyhow::Result<()> {
     use anyhow::{Context, bail, ensure};
     use intralink_d3d11::{
         RestrictedDecoderChild, harden_decoder_worker, verify_restricted_headless_cuda,
+        verify_restricted_headless_fixture,
     };
     use std::{
         io::{Read, Write},
@@ -16,6 +17,7 @@ fn main() -> anyhow::Result<()> {
 
     const STARTUP: &[u8] = b"restricted_headless_startup=passed\n";
     const CUDA: &[u8] = b"restricted_headless_cuda=passed\n";
+    const DECODE: &[u8] = b"restricted_headless_decode=passed\n";
     let mut args = std::env::args_os().skip(1);
     let first = args.next();
     let second = args.next();
@@ -37,6 +39,11 @@ fn main() -> anyhow::Result<()> {
                 verify_restricted_headless_cuda(luid)?;
                 CUDA
             }
+            2 => {
+                let luid = request[1..].try_into().context("Invalid LUID")?;
+                verify_restricted_headless_fixture(luid)?;
+                DECODE
+            }
             _ => bail!("Invalid headless probe bootstrap"),
         };
         let mut stdout = std::io::stdout().lock();
@@ -48,7 +55,7 @@ fn main() -> anyhow::Result<()> {
     let mut request = [0u8; 9];
     let expected = match (first, second) {
         (None, None) => STARTUP,
-        (Some(command), Some(luid)) if command == "--cuda-luid" => {
+        (Some(command), Some(luid)) if command == "--cuda-luid" || command == "--decode-luid" => {
             let luid = luid.to_str().context("LUID must be UTF-8")?;
             let (high, low) = luid.split_once(':').context("Expected HIGH:LOW LUID")?;
             ensure!(
@@ -61,12 +68,12 @@ fn main() -> anyhow::Result<()> {
                     .all(|b| b.is_ascii_hexdigit()),
                 "Invalid LUID digits"
             );
-            request[0] = 1;
+            request[0] = if command == "--cuda-luid" { 1 } else { 2 };
             request[1..5].copy_from_slice(&u32::from_str_radix(low, 16)?.to_le_bytes());
             request[5..9].copy_from_slice(&u32::from_str_radix(high, 16)?.to_le_bytes());
-            CUDA
+            if request[0] == 1 { CUDA } else { DECODE }
         }
-        _ => bail!("Usage: restricted_decoder_probe [--cuda-luid HIGH:LOW]"),
+        _ => bail!("Usage: restricted_decoder_probe [--cuda-luid|--decode-luid HIGH:LOW]"),
     };
 
     let (mut child, _job, mut input, output) = RestrictedDecoderChild::spawn()?;

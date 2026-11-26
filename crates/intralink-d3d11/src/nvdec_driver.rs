@@ -50,7 +50,7 @@ impl Cuda {
 
     /// Match the exact trusted adapter identity without importing D3D11
     /// into a headless diagnostic worker.
-    fn new_for_luid(expected: [u8; 8]) -> Result<Self> {
+    pub(super) fn new_for_luid(expected: [u8; 8]) -> Result<Self> {
         // SAFETY: resolve fixed ABI functions from the system CUDA driver
         // only; output pointers refer to initialized locals. No existing
         // context is replaced and the selected device must match DXGI LUID.

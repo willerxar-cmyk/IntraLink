@@ -2,6 +2,8 @@
 
 ## 0.22.0 — shared endpoint and full application validation
 
+- Separate the optional native presenter from decoder state; add a developer-only restricted headless worker for startup, CUDA capability and fixed native-generated 1080p decoding. No remote bitstream, permission, wire format or dependency changes.
+
 - Shared outbound-only endpoint and independent view cancellation. Full Windows combined-feature Clippy and 114 tests passed; sysinfo 0.40.4 resolves dependency conflict. See [APP-VALIDATION.md](docs/APP-VALIDATION.md).
 
 ## 0.21.0 — authenticated transport and multi-host integration

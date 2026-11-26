@@ -59,9 +59,30 @@ impl FixturePattern {
     }
 }
 
+// Keep the optional display sink out of the headless decoder's link path.
+trait SurfaceSink {
+    fn draw(&mut self, pointer: u64, pitch: u32) -> Result<()>;
+    fn finish(&mut self, expected: usize) -> Result<()>;
+    fn close(&mut self) -> Result<()>;
+}
+
+impl SurfaceSink for super::gpu_present::Presenter {
+    fn draw(&mut self, pointer: u64, pitch: u32) -> Result<()> {
+        super::gpu_present::Presenter::draw(self, pointer, pitch)
+    }
+
+    fn finish(&mut self, expected: usize) -> Result<()> {
+        super::gpu_present::Presenter::finish(self, expected)
+    }
+
+    fn close(&mut self) -> Result<()> {
+        super::gpu_present::Presenter::close(self)
+    }
+}
+
 struct State {
     // Release graphics registrations before their owning CUDA context.
-    presenter: Option<super::gpu_present::Presenter>,
+    presenter: Option<Box<dyn SurfaceSink>>,
     api: Cuvid,
     cuda: Cuda,
     decoder: CUvideodecoder,
@@ -368,11 +389,24 @@ impl Decoder {
         size: (u32, u32),
         pattern: FixturePattern,
     ) -> Result<Self> {
+        Self::validate_size(size)?;
+        Self::with_cuda(Cuda::new(device)?, size, pattern)
+    }
+
+    pub(crate) fn with_luid(luid: [u8; 8], size: (u32, u32)) -> Result<Self> {
+        Self::validate_size(size)?;
+        Self::with_cuda(Cuda::new_for_luid(luid)?, size, FixturePattern::Bands)
+    }
+
+    fn validate_size(size: (u32, u32)) -> Result<()> {
         ensure!(
             matches!(size, (960, 540) | (1280, 720) | (1920, 1080)),
             "Unsupported decoder dimensions"
         );
-        let cuda = Cuda::new(device)?;
+        Ok(())
+    }
+
+    fn with_cuda(cuda: Cuda, size: (u32, u32), pattern: FixturePattern) -> Result<Self> {
         let api = Cuvid::load()?;
         let mut state = Box::new(State {
             presenter: None,
@@ -420,7 +454,10 @@ impl Decoder {
                 && matches!(self.state.pattern, FixturePattern::Quadrants),
             "Preview requires a fresh generated quadrant fixture"
         );
-        self.state.presenter = Some(super::gpu_present::Presenter::new(device, self.state.size)?);
+        self.state.presenter = Some(Box::new(super::gpu_present::Presenter::new(
+            device,
+            self.state.size,
+        )?));
         Ok(())
     }
 
@@ -471,7 +508,12 @@ impl Decoder {
         check(result, "Parse native H.264 packet")
     }
 
-    pub(crate) fn finish(mut self) -> Result<()> {
+    pub(crate) fn finish(self) -> Result<()> {
+        println!("{}", self.finish_summary()?);
+        Ok(())
+    }
+
+    pub(crate) fn finish_summary(mut self) -> Result<String> {
         let mut eos = CUVIDSOURCEDATAPACKET {
             flags: CUVID_PKT_ENDOFSTREAM,
             payload_size: 0,
@@ -493,11 +535,12 @@ impl Decoder {
         }
         self.state.map_times.sort_unstable();
         let p50 = self.state.map_times[(self.state.map_times.len() - 1) / 2].as_secs_f64() * 1000.0;
-        println!(
+        let summary = format!(
             "nvdec_check=passed, submitted={}, decoded={}, displayed={}, sampled_yuv_max_error={}, map_and_sample_p50_ms={p50:.3}",
             self.state.submitted, self.state.decoded, self.state.displayed, self.state.max_error
         );
-        self.close()
+        self.close()?;
+        Ok(summary)
     }
 
     /// Cancellation never submits EOS, which could publish a delayed frame.

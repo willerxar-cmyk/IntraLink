@@ -1,0 +1,86 @@
+[
+  {
+    "pid": 26492,
+    "height": 540,
+    "frames": 60,
+    "cancel_after": null,
+    "isolated_decoder": false,
+    "decoder_pid": null,
+    "status": "ok",
+    "exit": 0,
+    "elapsed_s": 1.612,
+    "output": "selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:00017777\ngpu_preview_check=passed, presented=60, rgb_max_error=1, diagnostic_readback_bytes=960, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.555, p95_ms=0.868\nselected_wgc_resources_released\nselected_d3d11_device_released\nselected_winrt_apartment_released\nwgc_stream_source=passed, frames=60, output=960x540, bytes=52053, idr=1, elapsed_ms=1281.045, source_fps=46.84, capture_p50_ms=8.762, encode_p50_ms=0.986, enqueue_p50_ms=0.005, encoder_pixel_readback=0\nnvdec_check=passed, submitted=60, decoded=60, displayed=60, sampled_yuv_max_error=0, map_and_sample_p50_ms=1.391\nwgc_stream_viewer=passed, submitted=60, demand_to_decode_submit_p50_ms=11.723, p95_ms=18.058, steady_decode_submit_fps=59.46, worker_resources_released=true\nwgc_live_loopback=passed, resolution=960x540, frames=60, bytes=52533, elapsed_ms=1473.358, wire_pipeline_fps=40.72, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit=8, decode_queue=1, isolated_decoder=false, restricted_decoder=false\n"
+  },
+  {
+    "pid": 5060,
+    "height": 720,
+    "frames": 60,
+    "cancel_after": null,
+    "isolated_decoder": false,
+    "decoder_pid": null,
+    "status": "ok",
+    "exit": 0,
+    "elapsed_s": 1.617,
+    "output": "selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:00017777\ngpu_preview_check=passed, presented=60, rgb_max_error=1, diagnostic_readback_bytes=960, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.576, p95_ms=1.315\nselected_wgc_resources_released\nselected_d3d11_device_released\nselected_winrt_apartment_released\nwgc_stream_source=passed, frames=60, output=1280x720, bytes=30430, idr=1, elapsed_ms=1279.249, source_fps=46.90, capture_p50_ms=9.948, encode_p50_ms=1.342, enqueue_p50_ms=0.006, encoder_pixel_readback=0\nnvdec_check=passed, submitted=60, decoded=60, displayed=60, sampled_yuv_max_error=0, map_and_sample_p50_ms=1.695\nwgc_stream_viewer=passed, submitted=60, demand_to_decode_submit_p50_ms=14.157, p95_ms=18.924, steady_decode_submit_fps=59.61, worker_resources_released=true\nwgc_live_loopback=passed, resolution=1280x720, frames=60, bytes=30910, elapsed_ms=1479.757, wire_pipeline_fps=40.55, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit=8, decode_queue=1, isolated_decoder=false, restricted_decoder=false\n"
+  },
+  {
+    "pid": 15328,
+    "height": 1080,
+    "frames": 180,
+    "cancel_after": null,
+    "isolated_decoder": false,
+    "decoder_pid": null,
+    "status": "ok",
+    "exit": 0,
+    "elapsed_s": 3.727,
+    "output": "selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:00017777\ngpu_preview_check=passed, presented=180, rgb_max_error=3, diagnostic_readback_bytes=2880, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.666, p95_ms=1.472\nselected_wgc_resources_released\nselected_d3d11_device_released\nselected_winrt_apartment_released\nwgc_stream_source=passed, frames=180, output=1920x1080, bytes=107563, idr=3, elapsed_ms=3352.197, source_fps=53.70, capture_p50_ms=0.176, encode_p50_ms=2.132, enqueue_p50_ms=0.006, encoder_pixel_readback=0\nnvdec_check=passed, submitted=180, decoded=180, displayed=180, sampled_yuv_max_error=1, map_and_sample_p50_ms=2.631\nwgc_stream_viewer=passed, submitted=180, demand_to_decode_submit_p50_ms=5.742, p95_ms=16.455, steady_decode_submit_fps=58.79, worker_resources_released=true\nwgc_live_loopback=passed, resolution=1920x1080, frames=180, bytes=109003, elapsed_ms=3564.709, wire_pipeline_fps=50.50, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit=8, decode_queue=1, isolated_decoder=false, restricted_decoder=false\n"
+  },
+  {
+    "pid": 21964,
+    "height": 1080,
+    "frames": 180,
+    "cancel_after": null,
+    "isolated_decoder": false,
+    "decoder_pid": null,
+    "status": "ok",
+    "exit": 0,
+    "elapsed_s": 3.708,
+    "output": "selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:00017777\nselected_wgc_resources_released\ngpu_preview_check=passed, presented=180, rgb_max_error=3, diagnostic_readback_bytes=2880, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.709, p95_ms=1.613\nselected_d3d11_device_released\nselected_winrt_apartment_released\nwgc_stream_source=passed, frames=180, output=1920x1080, bytes=105738, idr=3, elapsed_ms=3341.521, source_fps=53.87, capture_p50_ms=0.147, encode_p50_ms=2.145, enqueue_p50_ms=0.005, encoder_pixel_readback=0\nnvdec_check=passed, submitted=180, decoded=180, displayed=180, sampled_yuv_max_error=1, map_and_sample_p50_ms=2.678\nwgc_stream_viewer=passed, submitted=180, demand_to_decode_submit_p50_ms=5.557, p95_ms=11.975, steady_decode_submit_fps=58.88, worker_resources_released=true\nwgc_live_loopback=passed, resolution=1920x1080, frames=180, bytes=107178, elapsed_ms=3563.578, wire_pipeline_fps=50.51, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit=8, decode_queue=1, isolated_decoder=false, restricted_decoder=false\n"
+  },
+  {
+    "pid": 3344,
+    "height": 540,
+    "frames": 60,
+    "cancel_after": 1,
+    "isolated_decoder": false,
+    "decoder_pid": null,
+    "status": "ok",
+    "exit": 0,
+    "elapsed_s": 0.702,
+    "output": "selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:00017777\nselected_wgc_resources_released\nselected_d3d11_device_released\nselected_winrt_apartment_released\nwgc_stream_source=cancelled, delivered=2, encoded=2, resources_released=true\nwgc_stream_viewer=cancelled, submitted=1, worker_resources_released=true\nwgc_live_cancel=passed, requested=1, source_delivered=2, viewer_submitted=1, joined_workers=true, no_more_decode=true, isolated_decoder=false, restricted_decoder=false\n"
+  },
+  {
+    "pid": 2700,
+    "height": 540,
+    "frames": 60,
+    "cancel_after": 10,
+    "isolated_decoder": false,
+    "decoder_pid": null,
+    "status": "ok",
+    "exit": 0,
+    "elapsed_s": 0.773,
+    "output": "selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:00017777\nselected_wgc_resources_released\nselected_d3d11_device_released\nselected_winrt_apartment_released\nwgc_stream_source=cancelled, delivered=10, encoded=11, resources_released=true\nwgc_stream_viewer=cancelled, submitted=10, worker_resources_released=true\nwgc_live_cancel=passed, requested=10, source_delivered=10, viewer_submitted=10, joined_workers=true, no_more_decode=true, isolated_decoder=false, restricted_decoder=false\n"
+  },
+  {
+    "pid": 23864,
+    "height": 1080,
+    "frames": 180,
+    "cancel_after": 30,
+    "isolated_decoder": false,
+    "decoder_pid": null,
+    "status": "ok",
+    "exit": 0,
+    "elapsed_s": 1.129,
+    "output": "selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:00017777\nselected_wgc_resources_released\nselected_d3d11_device_released\nselected_winrt_apartment_released\nwgc_stream_source=cancelled, delivered=30, encoded=30, resources_released=true\nwgc_stream_viewer=cancelled, submitted=30, worker_resources_released=true\nwgc_live_cancel=passed, requested=30, source_delivered=30, viewer_submitted=30, joined_workers=true, no_more_decode=true, isolated_decoder=false, restricted_decoder=false\n"
+  }
+]

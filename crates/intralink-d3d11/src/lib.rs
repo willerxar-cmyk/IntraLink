@@ -49,6 +49,10 @@ mod nvdec;
 mod nvdec_driver;
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 pub use nvdec_driver::verify_restricted_headless_cuda;
+#[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
+mod headless_fixture;
+#[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
+pub use headless_fixture::verify_restricted_headless_fixture;
 
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 mod precise_timer;
