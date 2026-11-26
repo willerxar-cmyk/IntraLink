@@ -1,0 +1,16 @@
+[Reading last 11 lines (total: 11 lines)]
+
+decoder_process_started, pid=34264, private_job=true
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0
+gpu_preview_check=passed, presented=60, rgb_max_error=3, diagnostic_readback_bytes=960, cuda_d3d11_copy=true, upload_shader_present_p50_ms=1.313, p95_ms=1.632
+selected_wgc_resources_released
+nvdec_check=passed, submitted=60, decoded=60, displayed=60, sampled_yuv_max_error=1, map_and_sample_p50_ms=3.493
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=passed, frames=60, output=1920x1080, bytes=47266, idr=1, elapsed_ms=1535.776, source_fps=39.07, capture_p50_ms=5.539, encode_p50_ms=2.383, enqueue_p50_ms=0.052, encoder_pixel_readback=0
+decoder_process_exit=passed, pid=34264, exit=0, ipc_joined=true
+wgc_stream_viewer=passed, submitted=60, demand_to_decode_submit_p50_ms=13.575, p95_ms=33.104, steady_decode_submit_fps=58.40, worker_resources_released=true
+wgc_live_loopback=passed, resolution=1920x1080, frames=60, bytes=47746, elapsed_ms=2030.138, wire_pipeline_fps=29.55, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit=8, decode_queue=1, isolated_decoder=true
+✅ Process completed with exit code 0 (runtime: 2.58s)
+
+[executed on device: DESKTOP-54A9GFC (af27c91c-6f94-4f61-a934-0c3dc3c2c0a6)]

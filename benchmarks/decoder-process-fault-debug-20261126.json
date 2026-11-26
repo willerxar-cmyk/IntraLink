@@ -1,0 +1,7 @@
+{
+  "parent_pid": 36440,
+  "decoder_pid": 29724,
+  "parent_exit": 1,
+  "passed": true,
+  "output": "decoder_process_started, pid=29724, private_job=true\nselected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:000169c0\nselected_wgc_resources_released\nselected_d3d11_device_released\nselected_winrt_apartment_released\nwgc_stream_source=cancelled, delivered=1, encoded=2, resources_released=true\ndecoder worker failed: O pipe est\u00e1 sendo fechado. (os error 232)\nError: decoder worker failed\n\nCaused by:\n    O pipe est\u00e1 sendo fechado. (os error 232)\n"
+}
