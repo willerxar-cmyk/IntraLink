@@ -230,11 +230,23 @@ pub async fn wgc_live_check(
     adapter_index: Option<u32>,
     cancel_after: Option<u16>,
     isolated_decoder: bool,
+    restricted_decoder: bool,
 ) -> Result<()> {
     ensure!(
         cancel_after.is_none_or(|count| count > 0 && count < samples),
         "Cancellation must precede the final frame"
     );
+    ensure!(
+        !restricted_decoder || isolated_decoder,
+        "Restricted decoder requires process isolation"
+    );
+    let mode = if restricted_decoder {
+        super::live_h264::DecoderMode::Restricted
+    } else if isolated_decoder {
+        super::live_h264::DecoderMode::Process
+    } else {
+        super::live_h264::DecoderMode::Thread
+    };
     let child = wgc_fixture(height, samples)?;
     super::live_h264::run(
         child.0.id(),
@@ -243,7 +255,7 @@ pub async fn wgc_live_check(
         samples,
         adapter_index,
         cancel_after,
-        isolated_decoder,
+        mode,
     )
     .await
 }

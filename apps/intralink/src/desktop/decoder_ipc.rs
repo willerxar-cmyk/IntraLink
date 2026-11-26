@@ -7,7 +7,9 @@ use intralink_core::{
     desktop::MAX_FRAME_BYTES,
     h264::{self, Profile, StreamState},
 };
-use intralink_d3d11::{FIXTURE_BITRATE, FIXTURE_FPS, verify_isolated_decoder};
+use intralink_d3d11::{
+    FIXTURE_BITRATE, FIXTURE_FPS, harden_decoder_worker, verify_isolated_decoder,
+};
 
 const MAGIC: &[u8; 8] = b"ILDEC001";
 pub(super) const START_BYTES: usize = 24;
@@ -110,19 +112,29 @@ fn message(text: &str) -> Result<()> {
 /// Hidden local-only executable mode. Bootstrap must arrive before native
 /// initialization (the parent attaches its job before sending it). The job
 /// check and independent v9 validator do not form a security sandbox.
-pub fn child() -> Result<()> {
+pub fn child(restricted: bool) -> Result<()> {
+    if restricted {
+        eprintln!("restricted_decoder_worker_entry");
+    }
     let mut input = io::stdin().lock();
     let mut bootstrap = [0; START_BYTES];
     input
         .read_exact(&mut bootstrap)
         .context("Missing decoder IPC bootstrap")?;
     let start = Start::decode(bootstrap)?;
+    harden_decoder_worker(restricted)?;
     let mut state = StreamState::new(start.profile);
     let count = verify_isolated_decoder(
         start.profile.height() as u16,
         start.samples,
         start.adapter,
-        || message("ILDEC READY 1"),
+        || {
+            message(if restricted {
+                "ILDEC READY 1 RESTRICTED"
+            } else {
+                "ILDEC READY 1"
+            })
+        },
         || next_packet(&mut input, &mut state),
         |sequence| message(&format!("ILDEC ACK {sequence}")),
     )?;

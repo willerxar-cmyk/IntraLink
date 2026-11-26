@@ -1,0 +1,40 @@
+restricted=False parent_pid=16704 exit=0
+decoder_process_started, pid=9332, private_job=true
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:00017777
+decoder_process_policy=verified, restricted_token=false, commit_limit_mib=2048, image_load_policy=true, extension_points_disabled=true, child_creation_disabled=true
+gpu_preview_check=passed, presented=6, rgb_max_error=1, diagnostic_readback_bytes=96, cuda_d3d11_copy=true, upload_shader_present_p50_ms=0.722, p95_ms=1.525
+selected_wgc_resources_released
+nvdec_check=passed, submitted=6, decoded=6, displayed=6, sampled_yuv_max_error=0, map_and_sample_p50_ms=1.500
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=passed, frames=6, output=960x540, bytes=16832, idr=1, elapsed_ms=389.436, source_fps=15.41, capture_p50_ms=0.187, encode_p50_ms=1.074, enqueue_p50_ms=0.018, encoder_pixel_readback=0
+decoder_process_exit=passed, pid=9332, exit=0, ipc_joined=true
+wgc_stream_viewer=passed, submitted=6, demand_to_decode_submit_p50_ms=4.008, p95_ms=342.682, steady_decode_submit_fps=101.15, worker_resources_released=true
+wgc_live_loopback=passed, resolution=960x540, frames=6, bytes=16880, elapsed_ms=2514.154, wire_pipeline_fps=2.39, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit=8, decode_queue=1, isolated_decoder=true, restricted_decoder=false
+
+restricted=True parent_pid=19956 exit=1
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:00017777
+selected_wgc_resources_released
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=cancelled, delivered=1, encoded=2, resources_released=true
+decoder worker failed: Set low integrity on decoder token: Acesso negado. (0x80070005)
+Error: decoder worker failed
+
+Caused by:
+    0: Set low integrity on decoder token
+    1: Acesso negado. (0x80070005)
+
+logon SID and no console, actual_exit=1
+decoder_process_started, pid=13892, private_job=true
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:00017777
+selected_wgc_resources_released
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=cancelled, delivered=1, encoded=2, resources_released=true
+decoder worker failed: Decoder child exited: exit code: 0xc0000142: Decoder IPC response closed or exceeded line budget
+Error: decoder worker failed
+
+Caused by:
+    0: Decoder child exited: exit code: 0xc0000142
+    1: Decoder IPC response closed or exceeded line budget

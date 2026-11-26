@@ -1,0 +1,18 @@
+decoder_process_started, pid=19268, private_job=true
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:00017777
+selected_wgc_resources_released
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=cancelled, delivered=1, encoded=2, resources_released=true
+intralink.exe : decoder worker failed: Decoder IPC response closed or exceeded line budget
+No linha:15 caractere:535
++ ... alink.exe"; & $exe desktop-wgc-live-check --height 540 --samples 6 -- ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (decoder worker ...ded line budget:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+Error: decoder worker failed
+
+Caused by:
+    Decoder IPC response closed or exceeded line budget
+actual_exit=1

@@ -214,3 +214,8 @@
 ### Supervised decoder process (development)
 - Add explicit --isolated-decoder diagnostic using a separate owned executable, private bounded IPC and a Windows Job Object with kill-on-close and one-process limit. Keep current local generated-origin verification and v9 validation on both sides.
 - Require immediate ordered native display callbacks before receipt, reject invalid bootstrap/record/response limits, and supervise actual child exit and cancellation. No arbitrary remote AVC or physical sharing exposure.
+
+### Decoder process hardening (development)
+- Enforce 2 GiB committed-memory limit and unhandled-exception policy in the decoder job; verify image-load, extension-point and child-creation mitigations before native GPU initialization.
+- Add explicit experimental low-integrity primary-token launcher with exact handle allowlist, minimal environment, job before resume and real token-only validation. Restricted graphical startup remains unqualified (0xC0000142); no fallback.
+- Preserve child native exit diagnostics, verify mandatory no-write-up, exact restricted SID membership and unchanged parent token. Add CLI guard coverage and native evidence.

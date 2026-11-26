@@ -79,3 +79,20 @@ mod driver_library;
 mod decoder_job;
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 pub use decoder_job::DecoderJob;
+
+#[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
+mod decoder_token;
+
+#[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
+mod restricted_decoder;
+
+#[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
+mod decoder_mitigation;
+
+#[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
+pub use decoder_mitigation::harden_decoder_worker;
+#[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
+pub use restricted_decoder::RestrictedDecoderChild;
+
+#[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
+pub use decoder_token::verify_decoder_token_creation;

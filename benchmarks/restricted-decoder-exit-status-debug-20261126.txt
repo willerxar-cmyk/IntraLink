@@ -1,0 +1,19 @@
+[Reading last 14 lines (total: 14 lines)]
+
+   Compiling intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.45s
+decoder_process_started, pid=3040, private_job=true
+selected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:00017777
+selected_wgc_resources_released
+selected_d3d11_device_released
+selected_winrt_apartment_released
+wgc_stream_source=cancelled, delivered=1, encoded=2, resources_released=true
+decoder worker failed: Decoder child exited: exit code: 0xc0000142: Decoder IPC response closed or exceeded line budget
+Error: decoder worker failed
+
+Caused by:
+    0: Decoder child exited: exit code: 0xc0000142
+    1: Decoder IPC response closed or exceeded line budget
+✅ Process completed with exit code 1 (runtime: 7.43s)
+
+[executed on device: DESKTOP-54A9GFC (af27c91c-6f94-4f61-a934-0c3dc3c2c0a6)]

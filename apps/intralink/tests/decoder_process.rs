@@ -110,14 +110,18 @@ fn kill_on_close_releases_a_real_child_blocked_on_ipc() {
 
 #[test]
 fn private_worker_rejects_vault_arguments() {
-    let output = Command::new(env!("CARGO_BIN_EXE_intralink"))
-        .args(["--vault", "unused-test-vault", "desktop-decoder-worker"])
-        .output()
-        .unwrap();
-    assert!(!output.status.success());
-    assert!(
-        String::from_utf8_lossy(&output.stderr).contains("Decoder worker cannot access a vault")
-    );
+    for command in [
+        "desktop-decoder-worker",
+        "desktop-restricted-decoder-worker",
+        "desktop-decoder-token-check",
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_intralink"))
+            .args(["--vault", "unused-test-vault", command])
+            .output()
+            .unwrap();
+        assert!(!output.status.success());
+        assert!(String::from_utf8_lossy(&output.stderr).contains("cannot access a vault"));
+    }
 }
 
 #[test]
@@ -130,4 +134,14 @@ fn explicit_job_termination_uses_failure_exit_status() {
     assert_eq!(wait(&mut child).code(), Some(1));
     drop(input);
     job.close().unwrap();
+}
+
+#[test]
+fn restricted_decoder_requires_explicit_process_isolation() {
+    let output = Command::new(env!("CARGO_BIN_EXE_intralink"))
+        .args(["desktop-wgc-live-check", "--restricted-decoder"])
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("--isolated-decoder"));
 }

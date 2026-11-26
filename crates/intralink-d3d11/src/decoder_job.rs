@@ -9,7 +9,8 @@ use windows::{
         System::{
             JobObjects::{
                 AssignProcessToJobObject, CreateJobObjectW, IsProcessInJob,
-                JOB_OBJECT_LIMIT_ACTIVE_PROCESS, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+                JOB_OBJECT_LIMIT_ACTIVE_PROCESS, JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION,
+                JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE, JOB_OBJECT_LIMIT_PROCESS_MEMORY,
                 JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation,
                 QueryInformationJobObject, SetInformationJobObject, TerminateJobObject,
             },
@@ -19,6 +20,8 @@ use windows::{
     core::{BOOL, PCWSTR},
 };
 
+const DECODER_COMMIT_LIMIT: usize = 2 * 1024 * 1024 * 1024;
+
 /// An unnamed, non-inheritable job owning only the explicitly spawned child.
 pub struct DecoderJob {
     handle: Option<HANDLE>,
@@ -26,16 +29,25 @@ pub struct DecoderJob {
 
 impl DecoderJob {
     pub fn attach(child: &Child) -> Result<Self> {
+        let job = Self::new()?;
+        job.assign(HANDLE(child.as_raw_handle()))?;
+        Ok(job)
+    }
+
+    pub(crate) fn new() -> Result<Self> {
         // SAFETY: null security attributes make the unnamed job private and
-        // non-inheritable. The child process handle is owned by Child.
+        // non-inheritable. It contains no process until explicit assignment.
         let handle = unsafe { CreateJobObjectW(None, PCWSTR::null())? };
         let job = Self {
             handle: Some(handle),
         };
         let mut limits = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();
-        limits.BasicLimitInformation.LimitFlags =
-            JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE | JOB_OBJECT_LIMIT_ACTIVE_PROCESS;
+        limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+            | JOB_OBJECT_LIMIT_ACTIVE_PROCESS
+            | JOB_OBJECT_LIMIT_PROCESS_MEMORY
+            | JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION;
         limits.BasicLimitInformation.ActiveProcessLimit = 1;
+        limits.ProcessMemoryLimit = DECODER_COMMIT_LIMIT;
         // SAFETY: live job and borrowed child handles; the initialized limits
         // buffer is valid for the entire call. No process ID lookup or reuse.
         unsafe {
@@ -45,9 +57,19 @@ impl DecoderJob {
                 (&limits as *const JOBOBJECT_EXTENDED_LIMIT_INFORMATION).cast(),
                 std::mem::size_of_val(&limits) as u32,
             )?;
-            AssignProcessToJobObject(handle, HANDLE(child.as_raw_handle()))?;
         }
         Ok(job)
+    }
+
+    pub(crate) fn assign(&self, process: HANDLE) -> Result<()> {
+        let handle = self
+            .handle
+            .ok_or_else(|| anyhow::anyhow!("Decoder job closed"))?;
+        // SAFETY: the caller holds the live process handle for its own child.
+        unsafe {
+            AssignProcessToJobObject(handle, process)?;
+        }
+        Ok(())
     }
 
     pub fn terminate(&self) -> Result<()> {
@@ -101,7 +123,12 @@ pub(crate) fn require_decoder_job() -> Result<()> {
             .LimitFlags
             .contains(JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE)
             && basic.LimitFlags.contains(JOB_OBJECT_LIMIT_ACTIVE_PROCESS)
-            && basic.ActiveProcessLimit == 1,
+            && basic.ActiveProcessLimit == 1
+            && basic.LimitFlags.contains(JOB_OBJECT_LIMIT_PROCESS_MEMORY)
+            && basic
+                .LimitFlags
+                .contains(JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION)
+            && limits.ProcessMemoryLimit == DECODER_COMMIT_LIMIT,
         "Decoder worker job policy mismatch"
     );
     Ok(())

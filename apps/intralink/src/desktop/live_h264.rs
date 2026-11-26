@@ -131,6 +131,13 @@ fn verify_wire(
     Ok(())
 }
 
+#[derive(Clone, Copy)]
+pub(super) enum DecoderMode {
+    Thread,
+    Process,
+    Restricted,
+}
+
 pub(super) async fn run(
     pid: u32,
     title: &'static str,
@@ -138,8 +145,10 @@ pub(super) async fn run(
     samples: u16,
     adapter_index: Option<u32>,
     cancel_after: Option<u16>,
-    isolated_decoder: bool,
+    decoder_mode: DecoderMode,
 ) -> Result<()> {
+    let isolated_decoder = !matches!(decoder_mode, DecoderMode::Thread);
+    let restricted_decoder = matches!(decoder_mode, DecoderMode::Restricted);
     ensure!((1..=180).contains(&samples), "Use 1-180 generated frames");
     ensure!(
         cancel_after.is_none_or(|count| count > 0 && count < samples),
@@ -172,7 +181,7 @@ pub(super) async fn run(
             .spawn(move || source_worker(pid,title,height,samples,adapter_index,requests,expected))?;
         let decode_worker = match thread::Builder::new().name("intralink-gpu-viewer".into())
             .spawn(move || if isolated_decoder {
-                super::decoder_process::run(decoder_start,jobs)
+                super::decoder_process::run(decoder_start,jobs,restricted_decoder)
             } else {
                 viewer_worker(height,samples,adapter_index,jobs)
             }) {
@@ -229,14 +238,14 @@ pub(super) async fn run(
                 && delivered>=submitted
                 && delivered<=submitted+MAX_IN_FLIGHT_RECORDS,
                 "Cancellation did not stop ordered GPU workers within credit");
-            println!("wgc_live_cancel=passed, requested={stop}, source_delivered={delivered}, viewer_submitted={submitted}, joined_workers=true, no_more_decode=true, isolated_decoder={isolated_decoder}");
+            println!("wgc_live_cancel=passed, requested={stop}, source_delivered={delivered}, viewer_submitted={submitted}, joined_workers=true, no_more_decode=true, isolated_decoder={isolated_decoder}, restricted_decoder={restricted_decoder}");
             return Ok(());
         }
         let (served,viewed)=transport?;
         ensure!(delivered==usize::from(samples) && submitted==delivered,"Native worker frame counts mismatch");
         ensure!(served==viewed && served.frames==usize::from(samples)
             && served.repeats==0 && served.no_updates==0,"Live diagnostic frame counts mismatch");
-        println!("wgc_live_loopback=passed, resolution={}x{}, frames={}, bytes={}, elapsed_ms={:.3}, wire_pipeline_fps={:.2}, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit={}, decode_queue=1, isolated_decoder={isolated_decoder}",
+        println!("wgc_live_loopback=passed, resolution={}x{}, frames={}, bytes={}, elapsed_ms={:.3}, wire_pipeline_fps={:.2}, authenticated_direct_quic=true, exact_native_origin=true, independent_gpu_workers=true, joined_workers=true, credit_limit={}, decode_queue=1, isolated_decoder={isolated_decoder}, restricted_decoder={restricted_decoder}",
             profile.width(),profile.height(),served.frames,served.media_bytes,elapsed.as_secs_f64()*1000.0,
             f64::from(samples)/elapsed.as_secs_f64(),MAX_IN_FLIGHT_RECORDS);
         Ok::<(),anyhow::Error>(())

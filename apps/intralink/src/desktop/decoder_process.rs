@@ -2,7 +2,7 @@
 //! pipes; the supervisor owns the child and its kill-on-close Windows job.
 use std::{
     io::{BufRead, BufReader, Read, Write},
-    process::{Child, ChildStdin, ChildStdout, Command, Stdio},
+    process::{Child, Command, ExitStatus, Stdio},
     sync::mpsc::{self, Receiver, SyncSender},
     thread::{self, JoinHandle},
     time::{Duration, Instant},
@@ -10,7 +10,7 @@ use std::{
 
 use anyhow::{Context, Result, ensure};
 use intralink_core::h264;
-use intralink_d3d11::DecoderJob;
+use intralink_d3d11::{DecoderJob, RestrictedDecoderChild};
 use tokio::sync::mpsc as async_mpsc;
 
 use super::decoder_ipc::Start;
@@ -22,7 +22,7 @@ const EXIT_LIMIT: Duration = Duration::from_secs(4);
 const MAX_LINE: usize = 1024;
 
 enum Request {
-    Start(Start),
+    Start(Start, bool),
     Frame { bytes: Vec<u8>, sequence: u32 },
     Finish { submitted: usize, canceled: bool },
 }
@@ -49,16 +49,19 @@ fn expect(input: &mut impl BufRead, expected: &str) -> Result<()> {
     Ok(())
 }
 
-fn exchange(
-    output: &mut ChildStdin,
-    input: &mut BufReader<ChildStdout>,
-    request: Request,
-) -> Result<()> {
+fn exchange(output: &mut impl Write, input: &mut impl BufRead, request: Request) -> Result<()> {
     match request {
-        Request::Start(start) => {
+        Request::Start(start, restricted) => {
             output.write_all(&start.encode())?;
             output.flush()?;
-            expect(input, "ILDEC READY 1")?;
+            expect(
+                input,
+                if restricted {
+                    "ILDEC READY 1 RESTRICTED"
+                } else {
+                    "ILDEC READY 1"
+                },
+            )?;
         }
         Request::Frame { bytes, sequence } => {
             output.write_all(&u32::try_from(bytes.len())?.to_be_bytes())?;
@@ -103,8 +106,27 @@ fn exchange(
     Ok(())
 }
 
+enum ChildProcess {
+    Standard(Child),
+    Restricted(RestrictedDecoderChild),
+}
+impl ChildProcess {
+    fn id(&self) -> u32 {
+        match self {
+            Self::Standard(child) => child.id(),
+            Self::Restricted(child) => child.id(),
+        }
+    }
+    fn try_wait(&mut self) -> Result<Option<ExitStatus>> {
+        match self {
+            Self::Standard(child) => Ok(child.try_wait()?),
+            Self::Restricted(child) => child.try_wait(),
+        }
+    }
+}
+
 struct Session {
-    child: Child,
+    child: ChildProcess,
     job: DecoderJob,
     send: Option<SyncSender<Request>>,
     receive: Receiver<Result<()>>,
@@ -113,24 +135,48 @@ struct Session {
 }
 
 impl Session {
-    fn spawn() -> Result<Self> {
-        let mut child = Command::new(std::env::current_exe()?)
-            .arg("desktop-decoder-worker")
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::inherit())
-            .spawn()
-            .context("Start owned decoder child")?;
-        let job = match DecoderJob::attach(&child) {
-            Ok(job) => job,
-            Err(error) => {
-                child
-                    .kill()
-                    .context("Stop child after job attachment failure")?;
-                child.wait()?;
-                return Err(error.context("Attach private decoder job"));
-            }
+    fn spawn(restricted: bool) -> Result<Self> {
+        let (child, job, mut output, input): (
+            ChildProcess,
+            DecoderJob,
+            Box<dyn Write + Send>,
+            Box<dyn Read + Send>,
+        ) = if restricted {
+            let (child, job, input, output) = RestrictedDecoderChild::spawn()?;
+            (
+                ChildProcess::Restricted(child),
+                job,
+                Box::new(input),
+                Box::new(output),
+            )
+        } else {
+            let mut child = Command::new(std::env::current_exe()?)
+                .arg("desktop-decoder-worker")
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::inherit())
+                .spawn()
+                .context("Start owned decoder child")?;
+            let job = match DecoderJob::attach(&child) {
+                Ok(job) => job,
+                Err(error) => {
+                    child
+                        .kill()
+                        .context("Stop child after job attachment failure")?;
+                    child.wait()?;
+                    return Err(error.context("Attach private decoder job"));
+                }
+            };
+            let input = child.stdin.take().context("Missing child input pipe")?;
+            let output = child.stdout.take().context("Missing child output pipe")?;
+            (
+                ChildProcess::Standard(child),
+                job,
+                Box::new(input),
+                Box::new(output),
+            )
         };
+        let mut input = BufReader::new(input);
         let (send, requests) = mpsc::sync_channel(1);
         let (responses, receive) = mpsc::sync_channel(1);
         let mut session = Self {
@@ -141,18 +187,6 @@ impl Session {
             io_worker: None,
             reaped: false,
         };
-        let mut output = session
-            .child
-            .stdin
-            .take()
-            .context("Missing child input pipe")?;
-        let mut input = BufReader::new(
-            session
-                .child
-                .stdout
-                .take()
-                .context("Missing child output pipe")?,
-        );
         session.io_worker = Some(
             thread::Builder::new()
                 .name("intralink-decoder-ipc".into())
@@ -174,15 +208,30 @@ impl Session {
         Ok(session)
     }
 
-    fn call(&self, request: Request, limit: Duration) -> Result<()> {
+    fn call(&mut self, request: Request, limit: Duration) -> Result<()> {
         self.send
             .as_ref()
             .context("Decoder IPC closed")?
             .try_send(request)
             .map_err(|_| anyhow::anyhow!("Decoder IPC queue unavailable"))?;
-        self.receive
-            .recv_timeout(limit)
-            .context("Decoder IPC response deadline")?
+        let result = match self.receive.recv_timeout(limit) {
+            Ok(result) => result,
+            Err(error) => Err(anyhow::Error::new(error).context("Decoder IPC response deadline")),
+        };
+        if let Err(error) = result {
+            // EOF can precede the process signal. Briefly poll the exact
+            // owned handle to retain the original native exit status.
+            let started = Instant::now();
+            while started.elapsed() < Duration::from_millis(100) {
+                if let Some(status) = self.child.try_wait()? {
+                    self.reaped = true;
+                    return Err(error.context(format!("Decoder child exited: {status}")));
+                }
+                thread::sleep(Duration::from_millis(5));
+            }
+            return Err(error);
+        }
+        Ok(())
     }
 
     fn wait_exit(&mut self) -> Result<std::process::ExitStatus> {
@@ -258,9 +307,16 @@ impl Drop for Session {
     }
 }
 
-pub(super) fn run(start: Start, mut jobs: async_mpsc::Receiver<DecodeJob>) -> Result<usize> {
-    let session = Session::spawn()?;
-    session.call(Request::Start(start), START_LIMIT)?;
+pub(super) fn run(
+    start: Start,
+    mut jobs: async_mpsc::Receiver<DecodeJob>,
+    restricted: bool,
+) -> Result<usize> {
+    let mut session = Session::spawn(restricted)?;
+    session.call(Request::Start(start, restricted), START_LIMIT)?;
+    println!(
+        "decoder_process_policy=verified, restricted_token={restricted}, commit_limit_mib=2048, image_load_policy=true, extension_points_disabled=true, child_creation_disabled=true"
+    );
     let mut samples = Vec::with_capacity(usize::from(start.samples));
     let mut first = None::<Instant>;
     let mut last = None::<Instant>;

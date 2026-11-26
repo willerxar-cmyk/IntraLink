@@ -1,0 +1,12 @@
+[Reading last 7 lines (total: 7 lines)]
+
+    Checking intralink-d3d11 v0.22.0 (D:\IntraLink\crates\intralink-d3d11)
+    Checking intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.97s
+   Compiling intralink-d3d11 v0.22.0 (D:\IntraLink\crates\intralink-d3d11)
+   Compiling intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 6.81s
+decoder_token_check=passed, parent_integrity=0x2000, child_integrity=0x1000, parent_privileges=5, child_privileges=1, restricting_sids=3, no_write_up=true, parent_unchanged=true
+✅ Process completed with exit code 0 (runtime: 9.38s)
+
+[executed on device: DESKTOP-54A9GFC (af27c91c-6f94-4f61-a934-0c3dc3c2c0a6)]

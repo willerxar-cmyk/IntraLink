@@ -250,10 +250,19 @@ enum Command {
         /// Run native decoding in a private supervised process.
         #[arg(long)]
         isolated_decoder: bool,
+        /// Experimental low-integrity primary token; fail closed if OS/driver startup fails.
+        #[arg(long, requires = "isolated_decoder")]
+        restricted_decoder: bool,
     },
     #[cfg(all(feature = "nvenc-preview", target_os = "windows"))]
     #[command(hide = true)]
     DesktopDecoderWorker,
+    #[cfg(all(feature = "nvenc-preview", target_os = "windows"))]
+    #[command(hide = true)]
+    DesktopRestrictedDecoderWorker,
+    /// Verify reduced decoder token creation without starting a GPU or network worker.
+    #[cfg(all(feature = "nvenc-preview", target_os = "windows"))]
+    DesktopDecoderTokenCheck,
     /// Transfer native-generated H.264 access units over isolated authenticated QUIC.
     #[cfg(all(feature = "nvenc-preview", target_os = "windows"))]
     DesktopH264Check {
@@ -414,11 +423,24 @@ where
 fn main() -> Result<()> {
     let cli = Cli::parse();
     #[cfg(all(feature = "nvenc-preview", target_os = "windows"))]
-    if matches!(&cli.command, Command::DesktopDecoderWorker) {
+    if matches!(
+        &cli.command,
+        Command::DesktopDecoderWorker | Command::DesktopRestrictedDecoderWorker
+    ) {
         if cli.record_session || cli.vault.is_some() {
             bail!("Decoder worker cannot access a vault or session journal");
         }
-        return desktop::decoder_ipc::child();
+        return desktop::decoder_ipc::child(matches!(
+            &cli.command,
+            Command::DesktopRestrictedDecoderWorker
+        ));
+    }
+    #[cfg(all(feature = "nvenc-preview", target_os = "windows"))]
+    if matches!(&cli.command, Command::DesktopDecoderTokenCheck) {
+        if cli.record_session || cli.vault.is_some() {
+            bail!("Token diagnostic cannot access a vault or session journal");
+        }
+        return intralink_d3d11::verify_decoder_token_creation();
     }
     let session_command = matches!(
         &cli.command,
@@ -571,6 +593,7 @@ fn main() -> Result<()> {
             adapter_index,
             cancel_after,
             isolated_decoder,
+            restricted_decoder,
         } => run_async(|| {
             desktop::media_check::wgc_live_check(
                 height,
@@ -578,10 +601,17 @@ fn main() -> Result<()> {
                 adapter_index,
                 cancel_after,
                 isolated_decoder,
+                restricted_decoder,
             )
         }),
         #[cfg(all(feature = "nvenc-preview", target_os = "windows"))]
-        Command::DesktopDecoderWorker => bail!("Decoder worker must use the private IPC entry"),
+        Command::DesktopDecoderTokenCheck => {
+            bail!("Token diagnostic must use the private local entry")
+        }
+        #[cfg(all(feature = "nvenc-preview", target_os = "windows"))]
+        Command::DesktopDecoderWorker | Command::DesktopRestrictedDecoderWorker => {
+            bail!("Decoder worker must use the private IPC entry")
+        }
         #[cfg(all(feature = "nvenc-preview", target_os = "windows"))]
         Command::DesktopH264Check {
             height,
