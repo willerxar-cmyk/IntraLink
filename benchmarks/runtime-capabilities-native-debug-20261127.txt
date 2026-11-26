@@ -1,0 +1,60 @@
+Local software decoder calibration: mode=Compact, logical_cpus=Some(20)
+decode_tier=1080p, samples_per_fixture=6, jpeg_worst_ms=4471.074, compact_worst_ms=Some(10.8163), tiles_worst_ms=Some(7.1178), worst_ms=4471.074
+decode_tier=720p, samples_per_fixture=6, jpeg_worst_ms=1108.569, compact_worst_ms=Some(15.02), tiles_worst_ms=Some(6.5472), worst_ms=1108.569
+decode_tier=540p, samples_per_fixture=6, jpeg_worst_ms=636.195, compact_worst_ms=Some(7.4590000000000005), tiles_worst_ms=Some(7.0823), worst_ms=636.195
+recommended_height=540, recommended_fps=1, slots=1, software_only=true
+adapter_index=0, name="Intel(R) Iris(R) Xe Graphics", vendor=0x8086, device=0x46a6, luid=00000000:0001353d, software=false
+decoder=H264, height=540, nv12=true, driver_configs=9, frames_verified=0, remote_enabled=false
+decoder=H264, height=720, nv12=true, driver_configs=9, frames_verified=0, remote_enabled=false
+decoder=H264, height=1080, nv12=true, driver_configs=9, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=540, nv12=true, driver_configs=6, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=720, nv12=true, driver_configs=6, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=1080, nv12=true, driver_configs=6, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=540, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=720, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=1080, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=540, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=720, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=1080, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+adapter=Intel(R) Iris(R) Xe Graphics, vendor_id=0x8086, device_id=0x46a6
+nv12_check=passed, size=1920x1080, samples=6, color=BT709_limited_left, packed_bytes=3110400, max_yuv_error=0, max_rgb_error=1, staging_allocations=2, forward_with_readback_p50_ms=15.402, reverse_with_readback_p50_ms=13.126
+Synthetic GPU color conversion only; no video codec, desktop capture or network.
+conversion_1080p=verified
+adapter_index=1, name="NVIDIA GeForce RTX 3080 Ti Laptop GPU", vendor=0x10de, device=0x2460, luid=00000000:00014555, software=false
+decoder=H264, height=540, nv12=true, driver_configs=3, frames_verified=0, remote_enabled=false
+decoder=H264, height=720, nv12=true, driver_configs=3, frames_verified=0, remote_enabled=false
+decoder=H264, height=1080, nv12=true, driver_configs=3, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=540, nv12=true, driver_configs=2, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=720, nv12=true, driver_configs=2, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=1080, nv12=true, driver_configs=2, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=540, nv12=true, driver_configs=2, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=720, nv12=true, driver_configs=2, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=1080, nv12=true, driver_configs=2, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=540, nv12=true, driver_configs=4, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=720, nv12=true, driver_configs=4, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=1080, nv12=true, driver_configs=4, frames_verified=0, remote_enabled=false
+adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, vendor_id=0x10de, device_id=0x2460
+nv12_check=passed, size=1920x1080, samples=6, color=BT709_limited_left, packed_bytes=3110400, max_yuv_error=0, max_rgb_error=1, staging_allocations=2, forward_with_readback_p50_ms=2.899, reverse_with_readback_p50_ms=7.090
+Synthetic GPU color conversion only; no video codec, desktop capture or network.
+conversion_1080p=verified
+adapter_index=2, name="Intel(R) Iris(R) Xe Graphics", vendor=0x8086, device=0x46a6, luid=00000000:00026d35, software=false
+decoder=H264, height=540, nv12=true, driver_configs=9, frames_verified=0, remote_enabled=false
+decoder=H264, height=720, nv12=true, driver_configs=9, frames_verified=0, remote_enabled=false
+decoder=H264, height=1080, nv12=true, driver_configs=9, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=540, nv12=true, driver_configs=6, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=720, nv12=true, driver_configs=6, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=1080, nv12=true, driver_configs=6, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=540, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=720, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=1080, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=540, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=720, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=1080, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+adapter=Intel(R) Iris(R) Xe Graphics, vendor_id=0x8086, device_id=0x46a6
+nv12_check=passed, size=1920x1080, samples=6, color=BT709_limited_left, packed_bytes=3110400, max_yuv_error=0, max_rgb_error=1, staging_allocations=2, forward_with_readback_p50_ms=13.250, reverse_with_readback_p50_ms=12.990
+Synthetic GPU color conversion only; no video codec, desktop capture or network.
+conversion_1080p=verified
+adapter_index=3, name="Microsoft Basic Render Driver", vendor=0x1414, device=0x008c, luid=00000000:00014504, software=true
+hardware_adapters=3, devices_created=3, verified_nv12_conversion=3, remote_hardware_codecs_enabled=0
+Generated local fixtures only; no remote performance or hardware codec qualification.
+native-debug exit=0

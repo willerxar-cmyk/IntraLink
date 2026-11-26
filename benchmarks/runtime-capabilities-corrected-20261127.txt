@@ -1,0 +1,255 @@
+=== fmt-check ===
+fmt-check exit=0
+=== clippy-desktop-preview,resource-monitor ===
+    Checking intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.47s
+clippy-desktop-preview,resource-monitor exit=0
+=== clippy-wgc-preview,resource-monitor ===
+    Checking intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.52s
+clippy-wgc-preview,resource-monitor exit=0
+=== clippy-nvenc-preview,resource-monitor ===
+    Checking intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.78s
+clippy-nvenc-preview,resource-monitor exit=0
+=== app-cpu-tests ===
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.42s
+     Running unittests src\main.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink-90fb4d22137b938a.exe)
+
+running 35 tests
+test desktop::host_capture::tests::explicit_backend_never_silently_falls_back ... ok
+test ddns::tests::update_address_modes ... ok
+test desktop::receive_limits::tests::per_device_limits_are_independent_and_bounded ... ok
+test desktop::host_capture::tests::identity_requires_same_display_name_geometry_position_and_rotation ... ok
+test desktop::overview::tests::disconnected_card_removes_all_previous_pixels ... ok
+test desktop::overview::tests::busy_decoder_retains_thumbnail_but_session_restart_invalidates_it ... ok
+test desktop::overview::tests::local_notice_preserves_original_pixels_and_reuses_scratch ... ok
+test desktop::resize::tests::aspect_and_rounding ... ok
+test discovery::tests::discovery_is_restricted_to_private_ipv4_hints ... ok
+test desktop::resize::tests::invalid_geometry_is_atomic_and_exact_size_skips_resize ... ok
+test desktop::source_status::tests::no_update_notice_is_delayed_and_only_observed_pixels_clear_it ... ok
+test desktop::resize::tests::opaque_screen_colors_and_reused_buffer ... ok
+test desktop::resize::tests::downsampling_preserves_antialiasing ... ok
+test resources::tests::json_distinguishes_missing_metrics_from_zero_usage ... ok
+test resources::tests::missing_cpu_is_not_printed_as_idle_and_ram_uses_bytes ... ok
+test routing::tests::address_classes_do_not_claim_reachability ... ok
+test routing::tests::candidates_are_bounded_unique_and_dual_stack ... ok
+test routing::tests::numeric_routes_are_normalized_without_dns ... ok
+test desktop::overview::tests::all_supported_card_counts_render_in_one_reusable_canvas ... ok
+test journal::tests::opt_out_does_not_create_file_and_corruption_blocks_operation ... ok
+test journal::tests::full_or_busy_journal_is_not_overwritten ... ok
+test journal::tests::wrapper_records_completion_and_preserves_command_error ... ok
+test desktop::codec::tests::compact_hybrid_decodes_palette_after_lossless_keyframe_and_rejects_mode_switch ... ok
+test journal::tests::recording_persists_and_interruption_is_unknown ... ok
+test desktop::codec::tests::malformed_oversized_and_wrong_dimensions_are_rejected ... ok
+test desktop::codec::tests::hybrid_uses_ordered_tiles_after_keyframe ... ok
+test desktop::codec::tests::codec_round_trip_and_letterbox ... ok
+test desktop::codec::tests::static_pixels_skip_encoding_and_change_triggers_new_jpeg ... ok
+test desktop::codec::tests::compact_exact_then_jpeg_then_exact_refresh ... ok
+test desktop::codec::tests::adaptive_encoder_forces_keyframe_and_decoder_rejects_unnegotiated_geometry ... ok
+test desktop::calibration::tests::generated_jpeg_fits_wire_limit_at_every_resolution ... ok
+test desktop::media_check::tests::static_markers_distinguish_final_update_from_stale_frame ... ok
+test desktop::media_check::tests::fixture_markers_survive_animation_and_reject_wrong_content ... ok
+test desktop::codec::tests::adaptive_jpeg_quality_preserves_1080p_wire_config_and_reduces_payload ... ok
+test desktop::calibration::tests::real_software_fixtures_round_trip_without_timing_assumptions ... ok
+
+test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.03s
+
+     Running tests\cli_smoke.rs (D:\IntraLink-validation-v020\target\debug\deps\cli_smoke-1c0ef86a98894d41.exe)
+
+running 4 tests
+test cli_help_and_version_exit_successfully ... ok
+test calibration_cli_is_explicit_and_validated_before_connection ... ok
+test portable_share_defaults_to_1080p_and_adaptive_quality ... ok
+test bounded_profile_cli_rejects_invalid_limits_before_session_start ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+
+     Running tests\decoder_process.rs (D:\IntraLink-validation-v020\target\debug\deps\decoder_process-40a46346605a0957.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+app-cpu-tests exit=0
+=== app-nvenc-tests ===
+   Compiling intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.95s
+     Running unittests src\main.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink-4d3320ef02d2d825.exe)
+
+running 39 tests
+test ddns::tests::update_address_modes ... ok
+test desktop::decoder_ipc::tests::bootstrap_is_exact_and_bounded ... ok
+test desktop::decoder_ipc::tests::stop_and_invalid_lengths_do_not_allocate_or_decode ... ok
+test desktop::decoder_process::tests::response_lines_are_bounded_and_exact ... ok
+test desktop::host_capture::tests::explicit_backend_never_silently_falls_back ... ok
+test desktop::host_capture::tests::identity_requires_same_display_name_geometry_position_and_rotation ... ok
+test desktop::live_h264::tests::exact_native_origin_is_required_before_decode ... ok
+test desktop::codec::tests::compact_hybrid_decodes_palette_after_lossless_keyframe_and_rejects_mode_switch ... ok
+test desktop::receive_limits::tests::per_device_limits_are_independent_and_bounded ... ok
+test desktop::overview::tests::local_notice_preserves_original_pixels_and_reuses_scratch ... ok
+test desktop::resize::tests::aspect_and_rounding ... ok
+test desktop::resize::tests::downsampling_preserves_antialiasing ... ok
+test desktop::resize::tests::invalid_geometry_is_atomic_and_exact_size_skips_resize ... ok
+test desktop::resize::tests::opaque_screen_colors_and_reused_buffer ... ok
+test desktop::overview::tests::disconnected_card_removes_all_previous_pixels ... ok
+test desktop::overview::tests::all_supported_card_counts_render_in_one_reusable_canvas ... ok
+test discovery::tests::discovery_is_restricted_to_private_ipv4_hints ... ok
+test resources::tests::json_distinguishes_missing_metrics_from_zero_usage ... ok
+test desktop::source_status::tests::no_update_notice_is_delayed_and_only_observed_pixels_clear_it ... ok
+test desktop::overview::tests::busy_decoder_retains_thumbnail_but_session_restart_invalidates_it ... ok
+test routing::tests::address_classes_do_not_claim_reachability ... ok
+test routing::tests::candidates_are_bounded_unique_and_dual_stack ... ok
+test resources::tests::missing_cpu_is_not_printed_as_idle_and_ram_uses_bytes ... ok
+test journal::tests::opt_out_does_not_create_file_and_corruption_blocks_operation ... ok
+test routing::tests::numeric_routes_are_normalized_without_dns ... ok
+test desktop::codec::tests::malformed_oversized_and_wrong_dimensions_are_rejected ... ok
+test journal::tests::full_or_busy_journal_is_not_overwritten ... ok
+test journal::tests::recording_persists_and_interruption_is_unknown ... ok
+test journal::tests::wrapper_records_completion_and_preserves_command_error ... ok
+test desktop::codec::tests::codec_round_trip_and_letterbox ... ok
+test desktop::codec::tests::hybrid_uses_ordered_tiles_after_keyframe ... ok
+test desktop::codec::tests::static_pixels_skip_encoding_and_change_triggers_new_jpeg ... ok
+test desktop::codec::tests::compact_exact_then_jpeg_then_exact_refresh ... ok
+test desktop::codec::tests::adaptive_encoder_forces_keyframe_and_decoder_rejects_unnegotiated_geometry ... ok
+test desktop::calibration::tests::generated_jpeg_fits_wire_limit_at_every_resolution ... ok
+test desktop::media_check::tests::static_markers_distinguish_final_update_from_stale_frame ... ok
+test desktop::media_check::tests::fixture_markers_survive_animation_and_reject_wrong_content ... ok
+test desktop::codec::tests::adaptive_jpeg_quality_preserves_1080p_wire_config_and_reduces_payload ... ok
+test desktop::calibration::tests::real_software_fixtures_round_trip_without_timing_assumptions ... ok
+
+test result: ok. 39 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.13s
+
+     Running tests\cli_smoke.rs (D:\IntraLink-validation-v020\target\debug\deps\cli_smoke-0efff71e4996936e.exe)
+
+running 5 tests
+test cli_help_and_version_exit_successfully ... ok
+test h264_diagnostic_help_does_not_initialize_driver_or_network ... ok
+test calibration_cli_is_explicit_and_validated_before_connection ... ok
+test portable_share_defaults_to_1080p_and_adaptive_quality ... ok
+test bounded_profile_cli_rejects_invalid_limits_before_session_start ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.23s
+
+     Running tests\decoder_process.rs (D:\IntraLink-validation-v020\target\debug\deps\decoder_process-a9699aa23eeec15e.exe)
+
+running 5 tests
+test explicit_job_termination_uses_failure_exit_status ... ok
+test invalid_bootstrap_is_rejected_before_driver_initialization ... ok
+test restricted_decoder_requires_explicit_process_isolation ... ok
+test private_worker_rejects_vault_arguments ... ok
+test kill_on_close_releases_a_real_child_blocked_on_ipc ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+
+app-nvenc-tests exit=0
+WGC feature graph: mini-cuda and mini-nvcodec absent
+=== wgc-portable-release ===
+   Compiling intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `release` profile [optimized] target(s) in 3m 27s
+wgc-portable-release exit=0
+=== receiver-profile-cli ===
+Open a view-only window to a paired host with a locally approved session
+
+Usage: intralink.exe view-desktop [OPTIONS] --device <DEVICE>
+
+Options:
+      --device <DEVICE>
+      --vault <VAULT>            Local encrypted profile file. Defaults to the OS user data directory
+      --adaptive-resolution      Request v10 adaptive resolution; host must also opt in
+      --record-session           Opt in to bounded local metadata for an existing foreground session attempt
+      --negotiate-codec          Negotiate mutually enabled software codecs and adaptive geometry (v11). In v11, --codec is the richest allowed mode; both peers must opt in
+      --negotiate-profile        Negotiate software codec, receiver resolution and FPS ceilings (v12)
+      --max-height <MAX_HEIGHT>  Receiver resolution ceiling: 540, 720 or 1080 (default 1080)
+      --max-fps <MAX_FPS>        Receiver FPS ceiling, 1-60 (default 60)
+      --auto-profile             Measure local software decoding and reduce the requested profile if needed
+      --codec <CODEC>            [default: compact] [possible values: jpeg, tiles, compact]
+  -h, --help                     Print help
+receiver-profile-cli exit=0
+=== software-profile-one ===
+Local software decoder calibration: mode=Compact, logical_cpus=Some(20)
+decode_tier=1080p, samples_per_fixture=6, jpeg_worst_ms=14.833, compact_worst_ms=Some(0.34650000000000003), tiles_worst_ms=Some(0.0208), worst_ms=14.833
+decode_tier=720p, samples_per_fixture=6, jpeg_worst_ms=6.730, compact_worst_ms=Some(0.1369), tiles_worst_ms=Some(0.0209), worst_ms=6.730
+decode_tier=540p, samples_per_fixture=6, jpeg_worst_ms=3.668, compact_worst_ms=Some(0.1361), tiles_worst_ms=Some(0.0194), worst_ms=3.668
+recommended_height=1080, recommended_fps=50, slots=1, software_only=true
+Generated local fixtures only; no remote performance or hardware codec qualification.
+software-profile-one exit=0
+=== software-profile-three ===
+Local software decoder calibration: mode=Compact, logical_cpus=Some(20)
+decode_tier=1080p, samples_per_fixture=6, jpeg_worst_ms=14.475, compact_worst_ms=Some(0.2714), tiles_worst_ms=Some(0.0194), worst_ms=14.475
+decode_tier=720p, samples_per_fixture=6, jpeg_worst_ms=6.683, compact_worst_ms=Some(0.1265), tiles_worst_ms=Some(0.032), worst_ms=6.683
+decode_tier=540p, samples_per_fixture=6, jpeg_worst_ms=3.708, compact_worst_ms=Some(0.0691), tiles_worst_ms=Some(0.02), worst_ms=3.708
+recommended_height=720, recommended_fps=37, slots=3, software_only=true
+Generated local fixtures only; no remote performance or hardware codec qualification.
+software-profile-three exit=0
+=== software-profile-eight ===
+Local software decoder calibration: mode=Compact, logical_cpus=Some(20)
+decode_tier=1080p, samples_per_fixture=6, jpeg_worst_ms=14.633, compact_worst_ms=Some(0.28430000000000005), tiles_worst_ms=Some(0.0212), worst_ms=14.633
+decode_tier=720p, samples_per_fixture=6, jpeg_worst_ms=6.558, compact_worst_ms=Some(0.1285), tiles_worst_ms=Some(0.019), worst_ms=6.558
+decode_tier=540p, samples_per_fixture=6, jpeg_worst_ms=3.720, compact_worst_ms=Some(0.0694), tiles_worst_ms=Some(0.0189), worst_ms=3.720
+recommended_height=540, recommended_fps=25, slots=8, software_only=true
+Generated local fixtures only; no remote performance or hardware codec qualification.
+software-profile-eight exit=0
+=== native-hardware-inventory ===
+Local software decoder calibration: mode=Compact, logical_cpus=Some(20)
+decode_tier=1080p, samples_per_fixture=6, jpeg_worst_ms=14.456, compact_worst_ms=Some(0.2813), tiles_worst_ms=Some(0.0249), worst_ms=14.456
+decode_tier=720p, samples_per_fixture=6, jpeg_worst_ms=6.599, compact_worst_ms=Some(0.1336), tiles_worst_ms=Some(0.0234), worst_ms=6.599
+decode_tier=540p, samples_per_fixture=6, jpeg_worst_ms=3.907, compact_worst_ms=Some(0.0666), tiles_worst_ms=Some(0.0189), worst_ms=3.907
+recommended_height=1080, recommended_fps=51, slots=1, software_only=true
+adapter_index=0, name="Intel(R) Iris(R) Xe Graphics", vendor=0x8086, device=0x46a6, luid=00000000:0001353d, software=false
+decoder=H264, height=540, nv12=true, driver_configs=9, frames_verified=0, remote_enabled=false
+decoder=H264, height=720, nv12=true, driver_configs=9, frames_verified=0, remote_enabled=false
+decoder=H264, height=1080, nv12=true, driver_configs=9, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=540, nv12=true, driver_configs=6, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=720, nv12=true, driver_configs=6, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=1080, nv12=true, driver_configs=6, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=540, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=720, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=1080, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=540, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=720, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=1080, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+adapter=Intel(R) Iris(R) Xe Graphics, vendor_id=0x8086, device_id=0x46a6
+nv12_check=passed, size=1920x1080, samples=6, color=BT709_limited_left, packed_bytes=3110400, max_yuv_error=0, max_rgb_error=1, staging_allocations=2, forward_with_readback_p50_ms=9.322, reverse_with_readback_p50_ms=6.763
+Synthetic GPU color conversion only; no video codec, desktop capture or network.
+conversion_1080p=verified
+adapter_index=1, name="NVIDIA GeForce RTX 3080 Ti Laptop GPU", vendor=0x10de, device=0x2460, luid=00000000:00014555, software=false
+decoder=H264, height=540, nv12=true, driver_configs=3, frames_verified=0, remote_enabled=false
+decoder=H264, height=720, nv12=true, driver_configs=3, frames_verified=0, remote_enabled=false
+decoder=H264, height=1080, nv12=true, driver_configs=3, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=540, nv12=true, driver_configs=2, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=720, nv12=true, driver_configs=2, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=1080, nv12=true, driver_configs=2, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=540, nv12=true, driver_configs=2, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=720, nv12=true, driver_configs=2, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=1080, nv12=true, driver_configs=2, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=540, nv12=true, driver_configs=4, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=720, nv12=true, driver_configs=4, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=1080, nv12=true, driver_configs=4, frames_verified=0, remote_enabled=false
+adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, vendor_id=0x10de, device_id=0x2460
+nv12_check=passed, size=1920x1080, samples=6, color=BT709_limited_left, packed_bytes=3110400, max_yuv_error=0, max_rgb_error=1, staging_allocations=2, forward_with_readback_p50_ms=2.119, reverse_with_readback_p50_ms=2.558
+Synthetic GPU color conversion only; no video codec, desktop capture or network.
+conversion_1080p=verified
+adapter_index=2, name="Intel(R) Iris(R) Xe Graphics", vendor=0x8086, device=0x46a6, luid=00000000:00026d35, software=false
+decoder=H264, height=540, nv12=true, driver_configs=9, frames_verified=0, remote_enabled=false
+decoder=H264, height=720, nv12=true, driver_configs=9, frames_verified=0, remote_enabled=false
+decoder=H264, height=1080, nv12=true, driver_configs=9, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=540, nv12=true, driver_configs=6, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=720, nv12=true, driver_configs=6, frames_verified=0, remote_enabled=false
+decoder=HEVC-main, height=1080, nv12=true, driver_configs=6, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=540, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=720, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=VP9-profile0, height=1080, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=540, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=720, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+decoder=AV1-profile0, height=1080, nv12=true, driver_configs=5, frames_verified=0, remote_enabled=false
+adapter=Intel(R) Iris(R) Xe Graphics, vendor_id=0x8086, device_id=0x46a6
+nv12_check=passed, size=1920x1080, samples=6, color=BT709_limited_left, packed_bytes=3110400, max_yuv_error=0, max_rgb_error=1, staging_allocations=2, forward_with_readback_p50_ms=7.357, reverse_with_readback_p50_ms=6.928
+Synthetic GPU color conversion only; no video codec, desktop capture or network.
+conversion_1080p=verified
+adapter_index=3, name="Microsoft Basic Render Driver", vendor=0x1414, device=0x008c, luid=00000000:00014504, software=true
+hardware_adapters=3, devices_created=3, verified_nv12_conversion=3, remote_hardware_codecs_enabled=0
+Generated local fixtures only; no remote performance or hardware codec qualification.
+native-hardware-inventory exit=0
+9FBE54C082036D34066D6B9C86E55D4CD1F6A30B3F9DC991D6C075CC14C2465A  dist\intralink-windows-x64-calibrated-wgc-portable-preview.exe
+RUNTIME_CAPABILITIES_GATE_PASSED
