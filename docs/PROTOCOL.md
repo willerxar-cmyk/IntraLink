@@ -28,7 +28,7 @@ Wire v8 adds one reserved no-update header with no payload and one ordered ACK/c
 
 ## Experimental isolated H.264 transport v9
 
-The normal desktop CLI still binds `intralink/view/8` and offers JPEG/Tiles/Compact. The H.264 diagnostic binds a separate `intralink/view/9-h264` ALPN on loopback only; no real Host command exposes it. Both endpoints use freshly generated pinned identities for the synthetic diagnostic. The existing transport engine, capture demand, receipt credit and deadline logic are shared; no v8 wire bytes change.
+The normal desktop CLI defaults to `intralink/view/8` and offers JPEG/Tiles/Compact; its explicit adaptive mode binds the separate v10 ALPN. The H.264 diagnostic binds a separate `intralink/view/9-h264` ALPN on loopback only; no real Host command exposes it. Both endpoints use freshly generated pinned identities for the synthetic diagnostic. The existing transport engine, capture demand, receipt credit and deadline logic are shared; no v8 wire bytes change.
 
 After the exact 17-byte `INTRALINK/9 VIEW` prefix plus mode byte 3, the viewer sends a 12-byte exact profile offer. The Host compares it to the locally supplied profile before issuing any capture demand and echoes it. Layout: height u16 BE (540/720/1080), FPS u8 (1-60), profile u8=1 (H.264 High progressive 8-bit 4:2:0 BT.709 limited), duration u16 BE (1-3600), credit u8=8, reserved u8=0, target bitrate u32 BE (500000-20000000 bits/s). The target bitrate is not a strict measured network ceiling. Both peers reject unsupported or mismatched values and ALPNs. Width is height times 16/9.
 

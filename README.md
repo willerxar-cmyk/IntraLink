@@ -18,7 +18,7 @@ Version 0.22.0 — development preview. The complete locked Windows workspace ha
 - SIMD CPU resize: bounded reusable RGBA8 buffer, antialiased bilinear filtering, exact-size fast path and 119 workspace tests passed. The optional Windows-only `wgc-preview` feature adds persistent-capture diagnostics (`desktop-media-check --wgc`). See [HARDWARE.md](docs/HARDWARE.md).
 - Reusable native D3D11 staging texture and recycled RGBA buffer; `desktop-media-check --wgc --gpu-scale` additionally requests strict hardware video-processor scaling before readback. See [PERFORMANCE.md](docs/PERFORMANCE.md) for actual local measurements.
 
-- The latest development source adds explicit Windows Host capture selection (`share-desktop --capture snapshot|wgc|wgc-gpu`), desktop wire v8 no-update records and local last-frame notices. Both peers need v8; actual authorized full-display operation remains unvalidated. See [DESKTOP.md](docs/DESKTOP.md) and [APP-VALIDATION.md](docs/APP-VALIDATION.md).
+- The Windows Host supports explicit capture selection (`share-desktop --capture snapshot|wgc|wgc-gpu`), v8/v10 no-update records and local last-frame notices. Both peers must select the same wire protocol; actual authorized full-display operation remains unvalidated. See [DESKTOP.md](docs/DESKTOP.md) and [APP-VALIDATION.md](docs/APP-VALIDATION.md).
 
 - GPU video preparation: native D3D11 RGBA-to-NV12 BT.709 limited-range conversion, retained GPU surface, strict adapter selection, and real color round-trips on NVIDIA and Intel. Hardware encode/decode is still a separate integration gate; see [HARDWARE.md](docs/HARDWARE.md).
 

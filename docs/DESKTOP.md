@@ -95,7 +95,7 @@ Display selection requires a unique locally enumerated XCap ID; the WGC adapter 
 
 A missing new WGC generation produces a v8 no-update record only after the first valid media record. It does not call the encoder, does not count as a repeat, and does not prove freshness. The Host checks known closure/device failure and conservatively ends the session after 15 seconds without an observed readback (a truly idle source can therefore require fresh approval). This deadline is not a guarantee of native call preemption. The viewer retains its last decoded image, with a visible local last-frame banner after one second of consecutive no-update observations. The workspace overview marks the affected slot and fullscreen renders the same notice. A verified new media record or repeat clears the notice. No notice changes ordered decoding or media counters.
 
-Use only with an explicitly authorized, isolated real test display and paired controller. Both peers must use the v8 build. Actual physical WGC full-display consent, native indicator, monitor identity, cancellation, suspend/lock, driver loss, multi-device operation and 1080p60 network testing are not yet certified.
+Use only with an explicitly authorized, isolated real test display and paired controller. Both peers must use the same supported protocol (v8 by default, v10 if explicitly enabled). Actual physical WGC full-display consent, native indicator, monitor identity, cancellation, suspend/lock, driver loss, multi-device operation and 1080p60 network testing are not yet certified.
 
 
 ## Portable default and adaptive quality (2026-11-26)
