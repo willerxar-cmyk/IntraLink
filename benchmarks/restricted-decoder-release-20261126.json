@@ -1,0 +1,6 @@
+{
+  "actual_exit": 1,
+  "output": "decoder_process_started, pid=2500, private_job=true\nselected_capture_adapter=NVIDIA GeForce RTX 3080 Ti Laptop GPU, luid=00000000:00017777\nselected_wgc_resources_released\nselected_d3d11_device_released\nselected_winrt_apartment_released\nwgc_stream_source=cancelled, delivered=1, encoded=2, resources_released=true\ndecoder worker failed: Decoder child exited: exit code: 0xc0000142: Decoder IPC response closed or exceeded line budget\nError: decoder worker failed\n\nCaused by:\n    0: Decoder child exited: exit code: 0xc0000142\n    1: Decoder IPC response closed or exceeded line budget\n",
+  "restricted_ready": false,
+  "qualified": false
+}
