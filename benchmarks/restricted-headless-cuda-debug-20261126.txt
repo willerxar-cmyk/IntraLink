@@ -1,0 +1,62 @@
+restricted_decoder_probe.exe : restricted_headless_stage=cuda_context
+No linha:1 caractere:414
++ ... ference='Continue'; & $exe --cuda-luid 00000000:00017777 2>&1 | Tee-O ...
++                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (restricted_headless_stage=cuda_context:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+restricted_headless_stage=cuvid_load
+restricted_headless_stage=nvdec_caps
+restricted_headless_caps=passed, max_width=4096, max_height=4096, max_mb=65536
+headless_probe_child_pid=9156, exit=exit code: 0
+restricted_headless_cuda=passed, actual_child_exit=0
+cuda_exit=0
+restricted_decoder_probe.exe : restricted_headless_stage=cuda_context
+No linha:1 caractere:590
++ ... -ne 0){exit $code}; & $exe --cuda-luid ffffffff:ffffffff 2>&1 | Tee-O ...
++                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (restricted_headless_stage=cuda_context:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+Error: No CUDA device matches D3D11 LUID
+headless_probe_child_pid=25184, exit=exit code: 1
+Error: Headless probe failed: exit code: 1
+wrong_luid_exit=1
+restricted_decoder_probe.exe : Error: Decoder worker job policy mismatch
+No linha:1 caractere:776
++ ... -eq 0){exit 1}; & $exe desktop-restricted-decoder-worker 2>&1 | Tee-O ...
++                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Error: Decoder ...policy mismatch:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+standalone_worker_exit=1
+Microsoft (R) COFF/PE Dumper Version 14.44.35226.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file D:\IntraLink-validation-v020\target\debug\examples\restricted_decoder_probe.exe
+
+File Type: EXECUTABLE IMAGE
+
+  Image has the following dependencies:
+
+    kernel32.dll
+    advapi32.dll
+    api-ms-win-core-synch-l1-2-0.dll
+    oleaut32.dll
+    KERNEL32.dll
+    ntdll.dll
+    VCRUNTIME140.dll
+    api-ms-win-crt-runtime-l1-1-0.dll
+    api-ms-win-crt-math-l1-1-0.dll
+    api-ms-win-crt-stdio-l1-1-0.dll
+    api-ms-win-crt-locale-l1-1-0.dll
+    api-ms-win-crt-heap-l1-1-0.dll
+
+  Summary
+
+        1000 .data
+        9000 .pdata
+       27000 .rdata
+        1000 .reloc
+       64000 .text

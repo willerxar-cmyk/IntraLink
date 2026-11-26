@@ -47,6 +47,8 @@ pub use nvenc_check::{EncodedFixture, FIXTURE_BITRATE, FIXTURE_FPS, verify_nvenc
 mod nvdec;
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 mod nvdec_driver;
+#[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
+pub use nvdec_driver::verify_restricted_headless_cuda;
 
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 mod precise_timer;

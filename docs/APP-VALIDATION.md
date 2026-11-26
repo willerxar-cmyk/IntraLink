@@ -166,3 +166,8 @@ PID 9236 completed exit 0 (222.26 s). Rustfmt, all three strict Clippy feature c
 ### Restricted headless startup — Debug (2026-11-26)
 
 `cargo clippy --locked -p intralink-d3d11 --example restricted_decoder_probe --features nvenc-preview -- -D warnings` and the corresponding Debug build passed. Two actual minimal child starts under the existing strict launcher returned exit 0 and the exact token/job/mitigation marker. PE dependencies compared using MSVC dumpbin; evidence `benchmarks/restricted-headless-probe-debug-20261126.txt`. This is a startup diagnostic only, not native decoding, resource isolation or physical sharing. Release and full-workspace regression gates for new code remain pending.
+
+
+### Restricted CUDA capability — Debug (2026-11-26)
+
+Targeted strict Clippy and Debug build passed after splitting CUDA context creation from the D3D11 adapter lookup. Startup and real CUDA/CUVID capability probe passed, with exact current NVIDIA LUID, actual child exit 0. Wrong LUID and direct worker invocation failed closed, each exit 1; PE imports still headless. Evidence: `benchmarks/restricted-headless-cuda-debug-20261126.txt`. No decoded frames or shared surfaces yet; full matrix and optimized probe remain open.

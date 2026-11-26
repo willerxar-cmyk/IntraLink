@@ -172,3 +172,8 @@ PID 9236 completed exit 0 (222.26 s). Rustfmt, all three strict Clippy feature c
 ### Minimal restricted startup diagnostic (2026-11-26)
 
 The new developer example `restricted_decoder_probe` passed targeted Debug Clippy/build and two real restricted child starts. It uses the existing fixed worker command, identical token/job/mitigations and private pipes; no GUI or GPU code runs. PE dependency comparison demonstrates a smaller import set, but the exact failing dependency of the graphical worker remains unknown. See `SECURITY.md` and `benchmarks/restricted-headless-probe-debug-20261126.txt`. Next: dynamically load CUDA/CUVID in the minimal child, match exact adapter LUID, query capabilities and test a private context; only then attempt headless decode and surface sharing. Existing v8/v9 and full graphical restrictions are unchanged.
+
+
+### Restricted CUDA/CUVID initialization (2026-11-26)
+
+The headless example now initializes a private CUDA context by exact LUID, loads the fixed System32 CUVID library and validates actual H.264 1080p NV12 capability under the unchanged low-integrity token. Real Debug success, wrong-LUID negative and standalone-worker denial recorded in `benchmarks/restricted-headless-cuda-debug-20261126.txt`. The PE comparison still excludes direct GUI/D3D11/network imports. Next split the existing native decoder's optional presenter from headless state, validate a fixed trusted generated bitstream (never arbitrary remote bytes), and then implement shared GPU surfaces. Full gates and Release qualification remain to be recorded.

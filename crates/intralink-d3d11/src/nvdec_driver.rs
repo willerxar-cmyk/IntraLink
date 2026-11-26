@@ -45,7 +45,12 @@ impl Cuda {
         let mut expected = [0u8; 8];
         expected[..4].copy_from_slice(&desc.AdapterLuid.LowPart.to_le_bytes());
         expected[4..].copy_from_slice(&desc.AdapterLuid.HighPart.to_le_bytes());
+        Self::new_for_luid(expected)
+    }
 
+    /// Match the exact trusted adapter identity without importing D3D11
+    /// into a headless diagnostic worker.
+    fn new_for_luid(expected: [u8; 8]) -> Result<Self> {
         // SAFETY: resolve fixed ABI functions from the system CUDA driver
         // only; output pointers refer to initialized locals. No existing
         // context is replaced and the selected device must match DXGI LUID.
@@ -162,4 +167,38 @@ impl Cuvid {
             })
         }
     }
+}
+
+/// Probe the real CUDA context and NVDEC capabilities without a D3D11
+/// device, GUI, parser or bitstream. Never selects a different adapter.
+pub fn verify_restricted_headless_cuda(expected: [u8; 8]) -> Result<()> {
+    crate::harden_decoder_worker(true)?;
+    eprintln!("restricted_headless_stage=cuda_context");
+    let mut cuda = Cuda::new_for_luid(expected)?;
+    eprintln!("restricted_headless_stage=cuvid_load");
+    let cuvid = Cuvid::load()?;
+    eprintln!("restricted_headless_stage=nvdec_caps");
+    // SAFETY: this initialized native capability structure is queried on
+    // the private current CUDA context, with fixed H.264/NV12 parameters.
+    let caps = unsafe {
+        let mut caps: CUVIDDECODECAPS = std::mem::zeroed();
+        caps.eCodecType = cudaVideoCodec::H264;
+        caps.eChromaFormat = cudaVideoChromaFormat::YUV420;
+        check((cuvid.caps)(&mut caps), "Query headless H.264 capability")?;
+        caps
+    };
+    ensure!(
+        caps.bIsSupported == 1
+            && caps.nOutputFormatMask & 1 != 0
+            && caps.nMaxWidth >= 1920
+            && caps.nMaxHeight >= 1088
+            && caps.nMaxMBCount >= 120 * 68,
+        "Headless H.264 1080p NV12 capability unsupported"
+    );
+    eprintln!(
+        "restricted_headless_caps=passed, max_width={}, max_height={}, max_mb={}",
+        caps.nMaxWidth, caps.nMaxHeight, caps.nMaxMBCount
+    );
+    cuda.close()?;
+    Ok(())
 }

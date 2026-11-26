@@ -56,3 +56,7 @@ Use nomes únicos nos relatórios e artefatos. Verifique código de saída real,
 
 ## Incremental headless checkpoint (2026-11-26)
 O exemplo `crates/intralink-d3d11/examples/restricted_decoder_probe.rs` passou Clippy direcionado, build Debug e duas execuções reais com o token reduzido intacto, job e mitigations; filho exit 0. Evidência em `benchmarks/restricted-headless-probe-debug-20261126.txt`, incluindo dependências PE do exemplo e app. Nenhuma inicialização GPU foi feita. Próximo passo: CUDA/CUVID dinâmicos, LUID exato, contexto privado e caps, seguidos por decodificação headless e superfícies compartilhadas. Não atribua a falha 0xC0000142 a uma DLL específica sem evidências. Gate completo e Release do exemplo ainda pendentes.
+
+
+## Incremental CUDA checkpoint (2026-11-26)
+O helper restrito com `--cuda-luid 00000000:00017777` passou contexto CUDA privado, carregamento CUVID, caps H.264/NV12 (4096x4096, 65536 macroblocos) e saída real 0 no Debug. LUID inexistente e invocação standalone do worker falharam (exit 1). Reutiliza `Cuda::new_for_luid`, sem alterar token ou ACL. A lista PE continua sem imports diretos de GUI/D3D11/rede. Evidência: `benchmarks/restricted-headless-cuda-debug-20261126.txt`. Ainda falta decodificar quadros reais no headless e qualificar o gate completo/Release; não declare a falha gráfica resolvida.
