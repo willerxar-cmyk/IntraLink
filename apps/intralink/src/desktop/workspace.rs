@@ -52,6 +52,7 @@ struct Target {
     name: String,
     identity: EndpointId,
     route: Route,
+    mode: ViewMode,
 }
 
 struct Session {
@@ -81,7 +82,8 @@ impl Session {
 
 // Each session has a bounded ordered queue and one independent decode worker.
 // Only fully decoded pixels are shared with the foreground window; no delta is dropped.
-fn start(target: &Target, endpoint: Endpoint, mode: ViewMode, priority: ViewPriority) -> Session {
+fn start(target: &Target, endpoint: Endpoint, priority: ViewPriority) -> Session {
+    let mode = target.mode;
     let identity = target.identity;
     let route = target.route.clone();
     let (stop, mut cancelled) = oneshot::channel();
@@ -382,10 +384,12 @@ pub async fn run(
     path: &Path,
     names: &[String],
     mode: ViewMode,
+    device_limits: &[String],
     mut fullscreen: bool,
     mut monitor_id: Option<u32>,
     all_live: bool,
 ) -> Result<()> {
+    let modes = super::receive_limits::slot_modes(names, mode, device_limits)?;
     require_graphical_terminal()?;
     let mut policy =
         WorkspacePolicy::new(names.len(), all_live).context("Select 1-8 distinct hosts")?;
@@ -398,7 +402,7 @@ pub async fn run(
         "This profile cannot initiate sessions"
     );
     let mut targets: Vec<Target> = Vec::with_capacity(names.len());
-    for name in names {
+    for (name, mode) in names.iter().zip(modes) {
         let peer = profile.peer(name, Direction::Outbound)?;
         let identity = peer.identity()?;
         ensure!(
@@ -409,6 +413,7 @@ pub async fn run(
             name: name.clone(),
             identity,
             route: peer.route().context("Outbound route missing")?.clone(),
+            mode,
         });
     }
     let secret = profile.secret_key();
@@ -420,7 +425,13 @@ pub async fn run(
         "Each Host must locally authorize its own view session. No automatic reconnect or input control."
     );
     for (index, target) in targets.iter().enumerate() {
-        println!("F{}: {}", index + 1, target.name);
+        println!(
+            "F{}: {} (receiver ceiling {}p/{} FPS)",
+            index + 1,
+            target.name,
+            target.mode.limits.height(),
+            target.mode.limits.fps()
+        );
     }
     let endpoint = bind_workspace_controller(secret).await?;
     let mut sessions: Vec<Option<Session>> = targets
@@ -430,7 +441,6 @@ pub async fn run(
             Some(start(
                 target,
                 endpoint.clone(),
-                mode,
                 policy.priority(index).expect("Initially active"),
             ))
         })
@@ -502,7 +512,7 @@ pub async fn run(
                     if let Some(session) = &mut sessions[index] { session.stop(); }
                 } else if sessions[index].is_none() {
                     policy.set_active(index, true);
-                    sessions[index] = Some(start(&targets[index], endpoint.clone(), mode, policy.priority(index).expect("Active slot")));
+                    sessions[index] = Some(start(&targets[index], endpoint.clone(), policy.priority(index).expect("Active slot")));
                 } else { println!("Wait for the previous session to close before starting another."); }
                 show_selection(&mut window, &targets, &policy);
                 if index == selected { presented = None; }

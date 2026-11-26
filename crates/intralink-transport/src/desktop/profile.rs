@@ -5,6 +5,7 @@ use intralink_core::{
     desktop::{CodecMode, REQUEST_BYTES, VideoConfig},
     h264,
     pacing::CapturePacer,
+    profile_limits::ReceiverLimits,
 };
 
 /// An explicit wire version and codec; neither can change during a session.
@@ -12,14 +13,27 @@ use intralink_core::{
 pub struct ViewMode {
     pub codec: CodecMode,
     pub protocol: ViewProtocol,
+    pub limits: ReceiverLimits,
+}
+
+impl ViewMode {
+    pub const fn new(codec: CodecMode, protocol: ViewProtocol) -> Self {
+        Self {
+            codec,
+            protocol,
+            limits: ReceiverLimits::MAX,
+        }
+    }
+
+    pub const fn with_limits(mut self, limits: ReceiverLimits) -> Self {
+        self.limits = limits;
+        self
+    }
 }
 
 impl From<CodecMode> for ViewMode {
     fn from(codec: CodecMode) -> Self {
-        Self {
-            codec,
-            protocol: ViewProtocol::Fixed,
-        }
+        Self::new(codec, ViewProtocol::Fixed)
     }
 }
 
@@ -54,10 +68,9 @@ impl RequestedMode {
 impl SessionProfile {
     pub(super) fn requested(self) -> RequestedMode {
         match self {
-            Self::Desktop(config, protocol) => RequestedMode::Desktop(ViewMode {
-                codec: config.mode(),
-                protocol,
-            }),
+            Self::Desktop(config, protocol) => {
+                RequestedMode::Desktop(ViewMode::new(config.mode(), protocol))
+            }
             Self::H264(profile) => RequestedMode::H264(profile),
         }
     }

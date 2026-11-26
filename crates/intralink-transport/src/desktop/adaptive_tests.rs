@@ -7,10 +7,7 @@ use intralink_core::{
 use std::future::ready;
 
 const WAIT: Duration = Duration::from_secs(15);
-const MODE: ViewMode = ViewMode {
-    codec: CodecMode::Compact,
-    protocol: ViewProtocol::Adaptive,
-};
+const MODE: ViewMode = ViewMode::new(CodecMode::Compact, ViewProtocol::Adaptive);
 
 fn ceiling() -> VideoConfig {
     VideoConfig::new(1080, 60, 75, 60)

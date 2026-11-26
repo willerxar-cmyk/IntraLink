@@ -60,3 +60,8 @@ The eight-byte configuration still carries the Host-approved JPEG quality value;
 ## Optional negotiated software protocol v11
 
 The separate `intralink/view/11-negotiated` ALPN exchanges a bounded software codec capability mask, a selected configuration, and an exact confirmation after identity validation and before capture. The selected codec is fixed for the session; v10 adaptive geometry and record semantics are unchanged. See [NEGOTIATED-MEDIA.md](NEGOTIATED-MEDIA.md) for the byte layout, local allow-list, and validation. v8/v10 compatibility and v9 isolation remain unchanged.
+
+
+## Optional bounded software protocol v12
+
+The separate `intralink/view/12-bounded` ALPN adds the viewer's height/FPS ceilings to the v11-style software negotiation. Both endpoints compute the exact intersection and confirm both Host approval and selected profile before capture. Adaptive records and native scaler retargeting remain unchanged. See [BOUNDED-MEDIA.md](BOUNDED-MEDIA.md). Prior wire versions and isolated v9 remain unchanged.

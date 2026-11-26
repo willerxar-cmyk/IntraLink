@@ -34,3 +34,8 @@ Include `adaptive` and `presentation` in the dependency-free media harness and e
 ### Negotiation and retargeting validation
 
 The mandatory independent harness includes capabilities mask and deterministic intersection tests. Run authenticated v11 loopback and adversarial handshake tests, CPU and NVIDIA-feature workspace suites, strict CPU/WGC/NVENC Clippy, and locked WGC Release without CUDA dependencies. On Windows, run `desktop-retarget-check`, `desktop-geometry-check`, and `desktop-static-check --height 1080 --gpu-scale`. Preserve native output transition, capture identity, teardown and strict readback geometry checks. Physical remote sessions remain separate.
+
+
+### Bounded v12 validation
+
+Run the portable harness and locked CPU/NVENC workspace tests with strict CPU/WGC/NVENC Clippy. Include exact profile intersections, hostile limit/selection cases, per-slot override and CLI tests, and three independently paired loopback hosts using different negotiated resolution/FPS ceilings. Validate WGC Release without NVIDIA dependencies and retain existing protocol/security regressions. Physical sessions are a separate gate.

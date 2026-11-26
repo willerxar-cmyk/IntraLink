@@ -6,6 +6,8 @@ Version 0.22.0 — development preview. The complete locked Windows workspace ha
 
 ### v0.22 additions
 
+- Opt-in v12 bounded media negotiation intersects both peers' resolution/FPS and software codec ceilings. Workspace slots support individual `--device-limit NAME=HEIGHT:FPS` overrides. Both endpoints pass `--negotiate-profile`; see [BOUNDED-MEDIA.md](docs/BOUNDED-MEDIA.md).
+
 - Opt-in v11 software codec negotiation selects the richest mutually allowed mode (Compact/Tiles/JPEG) and keeps adaptive geometry. Both peers pass `--negotiate-codec`. Explicit WGC GPU scaling now retargets its native output during resolution changes without reopening the source. See [NEGOTIATED-MEDIA.md](docs/NEGOTIATED-MEDIA.md).
 
 - Opt-in adaptive resolution v10: 1080p initial/maximum, stepwise 720p/540p downshift and recovery with ordered independent keyframes, unchanged v8 compatibility and CPU codecs. Both peers use `--adaptive-resolution`; see [ADAPTIVE-MEDIA.md](docs/ADAPTIVE-MEDIA.md).

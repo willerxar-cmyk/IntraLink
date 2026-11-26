@@ -59,10 +59,7 @@ async fn chooses_mutual_compact_and_reconstructs_real_pixels() -> Result<()> {
         &viewer,
         host.id(),
         std::slice::from_ref(&addr),
-        ViewMode {
-            codec: CodecMode::Compact,
-            protocol: PROTOCOL,
-        },
+        ViewMode::new(CodecMode::Compact, PROTOCOL),
         Vec::new,
         |frame| {
             let result = (|| -> Result<()> {
@@ -115,10 +112,7 @@ async fn different_codec_ceilings_negotiate_before_capture() -> Result<()> {
                 &viewer,
                 host.id(),
                 std::slice::from_ref(&addr),
-                ViewMode {
-                    codec: viewer_mode,
-                    protocol: PROTOCOL
-                },
+                ViewMode::new(viewer_mode, PROTOCOL),
                 Vec::new,
                 |_| -> std::future::Ready<Result<()>> { panic!("Unexpected media") },
                 |_| ViewPriority::Foreground
@@ -212,10 +206,7 @@ async fn viewer_rejects_host_selection_outside_intersection() -> Result<()> {
             &viewer,
             host.id(),
             std::slice::from_ref(&addr),
-            ViewMode {
-                codec: CodecMode::Compact,
-                protocol: PROTOCOL
-            },
+            ViewMode::new(CodecMode::Compact, PROTOCOL),
             Vec::new,
             |_| -> std::future::Ready<Result<()>> { panic!("Invalid selection reached consumer") },
             |_| ViewPriority::Foreground
@@ -244,10 +235,7 @@ async fn negotiation_requires_identity_and_explicit_version() -> Result<()> {
             &viewer,
             host.id(),
             std::slice::from_ref(&addr),
-            ViewMode {
-                codec: CodecMode::Compact,
-                protocol: PROTOCOL
-            },
+            ViewMode::new(CodecMode::Compact, PROTOCOL),
             Vec::new,
             |_| -> std::future::Ready<Result<()>> { panic!("Unauthorized media") },
             |_| ViewPriority::Foreground

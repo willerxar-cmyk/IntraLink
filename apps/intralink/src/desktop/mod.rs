@@ -16,7 +16,9 @@ use host_capture::{HostCapture, HostDisplay};
 #[cfg(target_os = "windows")]
 pub mod media_check;
 mod overview;
+mod receive_limits;
 mod resize;
+pub use receive_limits::ReceiveProfileArgs;
 mod source_status;
 #[cfg(all(target_os = "windows", feature = "wgc-preview"))]
 mod wgc_check;
@@ -105,24 +107,15 @@ pub fn list_displays() -> Result<()> {
     Ok(())
 }
 
-pub fn view_protocol(adaptive: bool, negotiated: bool) -> ViewProtocol {
-    if negotiated {
+pub fn view_protocol(adaptive: bool, negotiated: bool, bounded: bool) -> ViewProtocol {
+    if bounded {
+        ViewProtocol::Bounded
+    } else if negotiated {
         ViewProtocol::Negotiated
     } else if adaptive {
         ViewProtocol::Adaptive
     } else {
         ViewProtocol::Fixed
-    }
-}
-
-pub fn view_mode(
-    codec: intralink_core::desktop::CodecMode,
-    adaptive: bool,
-    negotiated: bool,
-) -> ViewMode {
-    ViewMode {
-        codec,
-        protocol: view_protocol(adaptive, negotiated),
     }
 }
 
@@ -174,7 +167,7 @@ pub async fn share(
         config.seconds()
     );
     println!("Explicit capture backend: {backend:?}");
-    if protocol == ViewProtocol::Negotiated {
+    if matches!(protocol, ViewProtocol::Negotiated | ViewProtocol::Bounded) {
         let caps = intralink_core::capabilities::CodecCapabilities::through(config.mode());
         println!(
             "Approved software codec ceiling: {:?}; allowed mask: {:#05b}. Best mutual codec will be selected before capture.",
@@ -297,9 +290,16 @@ pub async fn share(
             // Capture construction is reachable only after the transport has
             // authenticated the approved peer and matched the view request.
             let selected = request.desktop_config.context("Missing authenticated desktop profile")?;
-            ensure!(selected == config.with_mode(selected.mode()), "Negotiation changed the approved media profile");
             ensure!(
-                if protocol == ViewProtocol::Negotiated {
+                if protocol == ViewProtocol::Bounded {
+                    intralink_core::profile_limits::ReceiverLimits::within_approval(config, selected)
+                } else {
+                    selected == config.with_mode(selected.mode())
+                },
+                "Negotiation exceeded the approved media profile"
+            );
+            ensure!(
+                if matches!(protocol, ViewProtocol::Negotiated | ViewProtocol::Bounded) {
                     intralink_core::capabilities::CodecCapabilities::through(config.mode()).contains(selected.mode())
                 } else {
                     selected.mode() == config.mode()

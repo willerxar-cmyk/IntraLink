@@ -81,3 +81,79 @@ fn portable_share_defaults_to_1080p_and_adaptive_quality() {
     assert!(!conflicting.status.success());
     assert!(String::from_utf8_lossy(&conflicting.stderr).contains("cannot be used with"));
 }
+
+#[cfg(all(
+    feature = "desktop-preview",
+    any(target_os = "windows", target_os = "linux")
+))]
+#[test]
+fn bounded_profile_cli_rejects_invalid_limits_before_session_start() {
+    for command in ["share-desktop", "view-desktop", "workspace"] {
+        assert!(stdout(&[command, "--help"]).contains("--negotiate-profile"));
+    }
+    let workspace = stdout(&["workspace", "--help"]);
+    for option in ["--max-height", "--max-fps", "--device-limit"] {
+        assert!(workspace.contains(option));
+    }
+    for args in [
+        vec!["view-desktop", "--device", "test", "--max-height", "540"],
+        vec![
+            "view-desktop",
+            "--device",
+            "test",
+            "--negotiate-profile",
+            "--max-height",
+            "1440",
+        ],
+        vec![
+            "view-desktop",
+            "--device",
+            "test",
+            "--negotiate-profile",
+            "--max-fps",
+            "61",
+        ],
+        vec![
+            "view-desktop",
+            "--device",
+            "test",
+            "--negotiate-profile",
+            "--negotiate-codec",
+        ],
+        vec![
+            "workspace",
+            "--device",
+            "test",
+            "--negotiate-profile",
+            "--device-limit",
+            "unknown=540:15",
+        ],
+        vec![
+            "workspace",
+            "--device",
+            "test",
+            "--negotiate-profile",
+            "--max-height",
+            "540",
+            "--device-limit",
+            "test=1080:60",
+        ],
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_intralink"))
+            .args(&args)
+            .output()
+            .expect("Parse invalid receiver limits");
+        assert!(!output.status.success(), "{args:?}");
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            stderr.contains("requires")
+                || stderr.contains("required")
+                || stderr.contains("Receiver limits")
+                || stderr.contains("invalid value")
+                || stderr.contains("cannot be used with")
+                || stderr.contains("unselected host")
+                || stderr.contains("exceeds controller ceiling"),
+            "{args:?}: {stderr}"
+        );
+    }
+}

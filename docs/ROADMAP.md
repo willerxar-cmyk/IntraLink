@@ -122,3 +122,8 @@ v10 opt-in geometry transitions and local hysteresis are implemented and locally
 ### Negotiated software and scaler retargeting checkpoint
 
 Opt-in v11 software codec intersection and adaptive geometry are implemented, as is local live WGC/D3D11 output retargeting. The CPU codec baseline remains mandatory; no native H.264 is exposed remotely. Next qualify physical v11 sessions and multiple independent hosts under controlled pressure, add receiver-side resolution/FPS bounds, implement independently qualified platform hardware codecs and a portable software H.264 option, and complete native decoder isolation before advertising it. Preserve explicit security/backend policies; no implicit fallback from a failed strict decoder.
+
+
+### Bounded viewer profile checkpoint
+
+v12 opt-in profile intersection adds receiver height/FPS ceilings and independently configured workspace slots while retaining adaptive geometry and CPU baseline. Next validate physical v12 multi-device performance and recovery, introduce explicit measured platform capability selection, qualify independent hardware codecs and software alternatives, and complete decoder isolation. No mandatory GPU or CUDA; previous versions remain supported.

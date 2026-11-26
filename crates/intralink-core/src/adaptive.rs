@@ -22,6 +22,7 @@ pub enum ViewProtocol {
     Fixed,
     Adaptive,
     Negotiated,
+    Bounded,
 }
 
 impl ViewProtocol {
@@ -30,16 +31,18 @@ impl ViewProtocol {
             Self::Fixed => desktop::ALPN,
             Self::Adaptive => ALPN,
             Self::Negotiated => crate::capabilities::ALPN,
+            Self::Bounded => crate::profile_limits::ALPN,
         }
     }
 
     pub const fn is_adaptive(self) -> bool {
-        matches!(self, Self::Adaptive | Self::Negotiated)
+        matches!(self, Self::Adaptive | Self::Negotiated | Self::Bounded)
     }
 
     pub fn request(self, mode: CodecMode) -> [u8; desktop::REQUEST_BYTES] {
         match self {
             Self::Fixed => desktop::request(mode),
+            Self::Bounded => crate::profile_limits::request(mode),
             Self::Negotiated => crate::capabilities::CodecCapabilities::through(mode).request(),
             Self::Adaptive => {
                 let mut bytes = [0; desktop::REQUEST_BYTES];

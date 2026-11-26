@@ -98,3 +98,8 @@ The optional adaptive software transport has its own ALPN and exact codec match,
 ### Negotiated software session and output scaling (v11)
 
 Explicit v11 peers negotiate the richest mutually allowed implemented software codec before capture. Host and viewer independently validate the bounded intersection and confirm the selected configuration. The CPU codec path never requires NVIDIA. The Host lazily allocates encoder state using the authenticated profile and preserves its local display approval, resolution/FPS/quality ceilings and duration. Adaptive v10 geometry is retained. Optional WGC GPU scaling retargets only output resources on the same native device and capture item, with the next observed generation and a fresh software keyframe; no fallback from explicit backend or security policy. See [NEGOTIATED-MEDIA.md](NEGOTIATED-MEDIA.md).
+
+
+### Bounded per-session receiver profiles (v12)
+
+Explicit v12 exchanges receiver resolution/FPS ceilings and software mode mask. Host and receiver independently compute the exact lower height/FPS and richest common software mode before capture. The selected profile bounds local adaptive recovery, capture scaling, frame budget and sender pacing. Each workspace target stores its own local ViewMode; its override can only lower the controller ceiling. Version-specific handshake code is split from the shared session loop. No vendor-dependent media requirement or new remote control permission. See [BOUNDED-MEDIA.md](BOUNDED-MEDIA.md).

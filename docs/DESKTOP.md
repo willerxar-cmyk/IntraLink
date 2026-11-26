@@ -108,3 +108,8 @@ JPEG quality defaults to adaptive with `--quality 75` as its ceiling and 35 as i
 ## Negotiated codec and adaptive GPU output (v11)
 
 Use `--negotiate-codec` on both endpoints instead of `--adaptive-resolution` to select the best mutual software codec automatically and enable adaptive geometry. In this mode, `--codec` is the richest permitted software mode, not a mandatory exact match. The default Host remains 1080p/60 FPS ceiling. v8/v10 remain available as before. An explicit WGC-GPU session now retargets its D3D11 output resources at local adaptive transitions without reopening the capture item; software capture remains supported. See [NEGOTIATED-MEDIA.md](NEGOTIATED-MEDIA.md).
+
+
+## Bounded profile selection (v12)
+
+Use `--negotiate-profile` on both endpoints to negotiate viewer maximum height/FPS and software codec ceiling. Viewer `--max-height 720 --max-fps 30` cannot raise a locally approved Host cap. Defaults remain 1080p and 60 FPS. Adaptive recovery cannot exceed the selected ceiling. This opt-in mode preserves v8/v10/v11; no automatic downgrade or native H.264 exposure. See [BOUNDED-MEDIA.md](BOUNDED-MEDIA.md).

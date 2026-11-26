@@ -59,3 +59,8 @@ The workspace accepts `--adaptive-resolution` for all selected hosts. Each must 
 ### Negotiated codec per session (v11)
 
 `--negotiate-codec` opts every selected slot into v11. Each independently approved Host negotiates its own software codec with the controller's local `--codec` ceiling. The workspace still owns independent decode state, queues and cancellation per slot; no global GPU requirement or change to the authorization scope. Mixed protocol versions in one workspace are not yet supported.
+
+
+### Per-device resource ceilings (v12)
+
+Choose `--negotiate-profile` and optional global `--max-height` / `--max-fps`. Repeat `--device-limit NAME=HEIGHT:FPS` for selected paired-device names to lower individual slots (e.g. host-2=720:30 and host-3=540:15). The defaults remain 1080p/60 FPS. Reject unknown/duplicate/malformed overrides or widening of the global ceiling; preserve each slot's independent settings across local stop/reactivation. Existing protocols remain selectable; mixed versions remain unsupported. See [BOUNDED-MEDIA.md](BOUNDED-MEDIA.md).

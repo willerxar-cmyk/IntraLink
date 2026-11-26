@@ -5,12 +5,17 @@ use std::{future::ready, net::SocketAddr, time::Duration};
 use anyhow::{Context, Result, ensure};
 use intralink_core::{
     Role,
+    adaptive::ViewProtocol,
     desktop::{CodecMode, VideoConfig, ViewPriority},
     media::{Delta, MAX_DELTA_BYTES, apply_delta, apply_keyframe, encode_delta, encode_keyframe},
+    profile_limits::ReceiverLimits,
 };
 use intralink_transport::{
     bind_workspace_controller,
-    desktop::{Capture, CaptureRequest, Stats, bind_view, serve_view, view_with_policy},
+    desktop::{
+        Capture, CaptureRequest, Stats, ViewMode, bind_view_with_protocol, serve_view,
+        serve_view_with_protocol, view_with_observations, view_with_policy,
+    },
 };
 use intralink_vault::{Direction, Profile, Route};
 use iroh::{Endpoint, EndpointId};
@@ -29,8 +34,18 @@ struct Host {
 }
 
 async fn paired_host(controller: &mut Profile, name: &str, marker: u8) -> Result<Host> {
+    paired_host_protocol(controller, name, marker, ViewProtocol::Fixed).await
+}
+
+async fn paired_host_protocol(
+    controller: &mut Profile,
+    name: &str,
+    marker: u8,
+    protocol: ViewProtocol,
+) -> Result<Host> {
     let mut host = Profile::new(Role::Host);
-    let endpoint = bind_view(host.secret_key(), "127.0.0.1:0".parse()?).await?;
+    let endpoint =
+        bind_view_with_protocol(host.secret_key(), "127.0.0.1:0".parse()?, protocol).await?;
     let addr = endpoint
         .bound_sockets()
         .into_iter()
@@ -63,6 +78,25 @@ async fn run_session(controller: &Endpoint, host: &Host, priority: ViewPriority)
     let config = VideoConfig::new(540, 60, 75, 30)
         .context("Invalid profile")?
         .with_mode(CodecMode::Compact);
+    run_profile_session(
+        controller,
+        host,
+        priority,
+        config,
+        ViewMode::new(CodecMode::Compact, ViewProtocol::Fixed),
+        config,
+    )
+    .await
+}
+
+async fn run_profile_session(
+    controller: &Endpoint,
+    host: &Host,
+    priority: ViewPriority,
+    approved: VideoConfig,
+    mode: ViewMode,
+    config: VideoConfig,
+) -> Result<Stats> {
     let pixels = config.width() as usize * config.height() as usize;
     let (source, mut requests) = mpsc::channel::<CaptureRequest>(1);
     let mut previous = [host.marker, 0, 0].repeat(pixels);
@@ -72,6 +106,7 @@ async fn run_session(controller: &Endpoint, host: &Host, priority: ViewPriority)
             let req = timeout(WAIT, requests.recv())
                 .await?
                 .context("Missing capture request")?;
+            assert_eq!(req.desktop_config, Some(config));
             let mut payload = req.buffer;
             if sequence == 1 {
                 ensure!(
@@ -90,10 +125,15 @@ async fn run_session(controller: &Endpoint, host: &Host, priority: ViewPriority)
                 );
                 previous[index..index + 3].copy_from_slice(&rgb[index..index + 3]);
             }
-            ensure!(
-                req.reply.send(Ok(Capture::Frame(payload))).is_ok(),
-                "Capture canceled"
-            );
+            let record = if mode.protocol.is_adaptive() {
+                Capture::AdaptiveFrame {
+                    height: config.height() as u16,
+                    data: payload,
+                }
+            } else {
+                Capture::Frame(payload)
+            };
+            ensure!(req.reply.send(Ok(record)).is_ok(), "Capture canceled");
         }
         let req = timeout(WAIT, requests.recv())
             .await?
@@ -103,11 +143,11 @@ async fn run_session(controller: &Endpoint, host: &Host, priority: ViewPriority)
     };
     let mut canvas = Vec::new();
     let mut decoded = 0usize;
-    let view = view_with_policy(
+    let view = view_with_observations(
         controller,
         host.expected,
         std::slice::from_ref(&host.address),
-        CodecMode::Compact,
+        mode,
         Vec::new,
         |frame| {
             let result = (|| -> Result<()> {
@@ -138,11 +178,17 @@ async fn run_session(controller: &Endpoint, host: &Host, priority: ViewPriority)
             })();
             ready(result)
         },
-        || priority,
+        |_| priority,
     );
     let (served, viewed, ()) = timeout(Duration::from_secs(40), async {
         tokio::try_join!(
-            serve_view(&host.endpoint, host.approved, config, source),
+            serve_view_with_protocol(
+                &host.endpoint,
+                host.approved,
+                approved,
+                source,
+                mode.protocol
+            ),
             view,
             producer
         )
@@ -306,5 +352,63 @@ async fn stopping_one_view_preserves_sibling_and_allows_later_connection() -> Re
     stopped?;
     assert_eq!(continued?.frames, FRAMES);
     assert_eq!(later?.frames, FRAMES);
+    Ok(())
+}
+
+#[tokio::test]
+async fn one_controller_three_paired_hosts_negotiate_independent_receiver_limits() -> Result<()> {
+    let mut profile = Profile::new(Role::Controller);
+    let protocol = ViewProtocol::Bounded;
+    let one = paired_host_protocol(&mut profile, "host-1", 19, protocol).await?;
+    let two = paired_host_protocol(&mut profile, "host-2", 47, protocol).await?;
+    let three = paired_host_protocol(&mut profile, "host-3", 97, protocol).await?;
+    let controller = bind_workspace_controller(profile.secret_key()).await?;
+    let approved = VideoConfig::new(1080, 60, 75, 30)
+        .unwrap()
+        .with_mode(CodecMode::Compact);
+    let two_approved = VideoConfig::new(720, 25, 75, 30)
+        .unwrap()
+        .with_mode(CodecMode::Compact);
+    let one_mode = ViewMode::new(CodecMode::Compact, protocol);
+    let two_mode = one_mode.with_limits(ReceiverLimits::new(720, 30).unwrap());
+    let three_mode = one_mode.with_limits(ReceiverLimits::new(540, 15).unwrap());
+    let three_config = VideoConfig::new(540, 15, 75, 30)
+        .unwrap()
+        .with_mode(CodecMode::Compact);
+    let results = tokio::join!(
+        run_profile_session(
+            &controller,
+            &one,
+            ViewPriority::Foreground,
+            approved,
+            one_mode,
+            approved
+        ),
+        run_profile_session(
+            &controller,
+            &two,
+            ViewPriority::Foreground,
+            two_approved,
+            two_mode,
+            two_approved
+        ),
+        run_profile_session(
+            &controller,
+            &three,
+            ViewPriority::Background,
+            approved,
+            three_mode,
+            three_config
+        ),
+    );
+    controller.close().await;
+    tokio::join!(
+        one.endpoint.close(),
+        two.endpoint.close(),
+        three.endpoint.close()
+    );
+    for result in [results.0, results.1, results.2] {
+        assert_eq!(result?.frames, FRAMES);
+    }
     Ok(())
 }

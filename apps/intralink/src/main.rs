@@ -360,6 +360,9 @@ enum Command {
         /// In v11, --codec is the richest allowed mode; both peers must opt in.
         #[arg(long, conflicts_with = "adaptive_resolution")]
         negotiate_codec: bool,
+        /// Negotiate bounded viewer resolution/FPS and software codecs (v12).
+        #[arg(long, conflicts_with_all = ["adaptive_resolution", "negotiate_codec"])]
+        negotiate_profile: bool,
         /// Explicit compact tiles, basic tiles or independent JPEG mode. Must match the viewer.
         #[arg(long, value_enum, default_value = "compact")]
         codec: MediaMode,
@@ -379,6 +382,8 @@ enum Command {
         /// In v11, --codec is the richest allowed mode; both peers must opt in.
         #[arg(long, conflicts_with = "adaptive_resolution")]
         negotiate_codec: bool,
+        #[command(flatten)]
+        limits: desktop::ReceiveProfileArgs,
         #[arg(long, value_enum, default_value = "compact")]
         codec: MediaMode,
     },
@@ -398,8 +403,13 @@ enum Command {
         /// In v11, --codec is the richest allowed mode; both peers must opt in.
         #[arg(long, conflicts_with = "adaptive_resolution")]
         negotiate_codec: bool,
+        #[command(flatten)]
+        limits: desktop::ReceiveProfileArgs,
         #[arg(long, value_enum, default_value = "compact")]
         codec: MediaMode,
+        /// Per-selected-device ceiling NAME=HEIGHT:FPS; repeat for distinct hosts.
+        #[arg(long, requires = "negotiate_profile")]
+        device_limit: Vec<String>,
         /// Use a borderless window covering the selected local monitor (primary by default).
         #[arg(long)]
         fullscreen: bool,
@@ -678,6 +688,7 @@ fn main() -> Result<()> {
             fixed_quality,
             adaptive_resolution,
             negotiate_codec,
+            negotiate_profile,
             codec,
         } => {
             let config = intralink_core::desktop::VideoConfig::new(height, fps, quality, seconds)
@@ -699,7 +710,11 @@ fn main() -> Result<()> {
                         capture,
                         desktop::StreamOptions {
                             fixed_quality,
-                            protocol: desktop::view_protocol(adaptive_resolution, negotiate_codec),
+                            protocol: desktop::view_protocol(
+                                adaptive_resolution,
+                                negotiate_codec,
+                                negotiate_profile,
+                            ),
                         },
                     ),
                 )
@@ -714,18 +729,18 @@ fn main() -> Result<()> {
             codec,
             adaptive_resolution,
             negotiate_codec,
-        } => run_async(|| {
-            journal::run(
-                &path,
-                record,
-                Operation::ViewController,
-                desktop::receive(
+            limits,
+        } => {
+            let mode = limits.mode(codec.into(), adaptive_resolution, negotiate_codec)?;
+            run_async(|| {
+                journal::run(
                     &path,
-                    &device,
-                    desktop::view_mode(codec.into(), adaptive_resolution, negotiate_codec),
-                ),
-            )
-        }),
+                    record,
+                    Operation::ViewController,
+                    desktop::receive(&path, &device, mode),
+                )
+            })
+        }
         #[cfg(all(
             feature = "desktop-preview",
             any(target_os = "windows", target_os = "linux")
@@ -735,19 +750,25 @@ fn main() -> Result<()> {
             codec,
             adaptive_resolution,
             negotiate_codec,
+            limits,
+            device_limit,
             fullscreen,
             local_monitor,
             all_live,
-        } => run_async(|| {
-            desktop::workspace::run(
-                &path,
-                &device,
-                desktop::view_mode(codec.into(), adaptive_resolution, negotiate_codec),
-                fullscreen,
-                local_monitor,
-                all_live,
-            )
-        }),
+        } => {
+            let mode = limits.mode(codec.into(), adaptive_resolution, negotiate_codec)?;
+            run_async(|| {
+                desktop::workspace::run(
+                    &path,
+                    &device,
+                    mode,
+                    &device_limit,
+                    fullscreen,
+                    local_monitor,
+                    all_live,
+                )
+            })
+        }
         Command::Diagnose { device, wan_ip } => {
             run_async(|| local::diagnose(&path, &device, wan_ip))
         }
