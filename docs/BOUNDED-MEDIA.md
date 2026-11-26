@@ -34,4 +34,4 @@ Core tests enumerate every valid receiver height/FPS and multiple Host ceilings;
 
 ### Optional measured receiver ceilings
 
-`--auto-profile` with `--negotiate-profile` measures the actual local software decoder and reduces the offered receiver profile within all manual ceilings, accounting conservatively for the number of selected slots. No wire changes or hardware identity transmission. See [RUNTIME-CAPABILITIES.md](RUNTIME-CAPABILITIES.md).
+`--auto-profile` with `--negotiate-profile` measures the actual local software decoder and reduces the offered receiver profile within all manual ceilings, measuring all selected decoder workers concurrently at the candidate slot layout. No wire changes or hardware identity transmission. See [RUNTIME-CAPABILITIES.md](RUNTIME-CAPABILITIES.md).

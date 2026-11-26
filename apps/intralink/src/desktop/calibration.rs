@@ -1,20 +1,25 @@
 //! Local software decoder calibration. Only generated pixels and the real
 //! production decoder are used; no screen capture, network or vault access.
-use std::time::{Duration, Instant};
+use std::{
+    sync::mpsc,
+    thread,
+    time::{Duration, Instant},
+};
 
 use anyhow::{Context, Result, ensure};
-use image::{ExtendedColorType, codecs::jpeg::JpegEncoder};
 use intralink_core::{
-    calibration::{DecodeTier, recommend},
-    desktop::{CodecMode, MAX_FRAME_BYTES, VideoConfig},
-    media::{self, Delta, JPEG_TAG, MAX_DELTA_BYTES},
+    calibration::{DecodeCohort, DecodeTier, recommend},
+    desktop::CodecMode,
     profile_limits::ReceiverLimits,
+    workspace::MAX_DEVICES,
 };
 
 use super::codec::Decoder;
+#[path = "calibration_fixtures.rs"]
+mod fixtures;
+use fixtures::{Fixture, FixtureSet};
 
 const SAMPLES: usize = 6;
-const LOSSLESS_BUDGET: usize = 128 * 1024;
 
 #[derive(clap::Args)]
 pub struct ProfileCheckArgs {
@@ -32,14 +37,17 @@ impl ProfileCheckArgs {
             #[cfg(not(all(target_os = "windows", feature = "wgc-preview")))]
             anyhow::bail!("Native adapter probe requires Windows wgc-preview");
         }
-        let measured = measure(CodecMode::Compact, ReceiverLimits::MAX)?;
-        let limits = measured.recommend(ReceiverLimits::MAX, usize::from(self.slots))?;
-        println!(
-            "recommended_height={}, recommended_fps={}, slots={}, software_only=true",
-            limits.height(),
-            limits.fps(),
-            self.slots
-        );
+        let ceilings = vec![ReceiverLimits::MAX; usize::from(self.slots)];
+        let limits = measure(CodecMode::Compact, &ceilings)?;
+        for (index, limit) in limits.iter().enumerate() {
+            println!(
+                "recommended_slot={}, recommended_height={}, recommended_fps={}, slots={}, software_only=true",
+                index + 1,
+                limit.height(),
+                limit.fps(),
+                self.slots
+            );
+        }
         #[cfg(all(target_os = "windows", feature = "wgc-preview"))]
         if self.hardware {
             intralink_d3d11::probe_video_capabilities()?;
@@ -51,196 +59,260 @@ impl ProfileCheckArgs {
     }
 }
 
-pub(super) struct Calibration(Vec<DecodeTier>);
-
-impl Calibration {
-    pub(super) fn recommend(
-        &self,
-        ceiling: ReceiverLimits,
-        slots: usize,
-    ) -> Result<ReceiverLimits> {
-        recommend(&self.0, ceiling, slots)
-            .context("Measured decode budget cannot support this receiver profile")
-    }
+#[derive(Clone, Copy)]
+struct Work<'a> {
+    fixture: &'a Fixture,
+    base: Option<&'a [u8]>,
 }
 
-fn generated_jpeg(config: VideoConfig) -> Result<Vec<u8>> {
-    let (width, height) = (config.width(), config.height());
-    let mut rgb = vec![0; (width * height * 3) as usize];
-    for (i, pixel) in rgb.chunks_exact_mut(3).enumerate() {
-        let x = i as u32 % width;
-        let y = i as u32 / width;
-        // Keep a region of high-frequency detail while the rest resembles
-        // block/gradient desktop content. At quality 90 the fixture itself
-        // must fit the existing 2 MiB protocol ceiling at every tier.
-        let (tx, ty) = if y < height / 4 {
-            (x, y)
-        } else {
-            (x / 8, y / 8)
-        };
-        let texture = ((tx * 17 + ty * 29) ^ (tx * ty)) as u8;
-        pixel.copy_from_slice(&[
-            (x / 8) as u8 ^ texture,
-            (y / 4) as u8 ^ (texture / 2),
-            (x / 16 + y / 16) as u8,
-        ]);
-        if x < 64 && y < 64 {
-            pixel.copy_from_slice(&[70, 120, 180]);
-        }
-    }
-    let mut bytes = vec![JPEG_TAG];
-    // Encode at the maximum allowed JPEG quality. Fixture construction is
-    // excluded from decode timing; no claim of a worst-case hostile bitstream.
-    JpegEncoder::new_with_quality(&mut bytes, 90).encode(
-        &rgb,
-        width,
-        height,
-        ExtendedColorType::Rgb8,
-    )?;
-    ensure!(
-        (2..=MAX_FRAME_BYTES).contains(&bytes.len()),
-        "Calibration JPEG exceeds protocol bound"
-    );
-    Ok(bytes)
+struct WorkerResult {
+    worst: Duration,
+    finished: Instant,
+    samples: usize,
 }
 
-fn decode_samples(
-    config: VideoConfig,
-    bytes: &[u8],
-    base: Option<&[u8]>,
-) -> Result<(Duration, Vec<u32>)> {
+fn run_worker(
+    work: Work<'_>,
+    ready: mpsc::Sender<()>,
+    start: mpsc::Receiver<()>,
+) -> Result<WorkerResult> {
+    // Each worker owns its decoder and output canvas. Only the generated
+    // immutable compressed bytes are shared; no shared decoder lock.
     let mut decoder = Decoder::default();
     let mut pixels = Vec::new();
-    if let Some(base) = base {
-        decoder.decode_into(config, base, &mut pixels)?;
-    }
-    // Warm-up once to establish allocations. Absolute tiles may be applied
-    // repeatedly; a fresh keyframe and the production validation run each time.
-    decoder.decode_into(config, bytes, &mut pixels)?;
+    let config = work.fixture.config;
     let expected = (config.width() * config.height()) as usize;
-    ensure!(
-        pixels.len() == expected,
-        "Calibration decode geometry mismatch"
-    );
+    if let Some(base) = work.base {
+        decoder.decode_into(config, base, &mut pixels)?;
+        ensure!(
+            pixels.len() == expected,
+            "Calibration base geometry mismatch"
+        );
+    }
+    let retained = work.fixture.retained_pixel(&pixels);
+    decoder.decode_into(config, &work.fixture.bytes, &mut pixels)?;
+    work.fixture.verify(&pixels, retained)?;
+    // Every successful warm-up signals ready then drops its sender. If a
+    // worker fails or panics during warm-up, the coordinator can detect
+    // channel closure and release all other workers without a barrier hang.
+    ready
+        .send(())
+        .context("Calibration readiness receiver closed")?;
+    drop(ready);
+    start.recv().context("Calibration start canceled")?;
     let mut worst = Duration::ZERO;
     for _ in 0..SAMPLES {
-        let start = Instant::now();
-        decoder.decode_into(config, bytes, &mut pixels)?;
-        let elapsed = start.elapsed();
+        let began = Instant::now();
+        decoder.decode_into(config, &work.fixture.bytes, &mut pixels)?;
+        worst = worst.max(began.elapsed());
         ensure!(
             pixels.len() == expected,
             "Calibration decode geometry changed"
         );
-        worst = worst.max(elapsed);
     }
+    let finished = Instant::now();
     ensure!(!worst.is_zero(), "Local clock cannot measure decoder work");
-    Ok((worst, pixels))
+    work.fixture.verify(&pixels, retained)?;
+    Ok(WorkerResult {
+        worst,
+        finished,
+        samples: SAMPLES,
+    })
 }
 
-fn tier(mode: CodecMode, height: u16) -> Result<DecodeTier> {
-    let config = VideoConfig::new(height, 60, 90, 30)
-        .context("Invalid calibration profile")?
-        .with_mode(mode);
-    let jpeg = generated_jpeg(config)?;
-    let (jpeg_time, pixels) = decode_samples(config, &jpeg, None)?;
-    let marker = pixels[(config.width() * 24 + 24) as usize];
-    for (shift, expected) in [(16, 70u8), (8, 120), (0, 180)] {
+struct Batch {
+    periods: Vec<Duration>,
+    wall: Duration,
+    worst: Duration,
+    completed: usize,
+}
+
+fn measure_batch(work: &[Work<'_>]) -> Result<Batch> {
+    ensure!(
+        (1..=MAX_DEVICES).contains(&work.len()),
+        "Invalid worker count"
+    );
+    thread::scope(|scope| -> Result<Batch> {
+        let (ready_tx, ready_rx) = mpsc::channel();
+        let mut starts = Vec::with_capacity(work.len());
+        let mut workers = Vec::with_capacity(work.len());
+        for item in work.iter().copied() {
+            let (start_tx, start_rx) = mpsc::channel();
+            let ready = ready_tx.clone();
+            let worker = thread::Builder::new()
+                .name("intralink-calibration".to_owned())
+                .spawn_scoped(scope, move || run_worker(item, ready, start_rx))
+                .context("Unable to start local calibration worker")?;
+            starts.push(start_tx);
+            workers.push(worker);
+        }
+        drop(ready_tx);
+        let mut all_ready = true;
+        for _ in work {
+            if ready_rx.recv().is_err() {
+                all_ready = false;
+                break;
+            }
+        }
+        let began = Instant::now();
+        if all_ready {
+            for start in &starts {
+                if start.send(()).is_err() {
+                    all_ready = false;
+                    break;
+                }
+            }
+        }
+        // Dropping every sender also cancels any worker that did not receive
+        // a start signal. Scoped handles join on every success/error path.
+        drop(starts);
+        // Join every handle even if one worker failed. Never leave a
+        // panicking worker for the implicit scope destructor to rethrow.
+        let joined: Vec<_> = workers.into_iter().map(|worker| worker.join()).collect();
+        let results: Vec<_> = joined
+            .into_iter()
+            .map(|result| result.map_err(|_| anyhow::anyhow!("Calibration worker panicked"))?)
+            .collect::<Result<_>>()?;
+        ensure!(all_ready, "Calibration cohort did not start completely");
+        let finished = results
+            .iter()
+            .map(|result| result.finished)
+            .max()
+            .context("No calibration results")?;
+        let wall = finished.duration_since(began);
+        let completed = results.iter().map(|result| result.samples).sum();
         ensure!(
-            ((marker >> shift) as u8).abs_diff(expected) <= 5,
-            "Calibration JPEG marker mismatch"
+            completed == work.len() * SAMPLES && !wall.is_zero(),
+            "Incomplete calibration cohort"
+        );
+        // Limit every worker by both its own slowest decode and the observed
+        // full-cohort wall-time per round. Never divide by worker count again.
+        let round = Duration::from_nanos(u64::try_from(wall.as_nanos().div_ceil(SAMPLES as u128))?);
+        let worst = results
+            .iter()
+            .map(|result| result.worst)
+            .max()
+            .context("No worker timing")?;
+        let periods = results
+            .into_iter()
+            .map(|result| result.worst.max(round))
+            .collect();
+        Ok(Batch {
+            periods,
+            wall,
+            worst,
+            completed,
+        })
+    })
+}
+
+fn measure_cohort(height: u16, sets: &[&FixtureSet]) -> Result<DecodeCohort> {
+    let first = sets.first().context("No calibration slots")?;
+    ensure!(
+        sets.iter().all(|set| set.items.len() == first.items.len()),
+        "Inconsistent calibration fixture modes"
+    );
+    let mut periods = vec![Duration::ZERO; sets.len()];
+    for index in 0..first.items.len() {
+        let work: Vec<_> = sets
+            .iter()
+            .map(|set| Work {
+                fixture: &set.items[index],
+                base: set.base(index),
+            })
+            .collect();
+        ensure!(
+            work.iter()
+                .all(|item| item.fixture.name() == first.items[index].name()),
+            "Inconsistent calibration representation"
+        );
+        let result = measure_batch(&work)?;
+        for (period, measured) in periods.iter_mut().zip(result.periods) {
+            *period = (*period).max(measured);
+        }
+        println!(
+            "cohort_height={height}, fixture={}, workers={}, completed={}, wall_ms={:.3}, worst_frame_ms={:.3}, aggregate_decode_fps={:.2}",
+            first.items[index].name(),
+            sets.len(),
+            result.completed,
+            result.wall.as_secs_f64() * 1000.0,
+            result.worst.as_secs_f64() * 1000.0,
+            result.completed as f64 / result.wall.as_secs_f64()
         );
     }
-    let mut worst = jpeg_time;
-    let mut compact_time = None;
-    let mut tile_time = None;
-    if mode.supports_tiles() {
-        let (w, h) = (config.width() as usize, config.height() as usize);
-        let mut rgb = vec![0; w * h * 3];
-        if mode.supports_compact() {
-            for (i, pixel) in rgb.chunks_exact_mut(3).enumerate() {
-                let tile = (i / w / 32 + i % w / 32) % 2;
-                pixel.copy_from_slice(if tile == 0 {
-                    &[41, 83, 129]
-                } else {
-                    &[89, 137, 173]
-                });
+    let slots = sets
+        .iter()
+        .zip(periods)
+        .enumerate()
+        .map(|(index, (set, period))| {
+            println!(
+                "cohort_height={height}, slot={}, measured_height={}, effective_period_ms={:.3}",
+                index + 1,
+                set.height,
+                period.as_secs_f64() * 1000.0
+            );
+            DecodeTier {
+                height: set.height,
+                period,
             }
-            let mut key = Vec::new();
-            ensure!(
-                media::encode_keyframe(config, &rgb, &mut key, LOSSLESS_BUDGET)
-                    .map_err(|e| anyhow::anyhow!("Calibration keyframe: {e:?}"))?,
-                "Calibration keyframe did not fit"
-            );
-            let (time, canvas) = decode_samples(config, &key, None)?;
-            ensure!(
-                canvas
-                    .iter()
-                    .zip(rgb.chunks_exact(3))
-                    .all(|(&pixel, src)| pixel
-                        == (u32::from(src[0]) << 16 | u32::from(src[1]) << 8 | u32::from(src[2]))),
-                "Calibration keyframe pixels mismatch"
-            );
-            worst = worst.max(time);
-            compact_time = Some(time);
-        }
-        // Exercise dense absolute tile updates under the actual wire cap.
-        let previous = rgb.clone();
-        for y in 0..32.min(h) {
-            for x in 0..w.min(1024) {
-                let start = (y * w + x) * 3;
-                rgb[start..start + 3].copy_from_slice(&[
-                    (x * 13 + y * 17) as u8,
-                    (x * y) as u8,
-                    211,
-                ]);
-            }
-        }
-        // The peer may select Tiles instead of Compact, so measure both
-        // allowed tile representations rather than infer equivalent cost.
-        for tile_mode in [CodecMode::Tiles, CodecMode::Compact] {
-            if tile_mode == CodecMode::Compact && !mode.supports_compact() {
-                continue;
-            }
-            let config = config.with_mode(tile_mode);
-            let mut delta = Vec::new();
-            ensure!(
-                media::encode_delta(config, &previous, &rgb, &mut delta, MAX_DELTA_BYTES)
-                    .map_err(|e| anyhow::anyhow!("Calibration delta: {e:?}"))?
-                    == Delta::Encoded,
-                "Calibration tile budget exhausted"
-            );
-            let (time, canvas) = decode_samples(config, &delta, Some(&jpeg))?;
-            ensure!(
-                canvas[0] == 211 && canvas[w + 1] == 0x1e01d3,
-                "Calibration tile marker mismatch"
-            );
-            tile_time = Some(tile_time.map_or(time, |prior: Duration| prior.max(time)));
-            worst = worst.max(time);
-        }
-    }
-    let ms = |time: Duration| time.as_secs_f64() * 1000.0;
-    println!(
-        "decode_tier={height}p, samples_per_fixture={SAMPLES}, jpeg_worst_ms={:.3}, compact_worst_ms={:?}, tiles_worst_ms={:?}, worst_ms={:.3}",
-        ms(jpeg_time),
-        compact_time.map(ms),
-        tile_time.map(ms),
-        ms(worst)
-    );
-    Ok(DecodeTier { height, worst })
+        })
+        .collect();
+    Ok(DecodeCohort { height, slots })
 }
 
-pub(super) fn measure(mode: CodecMode, ceiling: ReceiverLimits) -> Result<Calibration> {
-    println!(
-        "Local software decoder calibration: mode={mode:?}, logical_cpus={:?}",
-        std::thread::available_parallelism().ok().map(|n| n.get())
+pub(super) fn measure(mode: CodecMode, ceilings: &[ReceiverLimits]) -> Result<Vec<ReceiverLimits>> {
+    ensure!(
+        (1..=MAX_DEVICES).contains(&ceilings.len()),
+        "Select 1-8 receiver slots"
     );
-    let mut tiers = Vec::with_capacity(3);
+    let maximum = ceilings
+        .iter()
+        .map(|limit| limit.height())
+        .max()
+        .context("Missing receiver ceiling")?;
+    println!(
+        "Local concurrent decoder calibration: mode={mode:?}, slots={}, logical_cpus={:?}",
+        ceilings.len(),
+        thread::available_parallelism().ok().map(|n| n.get())
+    );
+    // Construct immutable fixtures only once per permitted geometry, outside
+    // the measured region. Mixed ceilings are tested together as one cohort.
+    let mut fixtures = Vec::<FixtureSet>::with_capacity(3);
+    let mut cohorts = Vec::with_capacity(3);
     for height in [1080, 720, 540] {
-        if height <= ceiling.height() {
-            tiers.push(tier(mode, height)?);
+        if height > maximum {
+            continue;
+        }
+        for ceiling in ceilings {
+            let target = height.min(ceiling.height());
+            if !fixtures.iter().any(|set| set.height == target) {
+                fixtures.push(FixtureSet::new(mode, target)?);
+            }
+        }
+        let sets: Vec<_> = ceilings
+            .iter()
+            .map(|limit| {
+                let target = height.min(limit.height());
+                fixtures
+                    .iter()
+                    .find(|set| set.height == target)
+                    .context("Missing local calibration fixture")
+            })
+            .collect::<Result<_>>()?;
+        cohorts.push(measure_cohort(height, &sets)?);
+        // Highest candidate first. Once every slot meets its minimum target,
+        // the policy cannot prefer a smaller layout. Avoid unnecessary runs.
+        if let Some(limits) = recommend(&cohorts, ceilings)
+            && limits
+                .iter()
+                .zip(ceilings)
+                .all(|(limit, ceiling)| limit.fps() >= ceiling.fps().min(30))
+        {
+            return Ok(limits);
         }
     }
-    Ok(Calibration(tiers))
+    recommend(&cohorts, ceilings)
+        .context("Measured concurrent decode budget cannot support the receiver profiles")
 }
 
 #[cfg(test)]
@@ -248,22 +320,55 @@ mod tests {
     use super::*;
 
     #[test]
-    fn generated_jpeg_fits_wire_limit_at_every_resolution() -> Result<()> {
-        for height in [540, 720, 1080] {
-            let config = VideoConfig::new(height, 60, 90, 30).unwrap();
-            let bytes = generated_jpeg(config)?;
-            assert!((2..=MAX_FRAME_BYTES).contains(&bytes.len()));
+    fn real_software_fixtures_round_trip_without_timing_assumptions() -> Result<()> {
+        for mode in [CodecMode::Jpeg, CodecMode::Tiles, CodecMode::Compact] {
+            let fixture = FixtureSet::new(mode, 540)?;
+            let cohort = measure_cohort(540, &[&fixture])?;
+            assert_eq!(cohort.slots.len(), 1);
+            assert_eq!(cohort.slots[0].height, 540);
+            assert!(!cohort.slots[0].period.is_zero());
         }
         Ok(())
     }
 
     #[test]
-    fn real_software_fixtures_round_trip_without_timing_assumptions() -> Result<()> {
-        for mode in [CodecMode::Jpeg, CodecMode::Tiles, CodecMode::Compact] {
-            let sample = tier(mode, 540)?;
-            assert_eq!(sample.height, 540);
-            assert!(!sample.worst.is_zero());
-        }
+    fn concurrent_mixed_geometry_workers_complete_and_join() -> Result<()> {
+        let high = FixtureSet::new(CodecMode::Jpeg, 720)?;
+        let low = FixtureSet::new(CodecMode::Jpeg, 540)?;
+        let work = [
+            Work {
+                fixture: &high.items[0],
+                base: None,
+            },
+            Work {
+                fixture: &low.items[0],
+                base: None,
+            },
+        ];
+        let batch = measure_batch(&work)?;
+        assert_eq!(batch.completed, 2 * SAMPLES);
+        assert_eq!(batch.periods.len(), 2);
+        assert!(batch.periods.iter().all(|period| !period.is_zero()));
+        Ok(())
+    }
+
+    #[test]
+    fn failed_warmup_cancels_waiting_workers() -> Result<()> {
+        let mut bad = FixtureSet::new(CodecMode::Jpeg, 540)?;
+        let good = FixtureSet::new(CodecMode::Jpeg, 540)?;
+        bad.items[0].bytes.clear();
+        let work = [
+            Work {
+                fixture: &good.items[0],
+                base: None,
+            },
+            Work {
+                fixture: &bad.items[0],
+                base: None,
+            },
+        ];
+        assert!(measure_batch(&work).is_err());
+        assert!(measure_batch(&[]).is_err());
         Ok(())
     }
 }

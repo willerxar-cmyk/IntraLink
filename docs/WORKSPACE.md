@@ -68,4 +68,4 @@ Choose `--negotiate-profile` and optional global `--max-height` / `--max-fps`. R
 
 ### Measured workspace capacity
 
-With v12 `--auto-profile`, one local calibration covers the selected software modes and geometry tiers before starting the workspace. The conservative serial time budget is divided by the number of selected slots; each slot's manual override remains its upper bound. No measured multicore throughput guarantee, hardware-required path or new remote permission. See [RUNTIME-CAPABILITIES.md](RUNTIME-CAPABILITIES.md).
+With v12 `--auto-profile`, one local calibration measures the selected software modes and exact concurrent group of slots at each candidate geometry. Each slot owns an independent decoder/canvas and retains its manual override as an upper bound. The measured cohort period already includes concurrent load; do not divide it again by slot count. This is a short local decode benchmark, not a sustained rendering or network guarantee. No hardware-required path or new remote permission. See [RUNTIME-CAPABILITIES.md](RUNTIME-CAPABILITIES.md).

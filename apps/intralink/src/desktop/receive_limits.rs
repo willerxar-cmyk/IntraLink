@@ -33,8 +33,10 @@ impl ReceiveProfileArgs {
         if !self.auto_profile {
             return Ok(mode);
         }
-        let calibrated =
-            super::calibration::measure(codec, mode.limits)?.recommend(mode.limits, 1)?;
+        let calibrated = super::calibration::measure(codec, &[mode.limits])?
+            .into_iter()
+            .next()
+            .context("Missing measured receiver profile")?;
         println!(
             "Measured receiver ceiling: {}p/{} FPS",
             calibrated.height(),
@@ -54,10 +56,13 @@ impl ReceiveProfileArgs {
         let base = self.mode(codec, adaptive, negotiated)?;
         let mut modes = slot_modes(names, base, overrides)?;
         if self.auto_profile {
-            let calibration = super::calibration::measure(codec, base.limits)?;
-            let slots = modes.len();
-            for (name, mode) in names.iter().zip(&mut modes) {
-                let selected = calibration.recommend(mode.limits, slots)?;
+            let ceilings: Vec<_> = modes.iter().map(|mode| mode.limits).collect();
+            let calibrated = super::calibration::measure(codec, &ceilings)?;
+            ensure!(
+                calibrated.len() == modes.len(),
+                "Incomplete calibrated workspace"
+            );
+            for ((name, mode), selected) in names.iter().zip(&mut modes).zip(calibrated) {
                 println!(
                     "Measured receiver ceiling for {name}: {}p/{} FPS",
                     selected.height(),
