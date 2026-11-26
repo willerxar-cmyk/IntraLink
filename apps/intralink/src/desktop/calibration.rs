@@ -70,7 +70,15 @@ fn generated_jpeg(config: VideoConfig) -> Result<Vec<u8>> {
     for (i, pixel) in rgb.chunks_exact_mut(3).enumerate() {
         let x = i as u32 % width;
         let y = i as u32 / width;
-        let texture = ((x * 17 + y * 29) ^ (x * y)) as u8;
+        // Keep a region of high-frequency detail while the rest resembles
+        // block/gradient desktop content. At quality 90 the fixture itself
+        // must fit the existing 2 MiB protocol ceiling at every tier.
+        let (tx, ty) = if y < height / 4 {
+            (x, y)
+        } else {
+            (x / 8, y / 8)
+        };
+        let texture = ((tx * 17 + ty * 29) ^ (tx * ty)) as u8;
         pixel.copy_from_slice(&[
             (x / 8) as u8 ^ texture,
             (y / 4) as u8 ^ (texture / 2),
@@ -238,6 +246,16 @@ pub(super) fn measure(mode: CodecMode, ceiling: ReceiverLimits) -> Result<Calibr
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn generated_jpeg_fits_wire_limit_at_every_resolution() -> Result<()> {
+        for height in [540, 720, 1080] {
+            let config = VideoConfig::new(height, 60, 90, 30).unwrap();
+            let bytes = generated_jpeg(config)?;
+            assert!((2..=MAX_FRAME_BYTES).contains(&bytes.len()));
+        }
+        Ok(())
+    }
 
     #[test]
     fn real_software_fixtures_round_trip_without_timing_assumptions() -> Result<()> {
