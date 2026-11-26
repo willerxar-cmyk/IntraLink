@@ -2,6 +2,8 @@
 
 ## 0.22.0 — shared endpoint and full application validation
 
+- Add opt-in v11 authenticated software capability selection and exact confirmation before capture; preserve v8/v10 and isolated v9. Retarget optional WGC GPU output at adaptive geometry transitions without changing capture source/device.
+
 - Add opt-in v10 software adaptive geometry with separate ALPN, explicit approved ceiling, complete-keyframe transitions, local hysteresis, and safe ordered single-view/workspace presentation. Preserve the fixed v8 and isolated v9 modes.
 
 - Default the Host to 1080p and adapt JPEG quality using bounded receipt-pressure hysteresis, with a local fixed-quality opt-out. Keep v8 geometry, exact tiles, and authorization unchanged. Validate the independent CPU feature set without NVIDIA codec dependencies.

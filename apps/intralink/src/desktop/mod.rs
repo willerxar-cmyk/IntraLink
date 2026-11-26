@@ -105,18 +105,24 @@ pub fn list_displays() -> Result<()> {
     Ok(())
 }
 
-pub fn view_protocol(adaptive: bool) -> ViewProtocol {
-    if adaptive {
+pub fn view_protocol(adaptive: bool, negotiated: bool) -> ViewProtocol {
+    if negotiated {
+        ViewProtocol::Negotiated
+    } else if adaptive {
         ViewProtocol::Adaptive
     } else {
         ViewProtocol::Fixed
     }
 }
 
-pub fn view_mode(codec: intralink_core::desktop::CodecMode, adaptive: bool) -> ViewMode {
+pub fn view_mode(
+    codec: intralink_core::desktop::CodecMode,
+    adaptive: bool,
+    negotiated: bool,
+) -> ViewMode {
     ViewMode {
         codec,
-        protocol: view_protocol(adaptive),
+        protocol: view_protocol(adaptive, negotiated),
     }
 }
 
@@ -168,6 +174,14 @@ pub async fn share(
         config.seconds()
     );
     println!("Explicit capture backend: {backend:?}");
+    if protocol == ViewProtocol::Negotiated {
+        let caps = intralink_core::capabilities::CodecCapabilities::through(config.mode());
+        println!(
+            "Approved software codec ceiling: {:?}; allowed mask: {:#05b}. Best mutual codec will be selected before capture.",
+            config.mode(),
+            caps.bits()
+        );
+    }
     if fixed_quality {
         println!("JPEG quality: fixed at {}", config.quality());
     } else {
@@ -215,10 +229,10 @@ pub async fn share(
         result
     });
     println!("Waiting at {local} for the approved peer (up to 120s). No capture has started.");
-    let mut encoder = codec::Encoder::new(config);
-    let mut quality = (!fixed_quality).then(|| AdaptiveQuality::new(config));
-    let mut resolution =
-        (protocol == ViewProtocol::Adaptive).then(|| AdaptiveResolution::new(config));
+    let mut encoder = None::<codec::Encoder>;
+    let mut quality = None::<AdaptiveQuality>;
+    let mut resolution = None::<AdaptiveResolution>;
+    let mut selected_config = None::<VideoConfig>;
     let mut current_height = config.height() as u16;
     let mut active = false;
     let mut capture = None::<HostCapture>;
@@ -282,10 +296,31 @@ pub async fn share(
             }
             // Capture construction is reachable only after the transport has
             // authenticated the approved peer and matched the view request.
-            if capture.is_none() {
+            let selected = request.desktop_config.context("Missing authenticated desktop profile")?;
+            ensure!(selected == config.with_mode(selected.mode()), "Negotiation changed the approved media profile");
+            ensure!(
+                if protocol == ViewProtocol::Negotiated {
+                    intralink_core::capabilities::CodecCapabilities::through(config.mode()).contains(selected.mode())
+                } else {
+                    selected.mode() == config.mode()
+                },
+                "Selected codec exceeds local approval"
+            );
+            if let Some(previous) = selected_config {
+                ensure!(previous == selected, "Media profile changed after negotiation");
+            } else {
+                // Allocate and initialize only after the authenticated selection.
                 display.verify()?;
-                capture = Some(HostCapture::start(&display, backend, config)?);
+                encoder = Some(codec::Encoder::new(selected));
+                quality = (!fixed_quality).then(|| AdaptiveQuality::new(selected));
+                resolution = protocol.is_adaptive().then(|| AdaptiveResolution::new(selected));
+                capture = Some(HostCapture::start(&display, backend, selected)?);
+                selected_config = Some(selected);
+                current_height = selected.height() as u16;
+                println!("Selected software codec: {:?}, {}p, max {} FPS", selected.mode(), current_height, selected.fps());
+                indicator.set_title(&format!("IntraLink: SCREEN SHARING - {:?} - {current_height}p - ESC to stop", selected.mode()));
             }
+            let encoder = encoder.as_mut().context("Encoder missing")?;
             let source = capture.as_mut().context("Capture source missing")?;
             let capture_started = Instant::now();
             let observed = source.capture(&display, || {
@@ -330,9 +365,9 @@ pub async fn share(
                 break;
             }
             let changed = matches!(&encoded, Capture::Frame(_));
-            let encoded = match (protocol, encoded) {
-                (ViewProtocol::Adaptive, Capture::Frame(data)) => Capture::AdaptiveFrame { height: current_height, data },
-                (_, other) => other,
+            let encoded = match encoded {
+                Capture::Frame(data) if protocol.is_adaptive() => Capture::AdaptiveFrame { height: current_height, data },
+                other => other,
             };
             if request.reply.send(Ok(encoded)).is_err() {
                 break;
@@ -347,6 +382,7 @@ pub async fn share(
             if let Some(policy) = resolution.as_mut()
                 && let Some(next) = policy.observe(receipt_pressure, local_encode_time, changed)
             {
+                source.retarget(next)?;
                 encoder.reconfigure(next)?;
                 current_height = next.height() as u16;
                 println!("Adaptive resolution target: {current_height}p (next complete keyframe)");

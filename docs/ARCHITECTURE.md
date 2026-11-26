@@ -93,3 +93,8 @@ The normal Host now starts at 1920x1080 by default, with 60 FPS as a ceiling. Se
 
 ### Adaptive geometry boundary (v10)
 The optional adaptive software transport has its own ALPN and exact codec match, using the same authenticated session engine, record credit and time budget as v8. Geometry is a separately bounded per-changed-record field, never a remote command. A complete keyframe and minimum changed-record interval establish a new ordered canvas. The Host's local resolution policy uses backlog and measured software encode work; no GPU is required. The single viewer and workspace share the ordered decoder and preserve immutable snapshots across geometry changes. See [ADAPTIVE-MEDIA.md](ADAPTIVE-MEDIA.md). Existing v8 and isolated v9 are preserved; general codec capability negotiation and hardware codec qualification remain open.
+
+
+### Negotiated software session and output scaling (v11)
+
+Explicit v11 peers negotiate the richest mutually allowed implemented software codec before capture. Host and viewer independently validate the bounded intersection and confirm the selected configuration. The CPU codec path never requires NVIDIA. The Host lazily allocates encoder state using the authenticated profile and preserves its local display approval, resolution/FPS/quality ceilings and duration. Adaptive v10 geometry is retained. Optional WGC GPU scaling retargets only output resources on the same native device and capture item, with the next observed generation and a fresh software keyframe; no fallback from explicit backend or security policy. See [NEGOTIATED-MEDIA.md](NEGOTIATED-MEDIA.md).

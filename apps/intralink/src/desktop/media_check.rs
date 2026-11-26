@@ -461,6 +461,12 @@ pub fn run(height: u16, samples: u16, mode: CodecMode, wgc: bool, gpu_scale: boo
     Ok(())
 }
 
+#[cfg(feature = "wgc-preview")]
+#[path = "media_retarget.rs"]
+mod retarget;
+#[cfg(feature = "wgc-preview")]
+pub use retarget::retarget_check;
+
 #[cfg(any(test, feature = "wgc-preview"))]
 fn verify_static_marker(
     frame: &RgbaImage,

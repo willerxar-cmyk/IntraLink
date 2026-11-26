@@ -54,3 +54,8 @@ The v8 desktop wire protocol distinguishes no native update observed from verifi
 
 ### Optional adaptive-resolution sessions
 The workspace accepts `--adaptive-resolution` for all selected hosts. Each must separately opt in on its locally approved Host. The v10 software decoder accepts geometry changes only on validated complete keyframes. Every slot keeps its independent bounded queue, decode state, connection, cancellation and immutable presentation snapshot. A changed geometry uses a fresh or uniquely owned canvas; an older snapshot remains immutable. Background receipt priority remains unchanged; neutral observations do not drive resolution changes. Mixed v8/v10 host selection and physical eight-device qualification remain pending. See [ADAPTIVE-MEDIA.md](ADAPTIVE-MEDIA.md).
+
+
+### Negotiated codec per session (v11)
+
+`--negotiate-codec` opts every selected slot into v11. Each independently approved Host negotiates its own software codec with the controller's local `--codec` ceiling. The workspace still owns independent decode state, queues and cancellation per slot; no global GPU requirement or change to the authorization scope. Mixed protocol versions in one workspace are not yet supported.

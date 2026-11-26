@@ -65,4 +65,19 @@ fn portable_share_defaults_to_1080p_and_adaptive_quality() {
     assert!(help.contains("--adaptive-resolution"));
     assert!(stdout(&["view-desktop", "--help"]).contains("--adaptive-resolution"));
     assert!(stdout(&["workspace", "--help"]).contains("--adaptive-resolution"));
+    for command in ["share-desktop", "view-desktop", "workspace"] {
+        assert!(stdout(&[command, "--help"]).contains("--negotiate-codec"));
+    }
+    let conflicting = Command::new(env!("CARGO_BIN_EXE_intralink"))
+        .args([
+            "view-desktop",
+            "--device",
+            "test",
+            "--adaptive-resolution",
+            "--negotiate-codec",
+        ])
+        .output()
+        .expect("Parse conflicting protocol flags");
+    assert!(!conflicting.status.success());
+    assert!(String::from_utf8_lossy(&conflicting.stderr).contains("cannot be used with"));
 }

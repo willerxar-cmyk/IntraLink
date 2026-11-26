@@ -14,7 +14,7 @@ intralink view-desktop --device <paired-host-name> --adaptive-resolution
 intralink workspace --device <paired-host-1> --device <paired-host-2> --adaptive-resolution --fullscreen
 ```
 
-The workspace flag applies to all requested hosts. Mixed v8/v10 workspaces and automatic codec/capability negotiation are future work. Select `--capture wgc` or `--capture wgc-gpu` explicitly on a supported Windows WGC build; the portable snapshot path remains available. Neither mode silently falls back.
+The workspace flag applies to all requested hosts. Mixed protocol versions in one workspace remain future work. Separate opt-in v11 software codec negotiation is now implemented; see [NEGOTIATED-MEDIA.md](NEGOTIATED-MEDIA.md). Select `--capture wgc` or `--capture wgc-gpu` explicitly on a supported Windows WGC build; the portable snapshot path remains available. Neither mode silently falls back.
 
 ## Wire format
 
@@ -28,7 +28,7 @@ The workspace flag applies to all requested hosts. Mixed v8/v10 workspaces and a
 
 Start at 1080p by default (or lower explicitly approved ceiling). After 16 consecutive changed records with high receipt backlog, or low backlog and local resize/compare/encode work exceeding the approved frame interval, downshift 1080 -> 720 -> 540. After 120 consecutive changed records with low backlog and local encode work at or below half the interval, recover one tier, never beyond the approved ceiling. Neutral/background observations, repeats and no-update reset streaks. These are bounded engineering thresholds, not network bandwidth estimates or FPS guarantees. JPEG quality hysteresis remains independent (default 75 down to 35); `--fixed-quality` disables only JPEG quality adaptation. The Host announces the policy before consent and reports transitions. Single-view title updates on actual dimensions or freshness changes only.
 
-The software encoder reuses its two bounded RGB canvases, invalidates the previous tile base, and forces the next observed changed image to become a complete keyframe. A lower target can reduce software resize/encoding and transmitted pixels, but does not guarantee reduced native capture cost. In `wgc-gpu`, the existing capture scaler remains at the initial approved output ceiling; later software downshifts do not recreate the native capture session. Safe live native scaler reconfiguration is future optimization. The single viewer and workspace decoder enforce keyframe-only reconfiguration; immutable presentation snapshots preserve previous geometry and pixels, and malformed partial decode is never published.
+The software encoder reuses its two bounded RGB canvases, invalidates the previous tile base, and forces the next observed changed image to become a complete keyframe. A lower target can reduce software resize/encoding and transmitted pixels, but does not guarantee reduced native capture cost. In `wgc-gpu`, the capture scaler now retargets its output at locally selected adaptive transitions, preserving the native capture item and device. See [NEGOTIATED-MEDIA.md](NEGOTIATED-MEDIA.md) for the resource lifecycle and qualification scope. The single viewer and workspace decoder enforce keyframe-only reconfiguration; immutable presentation snapshots preserve previous geometry and pixels, and malformed partial decode is never published.
 
 ## Qualification
 

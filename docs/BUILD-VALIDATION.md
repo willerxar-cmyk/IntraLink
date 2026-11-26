@@ -29,3 +29,8 @@ Run the Windows/Linux `desktop-preview,resource-monitor` build, Clippy with `-D 
 
 ### Adaptive geometry (v10)
 Include `adaptive` and `presentation` in the dependency-free media harness and execute both CPU-only and optional NVIDIA-feature workspace suites. Run strict Clippy for CPU, WGC and NVENC feature combinations. Check the independent `wgc-preview,resource-monitor` dependency graph for absence of mini-cuda/mini-nvcodec before native generated-window diagnostics. Preserve the actual v8/v9 tests. v10 tests must cover resolution transitions, full-keyframe reset, old immutable snapshot lifetime, malformed initial/transition records, raw invalid peer geometry before ACK, wrong identity and incompatible ALPN. Keep physical multi-device sustained performance as a separate gate. See [ADAPTIVE-MEDIA.md](ADAPTIVE-MEDIA.md).
+
+
+### Negotiation and retargeting validation
+
+The mandatory independent harness includes capabilities mask and deterministic intersection tests. Run authenticated v11 loopback and adversarial handshake tests, CPU and NVIDIA-feature workspace suites, strict CPU/WGC/NVENC Clippy, and locked WGC Release without CUDA dependencies. On Windows, run `desktop-retarget-check`, `desktop-geometry-check`, and `desktop-static-check --height 1080 --gpu-scale`. Preserve native output transition, capture identity, teardown and strict readback geometry checks. Physical remote sessions remain separate.

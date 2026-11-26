@@ -1,7 +1,7 @@
 //! One foreground window; independent authorized view sessions and decoder workers.
 use anyhow::{Context, Result, anyhow, ensure};
 use intralink_core::{
-    adaptive::{ViewProtocol, is_keyframe},
+    adaptive::is_keyframe,
     desktop::ViewPriority,
     overview::{self, Action},
     presentation::PresentationSurface,
@@ -122,9 +122,7 @@ fn start(target: &Target, endpoint: Endpoint, mode: ViewMode, priority: ViewPrio
                         mode.protocol,
                     )
                 };
-                if mode.protocol == ViewProtocol::Adaptive
-                    && is_keyframe(frame.config.mode(), &frame.payload)
-                {
+                if mode.protocol.is_adaptive() && is_keyframe(frame.config.mode(), &frame.payload) {
                     surface.update_keyframe(frame.sequence, dimensions, decode)?;
                 } else {
                     surface.update(frame.sequence, dimensions, decode)?;

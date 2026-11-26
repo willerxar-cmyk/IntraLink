@@ -117,3 +117,8 @@ Keep CPU Compact/Tiles/JPEG as the always-available media baseline on supported 
 
 ### Adaptive software geometry checkpoint
 v10 opt-in geometry transitions and local hysteresis are implemented and locally exercised by automated protocol, encoder and authenticated QUIC loopback tests. The separate v8 fixed mode is still the default until physical v10 qualification; no fallback or native decoder access is implied. Next: locally consented physical 1080/720/540 transitions under controlled load, safe WGC scaler retargeting without new capture privileges, actual capability-based negotiation and CPU/GPU codec backend abstraction. Retain vendor-independent baseline and restricted NVIDIA security gates.
+
+
+### Negotiated software and scaler retargeting checkpoint
+
+Opt-in v11 software codec intersection and adaptive geometry are implemented, as is local live WGC/D3D11 output retargeting. The CPU codec baseline remains mandatory; no native H.264 is exposed remotely. Next qualify physical v11 sessions and multiple independent hosts under controlled pressure, add receiver-side resolution/FPS bounds, implement independently qualified platform hardware codecs and a portable software H.264 option, and complete native decoder isolation before advertising it. Preserve explicit security/backend policies; no implicit fallback from a failed strict decoder.

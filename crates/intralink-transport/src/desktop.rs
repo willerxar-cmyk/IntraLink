@@ -1,4 +1,4 @@
-//! Foreground view-only QUIC v8/v10 and isolated v9 H.264 diagnostic.
+//! Foreground view-only QUIC v8/v10/v11 and isolated v9 H.264 diagnostic.
 use std::{net::SocketAddr, time::Duration};
 
 use anyhow::{Context, Result, bail, ensure};
@@ -9,7 +9,9 @@ use intralink_core::desktop::{
     REQUEST_BYTES, Record, VideoConfig, ViewPriority, ack_with_priority, frame_header,
     parse_length,
 };
-use intralink_core::{adaptive::ViewProtocol, h264, quality::ReceiptPressure};
+use intralink_core::{
+    adaptive::ViewProtocol, capabilities::CodecCapabilities, h264, quality::ReceiptPressure,
+};
 use iroh::{Endpoint, EndpointAddr, EndpointId, SecretKey, endpoint::Connection};
 use tokio::{
     sync::{mpsc, oneshot},
@@ -28,6 +30,8 @@ pub struct CaptureRequest {
     pub reply: oneshot::Sender<Result<Capture>>,
     /// Local transport observation, never a new remotely supplied command.
     pub receipt_pressure: ReceiptPressure,
+    /// Immutable authenticated desktop selection; absent for isolated H.264 diagnostics.
+    pub desktop_config: Option<VideoConfig>,
 }
 
 pub enum Capture {
@@ -208,15 +212,42 @@ async fn serve_media<W: PacerWait>(
         let (mut tx, mut rx) = timeout(REQUEST_LIMIT, connection.accept_bi()).await??;
         let mut request = [0; REQUEST_BYTES];
         timeout(REQUEST_LIMIT, rx.read_exact(&mut request)).await??;
-        ensure!(
-            request == requested.request(),
-            "Unsupported or unapproved media mode"
-        );
-        match config {
-            SessionProfile::Desktop(legacy, _) => {
-                timeout(IO_LIMIT, tx.write_all(&legacy.encode())).await??
+        let config = match config {
+            SessionProfile::Desktop(ceiling, ViewProtocol::Negotiated) => {
+                let remote = CodecCapabilities::parse_request(&request)
+                    .context("Invalid software codec capabilities")?;
+                let local = CodecCapabilities::through(ceiling.mode());
+                let selected = local
+                    .select(remote)
+                    .context("No mutually approved software codec")?;
+                let config = ceiling.with_mode(selected);
+                // The viewer verifies the intersection and echoes the exact
+                // selection before any capture demand can be issued.
+                let mut selection = [0; CONFIG_BYTES + 1];
+                selection[0] = local.bits();
+                selection[1..].copy_from_slice(&config.encode());
+                timeout(IO_LIMIT, tx.write_all(&selection)).await??;
+                let mut confirmation = [0; CONFIG_BYTES + 1];
+                timeout(REQUEST_LIMIT, rx.read_exact(&mut confirmation)).await??;
+                ensure!(
+                    confirmation == selection,
+                    "Codec selection confirmation mismatch"
+                );
+                SessionProfile::Desktop(config, ViewProtocol::Negotiated)
+            }
+            SessionProfile::Desktop(legacy, protocol) => {
+                ensure!(
+                    request == requested.request(),
+                    "Unsupported or unapproved media mode"
+                );
+                timeout(IO_LIMIT, tx.write_all(&legacy.encode())).await??;
+                SessionProfile::Desktop(legacy, protocol)
             }
             SessionProfile::H264(profile) => {
+                ensure!(
+                    request == requested.request(),
+                    "Unsupported or unapproved media mode"
+                );
                 // The viewer explicitly requests the exact bounded profile,
                 // before the Host is permitted to ask its local source.
                 let mut offer = [0; h264::CONFIG_BYTES];
@@ -225,9 +256,10 @@ async fn serve_media<W: PacerWait>(
                     h264::Profile::decode(offer) == Some(profile),
                     "H.264 profile offer not approved"
                 );
-                timeout(IO_LIMIT, tx.write_all(&profile.encode())).await??
+                timeout(IO_LIMIT, tx.write_all(&profile.encode())).await??;
+                SessionProfile::H264(profile)
             }
-        }
+        };
         // Read receipts independently so background priority does not wait for
         // the credit window to fill. The queue and both futures are session-local.
         let (receipt_tx, mut receipt_rx) = mpsc::channel::<[u8; 4]>(MAX_IN_FLIGHT_RECORDS);
@@ -278,6 +310,7 @@ async fn serve_media<W: PacerWait>(
                             buffer,
                             reply,
                             receipt_pressure,
+                            desktop_config: config.desktop_config(),
                         })
                         .await
                         .map_err(|_| anyhow::anyhow!("Local capture source stopped"))?;
@@ -607,6 +640,21 @@ where
             timeout(REQUEST_LIMIT, tx.write_all(&profile.encode())).await??;
         }
         let config = match mode {
+            RequestedMode::Desktop(requested) if requested.protocol == ViewProtocol::Negotiated => {
+                let mut selection = [0; CONFIG_BYTES + 1];
+                timeout(IO_LIMIT, rx.read_exact(&mut selection)).await??;
+                let host = CodecCapabilities::from_bits(selection[0])
+                    .context("Invalid host software capabilities")?;
+                let config = VideoConfig::decode(selection[1..].try_into()?)
+                    .context("Invalid negotiated configuration")?;
+                let local = CodecCapabilities::through(requested.codec);
+                ensure!(
+                    local.select(host) == Some(config.mode()),
+                    "Host selected a codec outside the deterministic intersection"
+                );
+                timeout(IO_LIMIT, tx.write_all(&selection)).await??;
+                SessionProfile::Desktop(config, requested.protocol)
+            }
             RequestedMode::Desktop(requested) => {
                 let mut header = [0; CONFIG_BYTES];
                 timeout(IO_LIMIT, rx.read_exact(&mut header)).await??;
@@ -722,3 +770,6 @@ mod h264_tests;
 
 #[cfg(test)]
 mod adaptive_tests;
+
+#[cfg(test)]
+mod negotiated_tests;

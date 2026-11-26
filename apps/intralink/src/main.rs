@@ -214,6 +214,9 @@ enum Command {
         #[arg(long, requires = "wgc")]
         gpu_scale: bool,
     },
+    /// Validate live WGC output retargeting on a generated local window.
+    #[cfg(all(feature = "wgc-preview", target_os = "windows"))]
+    DesktopRetargetCheck,
     /// Verify a final native update survives idle time without CPU readback.
     #[cfg(all(feature = "wgc-preview", target_os = "windows"))]
     DesktopStaticCheck {
@@ -353,6 +356,10 @@ enum Command {
         /// Use adaptive-resolution protocol v10; both endpoints must opt in.
         #[arg(long)]
         adaptive_resolution: bool,
+        /// Negotiate mutually enabled software codecs and adaptive geometry (v11).
+        /// In v11, --codec is the richest allowed mode; both peers must opt in.
+        #[arg(long, conflicts_with = "adaptive_resolution")]
+        negotiate_codec: bool,
         /// Explicit compact tiles, basic tiles or independent JPEG mode. Must match the viewer.
         #[arg(long, value_enum, default_value = "compact")]
         codec: MediaMode,
@@ -368,6 +375,10 @@ enum Command {
         /// Request v10 adaptive resolution; host must also opt in.
         #[arg(long)]
         adaptive_resolution: bool,
+        /// Negotiate mutually enabled software codecs and adaptive geometry (v11).
+        /// In v11, --codec is the richest allowed mode; both peers must opt in.
+        #[arg(long, conflicts_with = "adaptive_resolution")]
+        negotiate_codec: bool,
         #[arg(long, value_enum, default_value = "compact")]
         codec: MediaMode,
     },
@@ -383,6 +394,10 @@ enum Command {
         /// Request v10 adaptive resolution for every explicitly selected host.
         #[arg(long)]
         adaptive_resolution: bool,
+        /// Negotiate mutually enabled software codecs and adaptive geometry (v11).
+        /// In v11, --codec is the richest allowed mode; both peers must opt in.
+        #[arg(long, conflicts_with = "adaptive_resolution")]
+        negotiate_codec: bool,
         #[arg(long, value_enum, default_value = "compact")]
         codec: MediaMode,
         /// Use a borderless window covering the selected local monitor (primary by default).
@@ -583,6 +598,8 @@ fn main() -> Result<()> {
         #[cfg(all(feature = "wgc-preview", target_os = "windows"))]
         Command::DesktopGeometryCheck => desktop::media_check::geometry_check(),
         #[cfg(all(feature = "wgc-preview", target_os = "windows"))]
+        Command::DesktopRetargetCheck => desktop::media_check::retarget_check(),
+        #[cfg(all(feature = "wgc-preview", target_os = "windows"))]
         Command::DesktopNv12Check {
             height,
             samples,
@@ -660,6 +677,7 @@ fn main() -> Result<()> {
             quality,
             fixed_quality,
             adaptive_resolution,
+            negotiate_codec,
             codec,
         } => {
             let config = intralink_core::desktop::VideoConfig::new(height, fps, quality, seconds)
@@ -681,7 +699,7 @@ fn main() -> Result<()> {
                         capture,
                         desktop::StreamOptions {
                             fixed_quality,
-                            protocol: desktop::view_protocol(adaptive_resolution),
+                            protocol: desktop::view_protocol(adaptive_resolution, negotiate_codec),
                         },
                     ),
                 )
@@ -695,6 +713,7 @@ fn main() -> Result<()> {
             device,
             codec,
             adaptive_resolution,
+            negotiate_codec,
         } => run_async(|| {
             journal::run(
                 &path,
@@ -703,7 +722,7 @@ fn main() -> Result<()> {
                 desktop::receive(
                     &path,
                     &device,
-                    desktop::view_mode(codec.into(), adaptive_resolution),
+                    desktop::view_mode(codec.into(), adaptive_resolution, negotiate_codec),
                 ),
             )
         }),
@@ -715,6 +734,7 @@ fn main() -> Result<()> {
             device,
             codec,
             adaptive_resolution,
+            negotiate_codec,
             fullscreen,
             local_monitor,
             all_live,
@@ -722,7 +742,7 @@ fn main() -> Result<()> {
             desktop::workspace::run(
                 &path,
                 &device,
-                desktop::view_mode(codec.into(), adaptive_resolution),
+                desktop::view_mode(codec.into(), adaptive_resolution, negotiate_codec),
                 fullscreen,
                 local_monitor,
                 all_live,

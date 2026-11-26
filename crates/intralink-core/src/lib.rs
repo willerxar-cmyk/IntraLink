@@ -3,6 +3,7 @@
 
 pub mod adaptive;
 pub mod canvas;
+pub mod capabilities;
 pub mod desktop;
 pub mod h264;
 pub mod journal;

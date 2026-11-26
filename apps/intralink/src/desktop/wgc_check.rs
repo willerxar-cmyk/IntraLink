@@ -26,7 +26,6 @@ pub(super) type Captured = (RgbaImage, (u32, u32));
 
 struct Flags {
     wake: SyncSender<()>,
-    gpu_target: Option<(u32, u32)>,
     expected_source: Option<(u32, u32)>,
 }
 
@@ -74,7 +73,12 @@ impl Handler {
 
     // Called under the same callback lock as update. Never publish an
     // uninitialized frame, old generation, or frame from a failed source.
-    fn consume(&mut self, after: u64, rgba: &mut Vec<u8>) -> Result<Option<(u64, Captured)>> {
+    fn consume(
+        &mut self,
+        after: u64,
+        rgba: &mut Vec<u8>,
+        gpu_target: Option<(u32, u32)>,
+    ) -> Result<Option<(u64, Captured)>> {
         ensure!(!self.closed, "WGC source closed");
         if let Some(error) = &self.failed {
             anyhow::bail!("WGC source failed: {error}");
@@ -87,12 +91,24 @@ impl Handler {
             return Ok(None);
         }
         let native_size = surface.size();
-        if self.scaler.is_none()
-            && let Some(target) = self.flags.gpu_target
-        {
+        if let Some(target) = gpu_target {
             let fit = super::resize::fitted(native_size, target);
-            self.scaler = Some(GpuScaler::new(surface, fit)?);
-            self.stats.gpu_processors = 1;
+            if self
+                .scaler
+                .as_ref()
+                .is_none_or(|scaler| scaler.output_size() != fit)
+            {
+                // Build replacement on the same verified capture device.
+                // Release the old output staging only after construction succeeds.
+                let next = GpuScaler::new(surface, fit)?;
+                if self.scaler.is_some() {
+                    self.readback.reset_output_staging();
+                }
+                self.scaler = Some(next);
+                self.stats.gpu_processors += 1;
+            }
+        } else {
+            ensure!(self.scaler.is_none(), "GPU capture mode changed");
         }
         let (width, height) = self
             .scaler
@@ -162,6 +178,8 @@ pub(super) struct CaptureSession {
     wake: Receiver<()>,
     delivered: u64,
     rgba: Vec<u8>,
+    gpu_ceiling: Option<(u32, u32)>,
+    gpu_target: Option<(u32, u32)>,
 }
 
 impl CaptureSession {
@@ -222,7 +240,6 @@ impl CaptureSession {
             ColorFormat::Rgba8,
             Flags {
                 wake: tx,
-                gpu_target,
                 expected_source,
             },
         );
@@ -233,7 +250,25 @@ impl CaptureSession {
             wake,
             delivered: 0,
             rgba: Vec::new(),
+            gpu_ceiling: gpu_target,
+            gpu_target,
         })
+    }
+
+    /// Change only the output scaler target, never the capture item or device.
+    /// Applied to the next new generation under the callback lock.
+    pub(super) fn retarget(&mut self, target: (u32, u32)) -> Result<()> {
+        self.check_health()?;
+        if let Some(ceiling) = self.gpu_ceiling {
+            ensure!(
+                matches!(target, (1920, 1080) | (1280, 720) | (960, 540))
+                    && target.0 <= ceiling.0
+                    && target.1 <= ceiling.1,
+                "Scaler target exceeds the approved output geometry"
+            );
+            self.gpu_target = Some(target);
+        }
+        Ok(())
     }
 
     /// Wait for a new observed generation, pumping local cancellation at most
@@ -261,7 +296,7 @@ impl CaptureSession {
             );
             if let Some(mut handler) = callback.try_lock()
                 && let Some((generation, frame)) =
-                    handler.consume(self.delivered, &mut self.rgba)?
+                    handler.consume(self.delivered, &mut self.rgba, self.gpu_target)?
             {
                 check()?;
                 ensure!(

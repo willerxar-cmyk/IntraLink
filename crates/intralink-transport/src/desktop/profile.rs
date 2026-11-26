@@ -84,15 +84,22 @@ impl SessionProfile {
     }
 
     pub(super) fn is_adaptive(self) -> bool {
-        matches!(self, Self::Desktop(_, ViewProtocol::Adaptive))
+        matches!(self, Self::Desktop(_, protocol) if protocol.is_adaptive())
+    }
+
+    pub(super) fn desktop_config(self) -> Option<VideoConfig> {
+        match self {
+            Self::Desktop(config, _) => Some(config),
+            Self::H264(_) => None,
+        }
     }
 
     pub(super) fn media_guard(self) -> MediaGuard {
         match self {
-            Self::Desktop(config, ViewProtocol::Adaptive) => {
-                MediaGuard::Adaptive(adaptive::StreamState::new(config))
-            }
             Self::Desktop(config, ViewProtocol::Fixed) => MediaGuard::Fixed(config),
+            Self::Desktop(config, protocol) => {
+                MediaGuard::Adaptive(adaptive::StreamState::new(config), protocol)
+            }
             Self::H264(profile) => MediaGuard::H264 {
                 profile,
                 state: Box::new(h264::StreamState::new(profile)),
@@ -109,7 +116,7 @@ pub(super) struct MediaFrame {
 
 pub(super) enum MediaGuard {
     Fixed(VideoConfig),
-    Adaptive(adaptive::StreamState),
+    Adaptive(adaptive::StreamState, ViewProtocol),
     H264 {
         profile: h264::Profile,
         state: Box<h264::StreamState>,
@@ -123,12 +130,12 @@ impl MediaGuard {
                 ensure!(height.is_none(), "Adaptive frame not permitted in v8");
                 Ok(SessionProfile::Desktop(*config, ViewProtocol::Fixed))
             }
-            Self::Adaptive(state) => {
+            Self::Adaptive(state, protocol) => {
                 let Some(height) = height else {
                     bail!("Missing v10 adaptive frame geometry");
                 };
                 let config = state.accept(height, bytes)?;
-                Ok(SessionProfile::Desktop(config, ViewProtocol::Adaptive))
+                Ok(SessionProfile::Desktop(config, *protocol))
             }
             Self::H264 { profile, state } => {
                 ensure!(

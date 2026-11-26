@@ -214,6 +214,17 @@ impl HostCapture {
         }
     }
 
+    pub(super) fn retarget(&mut self, config: VideoConfig) -> Result<()> {
+        match self {
+            Self::Snapshot => {
+                let _ = config;
+                Ok(())
+            }
+            #[cfg(all(target_os = "windows", feature = "wgc-preview"))]
+            Self::Wgc { session, .. } => session.retarget((config.width(), config.height())),
+        }
+    }
+
     pub(super) fn recycle(&mut self, frame: RgbaImage) {
         match self {
             Self::Snapshot => drop(frame),

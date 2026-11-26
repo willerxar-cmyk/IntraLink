@@ -213,7 +213,7 @@ impl Decoder {
                 previous
             };
             ensure!(
-                protocol == ViewProtocol::Adaptive
+                protocol.is_adaptive()
                     && config_at_height(ceiling, previous.height() as u16) == Some(previous)
                     && config_at_height(ceiling, config.height() as u16) == Some(config)
                     && is_keyframe(config.mode(), data),

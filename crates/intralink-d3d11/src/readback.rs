@@ -22,6 +22,12 @@ pub struct Readback {
 }
 
 impl Readback {
+    /// Explicit local output retargeting only; retain device identity and counters.
+    /// Ordinary readbacks still reject unexpected resource geometry changes.
+    pub fn reset_output_staging(&mut self) {
+        self.staging = None;
+    }
+
     pub fn allocations(&self) -> u64 {
         self.allocations
     }
