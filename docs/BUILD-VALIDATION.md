@@ -44,3 +44,8 @@ Run the portable harness and locked CPU/NVENC workspace tests with strict CPU/WG
 ### Runtime capability gate
 
 Run calibration pure-policy and generated-codec tests, actual CLI validation, independent CPU/NVENC workspace suites and strict CPU/WGC/NVENC Clippy. Build locked independent WGC Release; run `desktop-profile-check --slots 1`, `--slots 3`, `--slots 8`, and `--hardware`. Record actual timings, observed recommended ceilings, per-adapter configuration and conversion outcomes separately. No timing-sensitive unit test assertions; physical streaming remains separate. Concurrent calibration additionally requires complete worker/sample counts, real mixed-resolution decode tests, malformed warm-up cancellation without a rendezvous hang, and 1/3/8-worker Release measurements.
+
+
+### Host calibration gate
+
+Qualify the pure selection policy (manual ceilings, duplicate/invalid measurements, CPU-only candidate), actual dense encoding/decoding, cancellation and explicit CLI opt-in. Run strict Clippy, portable and NVIDIA feature suites, locked WGC Release without NVIDIA dependencies, `desktop-profile-check --host` and owned-window retarget/geometry regression. Record actual candidate results and selected profile; do not imply physical monitor/network qualification.

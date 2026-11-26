@@ -188,13 +188,16 @@ impl CaptureSession {
         title: &str,
         gpu_target: Option<(u32, u32)>,
     ) -> Result<Self> {
-        let target = Window::enumerate()?
-            .into_iter()
-            .find(|window| {
-                window.process_id().ok() == Some(pid)
-                    && window.title().ok().as_deref() == Some(title)
-            })
+        let mut matches = Window::enumerate()?.into_iter().filter(|window| {
+            window.process_id().ok() == Some(pid) && window.title().ok().as_deref() == Some(title)
+        });
+        let target = matches
+            .next()
             .context("Own diagnostic WGC window was not found")?;
+        ensure!(
+            matches.next().is_none(),
+            "Ambiguous owned diagnostic WGC window"
+        );
         ensure!(target.is_valid(), "Diagnostic WGC window is unavailable");
         Self::start(target, gpu_target, None)
     }

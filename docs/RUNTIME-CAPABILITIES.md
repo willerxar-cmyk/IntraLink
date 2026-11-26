@@ -26,3 +26,8 @@ With a `wgc-preview` build, `desktop-profile-check --hardware` additionally enum
 Independently execute the actual native generated-color RGBA→NV12→RGBA conversion on each successfully created hardware device at 1080p, six changing samples, with bounded textures, staging reuse and checked color errors. This demonstrates conversion on that device, not hardware encoder/decoder support or remote codec safety. A missing/unsupported GPU is an inventory result, not a required software backend. CUDA/NVENC are not dependencies of the WGC capability build. No real screen capture, driver reset, network access or arbitrary AVC input. The hardware flag is rejected on a CPU-only build or a platform without this adapter. Existing Linux VA-API inventory remains separate and requires actual Linux qualification; Apple/Android adapters and portable hardware codec integration are still pending.
 
 All native decoder configurations remain diagnostic only, with zero remote-enabled hardware codecs. Never advertise a remote native codec based on driver enumeration or a color conversion success. The existing NVIDIA restricted fixture, isolation gates and explicit capture backend policy remain unchanged.
+
+
+## Measured Host capture and encoding
+
+`desktop-profile-check --host` and `share-desktop --capture auto` measure capture and software encoding in a separate owned-window preflight. The concrete profile is selected before sharing consent, does not change the display or grant, and preserves CPU baseline. See [HOST-CALIBRATION.md](HOST-CALIBRATION.md).

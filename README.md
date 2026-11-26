@@ -6,6 +6,8 @@ Version 0.22.0 — development preview. The complete locked Windows workspace ha
 
 ### v0.22 additions
 
+- Opt-in measured Host selection (`share-desktop --capture auto`): compare available native capture paths and actual software encoding on a disposable generated window, select a bounded height/FPS before local sharing approval, and keep the concrete backend fixed. `desktop-profile-check --host` runs the local diagnostic. See [HOST-CALIBRATION.md](docs/HOST-CALIBRATION.md).
+
 - Opt-in measured receiver ceilings (`--negotiate-profile --auto-profile`): concurrent production CPU decoder workers, measured mixed-resolution workspace cohorts and bounded per-device recommendations. Optional local `desktop-profile-check --hardware` inventories exact D3D11 adapter configurations and verifies native NV12 color conversion without enabling hardware codecs remotely. See [RUNTIME-CAPABILITIES.md](docs/RUNTIME-CAPABILITIES.md).
 
 - Opt-in v12 bounded media negotiation intersects both peers' resolution/FPS and software codec ceilings. Workspace slots support individual `--device-limit NAME=HEIGHT:FPS` overrides. Both endpoints pass `--negotiate-profile`; see [BOUNDED-MEDIA.md](docs/BOUNDED-MEDIA.md).

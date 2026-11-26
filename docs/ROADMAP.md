@@ -132,3 +132,8 @@ v12 opt-in profile intersection adds receiver height/FPS ceilings and independen
 ### Runtime capability checkpoint
 
 Opt-in real CPU decoder calibration and local vendor-neutral Windows D3D11 capability inventory are implemented. Distinguish driver advertisement from actual verified conversion and from qualified hardware codec execution. Concurrent receiver cohort throughput is now measured using independent warmed production decoders. Next implement local Host capture/encode selection with consent and exact source/device verification, qualify physical multi-device sessions and platform-specific codec adapters/decoder containment. Keep CPU baseline and do not advertise native codecs from capability inventory alone.
+
+
+### Host calibration checkpoint
+
+Opt-in local measured capture/encode selection uses generated-window diagnostics before real display approval; physical monitor and sustained network qualification, optional native codec adapters and containment remain separate gates. See [HOST-CALIBRATION.md](HOST-CALIBRATION.md).

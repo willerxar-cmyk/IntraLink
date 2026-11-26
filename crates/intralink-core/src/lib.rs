@@ -7,6 +7,7 @@ pub mod canvas;
 pub mod capabilities;
 pub mod desktop;
 pub mod h264;
+pub mod host_calibration;
 pub mod journal;
 pub mod media;
 pub mod network;

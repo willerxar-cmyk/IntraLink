@@ -108,3 +108,8 @@ Explicit v12 exchanges receiver resolution/FPS ceilings and software mode mask. 
 ### Local runtime capability policy
 
 Portable CPU decode calibration measures representative production decoder work on independent concurrent workers in the actual selected workspace layout, and selects bounded receiver limits before v12 negotiation. It never widens a local cap or combines timings from untested layouts. Optional native Windows inventory is separate: exact DXGI device identity, driver configuration advertisements and verified conversion are distinct evidence. Hardware identities/timings remain local and no native codec is advertised remotely. See [RUNTIME-CAPABILITIES.md](RUNTIME-CAPABILITIES.md).
+
+
+### Local measured Host profile
+
+Opt-in automatic Host preflight captures only a generated owned child window and measures available native capture paths plus production CPU encoding. Deterministic bounded selection precedes approval and listener creation; exact real display identity is rechecked. The chosen concrete backend remains fixed for the session. No wire changes, remote native codec or mandatory acceleration. See [HOST-CALIBRATION.md](HOST-CALIBRATION.md).

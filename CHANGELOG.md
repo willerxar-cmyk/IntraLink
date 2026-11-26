@@ -2,6 +2,8 @@
 
 ## 0.22.0 — shared endpoint and full application validation
 
+- Add opt-in measured automatic Host capture/backend and output ceiling selection using a locally generated window and production software encoding. Preserve explicit backends, snapshot default, consent, identity, wire protocols and CPU baseline.
+
 - Measure independent concurrent CPU decoder cohorts for 1-8 selected slots; share immutable fixtures, keep decoder/canvas ownership separate, and derive receiver limits from observed parallel frame/batch periods, not serial division. Preserve per-device ceilings and v12 wire.
 
 - Add opt-in local CPU decoder calibration to recommend bounded v12 receiver profiles, including workspace slots. Add vendor-neutral exact-adapter D3D11 inventory and independent generated 1080p NV12 conversion verification; no automatic native codec enablement or wire changes.

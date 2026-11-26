@@ -29,10 +29,20 @@ pub struct ProfileCheckArgs {
     /// Probe optional native Windows adapters separately from software decode.
     #[arg(long)]
     hardware: bool,
+    /// Measure Host capture backends and software encoding of generated pixels only.
+    #[arg(long, conflicts_with_all = ["hardware", "slots"])]
+    host: bool,
 }
 
 impl ProfileCheckArgs {
     pub fn run(self) -> Result<()> {
+        if self.host {
+            let ceiling = intralink_core::desktop::VideoConfig::new(1080, 60, 75, 30)
+                .context("Invalid Host calibration profile")?
+                .with_mode(CodecMode::Compact);
+            super::host_calibration::select(ceiling)?;
+            return Ok(());
+        }
         if self.hardware {
             #[cfg(not(all(target_os = "windows", feature = "wgc-preview")))]
             anyhow::bail!("Native adapter probe requires Windows wgc-preview");

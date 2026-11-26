@@ -118,3 +118,8 @@ Use `--negotiate-profile` on both endpoints to negotiate viewer maximum height/F
 ## Optional measured receiver profile
 
 Use `--negotiate-profile --auto-profile` on a viewer/workspace to calibrate real CPU decoder work locally and choose bounded resolution/FPS before negotiation. The diagnostic `desktop-profile-check --slots N` reports measured tiers without screen capture or network; optional `--hardware` queries and tests native Windows video conversion in the WGC build. Existing Host/capture policy and manual v12 ceilings remain unchanged. See [RUNTIME-CAPABILITIES.md](RUNTIME-CAPABILITIES.md).
+
+
+## Optional measured Host profile
+
+`--capture auto` selects a concrete locally measured backend and bounded height/FPS on a disposable generated window before the sharing approval prompt. No real monitor capture or network starts during calibration. Explicit backends and the snapshot default remain unchanged; no fallback after approval. `desktop-profile-check --host` runs the same diagnostic independently. See [HOST-CALIBRATION.md](HOST-CALIBRATION.md).

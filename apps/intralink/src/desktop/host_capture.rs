@@ -10,18 +10,29 @@ use super::wgc_check::CaptureSession;
 #[cfg(all(target_os = "windows", feature = "wgc-preview"))]
 use std::time::{Duration, Instant};
 
-#[derive(Debug, Clone, Copy, Default, clap::ValueEnum)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, clap::ValueEnum)]
 pub enum CaptureBackend {
     #[default]
     Snapshot,
     Wgc,
     WgcGpu,
+    /// Measure local generated-window capture and software encoding before approval.
+    Auto,
 }
 
 impl CaptureBackend {
+    pub(super) fn from_measured(path: intralink_core::host_calibration::CapturePath) -> Self {
+        use intralink_core::host_calibration::CapturePath;
+        match path {
+            CapturePath::Snapshot => Self::Snapshot,
+            CapturePath::Wgc => Self::Wgc,
+            CapturePath::WgcGpu => Self::WgcGpu,
+        }
+    }
+
     pub(super) fn validate(self) -> Result<()> {
         ensure!(
-            matches!(self, Self::Snapshot)
+            matches!(self, Self::Snapshot | Self::Auto)
                 || cfg!(all(target_os = "windows", feature = "wgc-preview")),
             "Selected WGC backend is unavailable in this build"
         );
@@ -124,6 +135,9 @@ impl HostCapture {
         #[cfg(not(all(target_os = "windows", feature = "wgc-preview")))]
         let _ = config;
         match backend {
+            CaptureBackend::Auto => {
+                anyhow::bail!("Automatic capture must be resolved before local sharing approval")
+            }
             CaptureBackend::Snapshot => Ok(Self::Snapshot),
             #[cfg(all(target_os = "windows", feature = "wgc-preview"))]
             CaptureBackend::Wgc | CaptureBackend::WgcGpu => {
@@ -297,6 +311,11 @@ mod tests {
     #[test]
     fn explicit_backend_never_silently_falls_back() {
         assert!(CaptureBackend::Snapshot.validate().is_ok());
+        assert!(CaptureBackend::Auto.validate().is_ok());
+        assert_eq!(
+            CaptureBackend::from_measured(intralink_core::host_calibration::CapturePath::Snapshot),
+            CaptureBackend::Snapshot
+        );
         let supported = cfg!(all(target_os = "windows", feature = "wgc-preview"));
         assert_eq!(CaptureBackend::Wgc.validate().is_ok(), supported);
         assert_eq!(CaptureBackend::WgcGpu.validate().is_ok(), supported);

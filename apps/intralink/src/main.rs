@@ -321,16 +321,12 @@ enum Command {
     #[cfg(all(feature = "wgc-preview", target_os = "windows"))]
     DesktopGeometryCheck,
     /// Local synthetic test fixture, used only by desktop diagnostics.
-    #[cfg(all(feature = "desktop-preview", target_os = "windows"))]
+    #[cfg(all(
+        feature = "desktop-preview",
+        any(target_os = "windows", target_os = "linux")
+    ))]
     #[command(hide = true)]
-    DesktopTestPattern {
-        #[arg(long)]
-        height: u16,
-        #[arg(long)]
-        static_pattern: bool,
-        #[arg(long, conflicts_with = "static_pattern")]
-        geometry_pattern: bool,
-    },
+    DesktopTestPattern(desktop::PatternArgs),
     /// Share one locally selected display with one paired controller (read-only).
     #[cfg(all(
         feature = "desktop-preview",
@@ -343,7 +339,7 @@ enum Command {
         controller: String,
         #[arg(long)]
         monitor: u32,
-        /// Explicit native capture backend. WGC requires the Windows wgc-preview feature.
+        /// Native capture backend; auto measures an owned test window before approval.
         #[arg(long, value_enum, default_value = "snapshot")]
         capture: desktop::CaptureBackend,
         #[arg(long, default_value_t = 300, value_parser = clap::value_parser!(u64).range(1..=3600))]
@@ -617,12 +613,11 @@ fn main() -> Result<()> {
             wgc,
             gpu_scale,
         } => desktop::media_check::run(height, samples, codec.into(), wgc, gpu_scale),
-        #[cfg(all(feature = "desktop-preview", target_os = "windows"))]
-        Command::DesktopTestPattern {
-            height,
-            static_pattern,
-            geometry_pattern,
-        } => desktop::media_check::pattern_source(height, static_pattern, geometry_pattern),
+        #[cfg(all(
+            feature = "desktop-preview",
+            any(target_os = "windows", target_os = "linux")
+        ))]
+        Command::DesktopTestPattern(args) => args.run(),
         #[cfg(all(feature = "wgc-preview", target_os = "windows"))]
         Command::DesktopGeometryCheck => desktop::media_check::geometry_check(),
         #[cfg(all(feature = "wgc-preview", target_os = "windows"))]

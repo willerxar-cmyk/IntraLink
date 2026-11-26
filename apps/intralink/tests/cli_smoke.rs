@@ -176,3 +176,25 @@ fn calibration_cli_is_explicit_and_validated_before_connection() {
         assert!(String::from_utf8_lossy(&output.stderr).contains("--negotiate-profile"));
     }
 }
+
+#[cfg(all(
+    feature = "desktop-preview",
+    any(target_os = "windows", target_os = "linux")
+))]
+#[test]
+fn host_calibration_is_opt_in_and_keeps_explicit_capture() {
+    let help = stdout(&["share-desktop", "--help"]);
+    assert!(help.contains("snapshot") && help.contains("wgc-gpu") && help.contains("auto"));
+    assert!(help.contains("[default: snapshot]"));
+    let help = stdout(&["desktop-profile-check", "--help"]);
+    assert!(help.contains("--host"));
+    for conflicting in [vec!["--host", "--slots", "2"], vec!["--host", "--hardware"]] {
+        let output = Command::new(env!("CARGO_BIN_EXE_intralink"))
+            .arg("desktop-profile-check")
+            .args(&conflicting)
+            .output()
+            .expect("Validate calibration command");
+        assert!(!output.status.success(), "{conflicting:?}");
+        assert!(String::from_utf8_lossy(&output.stderr).contains("cannot be used with"));
+    }
+}

@@ -1,6 +1,9 @@
 //! Experimental Windows/X11 screen viewing. Local approval is session-specific.
 mod calibration;
+mod capture_fixture;
+pub use capture_fixture::PatternArgs;
 mod codec;
+mod host_calibration;
 pub use calibration::ProfileCheckArgs;
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 pub mod decoder_ipc;
@@ -157,6 +160,18 @@ pub async fn share(
     let secret = profile.secret_key();
     drop(profile);
     let display = HostDisplay::select(monitor_id)?;
+    let (backend, config) = if backend == CaptureBackend::Auto {
+        // Only an owned generated window is read before approval. Resolve a
+        // concrete measured choice, then verify the selected real display again.
+        let measured = host_calibration::select(config)?;
+        display.verify()?;
+        (
+            CaptureBackend::from_measured(measured.path),
+            measured.config,
+        )
+    } else {
+        (backend, config)
+    };
     let name = display.name();
     let (width, height) = display.size();
     println!(
