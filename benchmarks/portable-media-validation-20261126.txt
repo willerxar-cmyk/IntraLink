@@ -1,0 +1,99 @@
+=== fmt ===
+fmt exit=0
+=== clippy-cpu ===
+    Checking intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+    Checking intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+    Checking intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+    Checking intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.98s
+clippy-cpu exit=0
+=== clippy-wgc ===
+    Checking intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+    Checking intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+    Checking intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.63s
+clippy-wgc exit=0
+=== clippy-nvenc ===
+    Checking intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+    Checking intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+    Checking intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.30s
+clippy-nvenc exit=0
+CPU feature graph: mini-cuda and mini-nvcodec absent
+=== cpu-release ===
+   Compiling smallvec v1.16.6
+   Compiling windows-future v0.3.2
+   Compiling intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+   Compiling icu_normalizer v2.4.0
+   Compiling hyper v1.13.0
+   Compiling windows v0.62.2
+   Compiling idna_adapter v1.2.2
+   Compiling idna v1.1.0
+   Compiling url v2.5.9
+   Compiling hyper-util v0.1.21
+   Compiling tower-http v0.6.11
+   Compiling iroh-base v1.5.0
+   Compiling hyper-rustls v0.27.10
+   Compiling reqwest v0.13.5
+   Compiling reqwest v0.12.28
+   Compiling n0-dns-resolver v0.1.1
+   Compiling iroh-dns v1.5.0
+   Compiling iroh-relay v1.5.0
+   Compiling wmi v0.18.4
+   Compiling xcap v0.9.10
+   Compiling sysinfo v0.40.4
+   Compiling netwatch v0.20.2
+   Compiling iroh v1.5.0
+   Compiling intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+   Compiling intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+   Compiling intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `release` profile [optimized] target(s) in 4m 57s
+cpu-release exit=0
+=== portable-help ===
+Share one locally selected display with one paired controller (read-only)
+
+Usage: intralink.exe share-desktop [OPTIONS] --bind <BIND> --controller <CONTROLLER> --monitor <MONITOR>
+
+Options:
+      --bind <BIND>
+      --vault <VAULT>            Local encrypted profile file. Defaults to the OS user data directory
+      --controller <CONTROLLER>
+      --record-session           Opt in to bounded local metadata for an existing foreground session attempt
+      --monitor <MONITOR>
+      --capture <CAPTURE>        Explicit native capture backend. WGC requires the Windows wgc-preview feature [default: snapshot] [possible values: snapshot, wgc, wgc-gpu]
+      --seconds <SECONDS>        [default: 300]
+      --fps <FPS>                [default: 60]
+      --height <HEIGHT>          Output height: 540, 720 or 1080. Defaults to 1080; fixed during a session [default: 1080]
+      --quality <QUALITY>        Maximum JPEG quality (35-90); adaptive by default [default: 75]
+      --fixed-quality            Keep the locally selected JPEG quality fixed instead of adapting to receipt pressure
+      --codec <CODEC>            Explicit compact tiles, basic tiles or independent JPEG mode. Must match the viewer [default: compact] [possible values: jpeg, tiles, compact]
+  -h, --help                     Print help
+portable-help exit=0
+=== native-cpu-1080p ===
+capture_backend=gdi_window
+native_samples=60, no_new_sample=0
+local_media_check,mode=Compact,resolution=1920x1080,samples=60,changed=60,payload_bytes=232323,elapsed_s=26.120,capture_fps=2.30,changed_fps=2.30
+source_resolution=3321x1869
+readback_resolution=3321x1869
+capture: count=60, p50_ms=416.601, p95_ms=444.638, p99_ms=849.108
+encode: count=60, p50_ms=10.946, p95_ms=13.793, p99_ms=21.106
+decode_changed: count=60, p50_ms=0.018, p95_ms=0.029, p99_ms=3.988
+native_buffer_submission: count=60, p50_ms=1.014, p95_ms=1.574, p99_ms=2.700
+local_pipeline: count=60, p50_ms=428.668, p95_ms=457.190, p99_ms=875.756
+No desktop capture, remote connection, or image recording performed.
+native-cpu-1080p exit=0
+=== native-cpu-720p ===
+capture_backend=gdi_window
+native_samples=60, no_new_sample=0
+local_media_check,mode=Compact,resolution=1280x720,samples=60,changed=60,payload_bytes=209020,elapsed_s=12.538,capture_fps=4.79,changed_fps=4.79
+source_resolution=2201x1239
+readback_resolution=2201x1239
+capture: count=60, p50_ms=199.710, p95_ms=229.465, p99_ms=254.041
+encode: count=60, p50_ms=4.663, p95_ms=6.842, p99_ms=9.267
+decode_changed: count=60, p50_ms=0.015, p95_ms=0.027, p99_ms=1.557
+native_buffer_submission: count=60, p50_ms=1.029, p95_ms=1.692, p99_ms=1.920
+local_pipeline: count=60, p50_ms=206.832, p95_ms=235.883, p99_ms=263.824
+No desktop capture, remote connection, or image recording performed.
+native-cpu-720p exit=0
+0A92EABCA656ED83796D2027799ECF76DC6721150DF7521B2E06C8F97520DB41
+PORTABLE_GATE_PASSED

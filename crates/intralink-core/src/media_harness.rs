@@ -4,6 +4,7 @@
 
 extern crate self as intralink_core;
 
+pub mod adaptive;
 pub mod canvas;
 pub mod desktop;
 pub mod h264;

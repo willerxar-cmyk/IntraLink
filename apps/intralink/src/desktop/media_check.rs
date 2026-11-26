@@ -400,7 +400,9 @@ pub fn run(height: u16, samples: u16, mode: CodecMode, wgc: bool, gpu_scale: boo
                 payload = data;
             }
             Capture::Repeat(data) => payload = data,
-            Capture::End | Capture::NoUpdate(_) => anyhow::bail!("Unexpected local encoder record"),
+            Capture::End | Capture::NoUpdate(_) | Capture::AdaptiveFrame { .. } => {
+                anyhow::bail!("Unexpected local encoder record")
+            }
         }
         ensure!(!pixels.is_empty(), "Missing decoded keyframe");
         let stage = Instant::now();

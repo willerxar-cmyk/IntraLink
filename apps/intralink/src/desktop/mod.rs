@@ -32,7 +32,8 @@ use std::{
 
 use anyhow::{Context, Result, anyhow, ensure};
 use intralink_core::{
-    desktop::{CodecMode, VideoConfig, ViewPriority},
+    adaptive::{AdaptiveResolution, ViewProtocol},
+    desktop::{VideoConfig, ViewPriority},
     journal::Outcome,
     media::{JPEG_TAG, LOSSLESS_KEYFRAME_TAG, TILE_TAG},
     quality::AdaptiveQuality,
@@ -40,7 +41,8 @@ use intralink_core::{
 use intralink_transport::{
     bind_controller,
     desktop::{
-        Capture, CaptureRequest, Stats, VideoFrame, bind_view, serve_view, view_with_observations,
+        Capture, CaptureRequest, Stats, VideoFrame, ViewMode, bind_view_with_protocol,
+        serve_view_with_protocol, view_with_observations,
     },
 };
 use intralink_vault::{Direction, Vault};
@@ -103,6 +105,27 @@ pub fn list_displays() -> Result<()> {
     Ok(())
 }
 
+pub fn view_protocol(adaptive: bool) -> ViewProtocol {
+    if adaptive {
+        ViewProtocol::Adaptive
+    } else {
+        ViewProtocol::Fixed
+    }
+}
+
+pub fn view_mode(codec: intralink_core::desktop::CodecMode, adaptive: bool) -> ViewMode {
+    ViewMode {
+        codec,
+        protocol: view_protocol(adaptive),
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct StreamOptions {
+    pub fixed_quality: bool,
+    pub protocol: ViewProtocol,
+}
+
 /// Network tasks never own a native GUI or capture handle. Cancellation has
 /// priority over incoming data; the foreground window keeps processing events.
 pub async fn share(
@@ -112,8 +135,12 @@ pub async fn share(
     monitor_id: u32,
     config: VideoConfig,
     backend: CaptureBackend,
-    fixed_quality: bool,
+    options: StreamOptions,
 ) -> Result<Outcome> {
+    let StreamOptions {
+        fixed_quality,
+        protocol,
+    } = options;
     require_graphical_terminal()?;
     backend.validate()?;
     ensure!(local.port() != 0, "Specify a nonzero listening port");
@@ -145,10 +172,14 @@ pub async fn share(
         println!("JPEG quality: fixed at {}", config.quality());
     } else {
         println!(
-            "JPEG quality: adaptive, 35-{} (receipt pressure); resolution remains fixed for this session",
+            "JPEG quality: adaptive, 35-{} (receipt pressure)",
             config.quality()
         );
     }
+    println!(
+        "Resolution policy: {protocol:?}; approved maximum {}p; adaptive minimum 540p",
+        config.height()
+    );
     approve(
         "Share the entire selected display with this exact controller for ONE read-only session? Close sensitive windows first. The recipient may save what they see. Ctrl+C stops the foreground process.",
     )?;
@@ -171,14 +202,14 @@ pub async fn share(
     indicator
         .update_with_buffer(&waiting, 320, 64)
         .map_err(|err| anyhow!("Sharing indicator failed: {err}"))?;
-    let endpoint = bind_view(secret, local).await?;
+    let endpoint = bind_view_with_protocol(secret, local, protocol).await?;
     let (source, mut requests) = mpsc::channel::<CaptureRequest>(1);
     let (stop, mut stop_rx) = oneshot::channel();
     let task = tokio::spawn(async move {
         let result = tokio::select! {
             biased;
             _ = &mut stop_rx => Ok(None),
-            outcome = serve_view(&endpoint, peer, config, source) => outcome.map(Some),
+            outcome = serve_view_with_protocol(&endpoint, peer, config, source, protocol) => outcome.map(Some),
         };
         endpoint.close().await;
         result
@@ -186,6 +217,9 @@ pub async fn share(
     println!("Waiting at {local} for the approved peer (up to 120s). No capture has started.");
     let mut encoder = codec::Encoder::new(config);
     let mut quality = (!fixed_quality).then(|| AdaptiveQuality::new(config));
+    let mut resolution =
+        (protocol == ViewProtocol::Adaptive).then(|| AdaptiveResolution::new(config));
+    let mut current_height = config.height() as u16;
     let mut active = false;
     let mut capture = None::<HostCapture>;
     let mut last_health_check = Instant::now();
@@ -266,11 +300,13 @@ pub async fn share(
                 break;
             }
             let receipt_pressure = request.receipt_pressure;
+            let mut local_encode_time = Duration::ZERO;
             let encoded = match observed? {
                 Some(frame) => {
                     let encode_started = Instant::now();
                     let encoded = encoder.encode(&frame, request.buffer)?;
-                    encode_time += encode_started.elapsed();
+                    local_encode_time = encode_started.elapsed();
+                    encode_time += local_encode_time;
                     sampled += 1;
                     source.recycle(frame);
                     encoded
@@ -294,6 +330,10 @@ pub async fn share(
                 break;
             }
             let changed = matches!(&encoded, Capture::Frame(_));
+            let encoded = match (protocol, encoded) {
+                (ViewProtocol::Adaptive, Capture::Frame(data)) => Capture::AdaptiveFrame { height: current_height, data },
+                (_, other) => other,
+            };
             if request.reply.send(Ok(encoded)).is_err() {
                 break;
             }
@@ -302,7 +342,15 @@ pub async fn share(
             {
                 encoder.set_jpeg_quality(next)?;
                 println!("Adaptive JPEG target: {next} (receipt pressure: {receipt_pressure:?}); next JPEG keyframe");
-                indicator.set_title(&format!("IntraLink: SCREEN SHARING - JPEG target {next} - ESC to stop"));
+                indicator.set_title(&format!("IntraLink: SCREEN SHARING - {current_height}p - JPEG target {next} - ESC to stop"));
+            }
+            if let Some(policy) = resolution.as_mut()
+                && let Some(next) = policy.observe(receipt_pressure, local_encode_time, changed)
+            {
+                encoder.reconfigure(next)?;
+                current_height = next.height() as u16;
+                println!("Adaptive resolution target: {current_height}p (next complete keyframe)");
+                indicator.set_title(&format!("IntraLink: SCREEN SHARING - {current_height}p - ESC to stop"));
             }
         }
         Ok::<(), anyhow::Error>(())
@@ -332,7 +380,7 @@ pub async fn share(
     Ok(report(network_result?, started))
 }
 
-pub async fn receive(path: &Path, device: &str, mode: CodecMode) -> Result<Outcome> {
+pub async fn receive(path: &Path, device: &str, mode: ViewMode) -> Result<Outcome> {
     require_graphical_terminal()?;
     let vault = Vault::lock(path)?;
     let password = prompt_password()?;
@@ -407,7 +455,12 @@ pub async fn receive(path: &Path, device: &str, mode: CodecMode) -> Result<Outco
             if let Ok(frame) = pending.try_recv() {
                 ensure!(frame.sequence > last_sequence, "Out-of-order media record");
                 let decode_started = Instant::now();
-                decoder.decode_into(frame.config, &frame.payload, &mut pixels)?;
+                decoder.decode_into_protocol(
+                    frame.config,
+                    &frame.payload,
+                    &mut pixels,
+                    mode.protocol,
+                )?;
                 decode_time += decode_started.elapsed();
                 rendered += 1;
                 match frame.payload.first().copied() {
@@ -416,13 +469,17 @@ pub async fn receive(path: &Path, device: &str, mode: CodecMode) -> Result<Outco
                     Some(TILE_TAG) => tiles += 1,
                     _ => anyhow::bail!("Unknown decoded media record"),
                 }
-                dimensions = (
+                let next_dimensions = (
                     frame.config.width() as usize,
                     frame.config.height() as usize,
                 );
-                if last_sequence == 0 {
-                    window.set_title("IntraLink: Remote view - ESC to disconnect");
+                if (last_sequence == 0 || dimensions != next_dimensions) && !notice {
+                    window.set_title(&format!(
+                        "IntraLink: Remote view - {}p - ESC to disconnect",
+                        frame.config.height()
+                    ));
                 }
+                dimensions = next_dimensions;
                 last_sequence = frame.sequence;
                 let mut buffer = frame.payload;
                 buffer.clear();
@@ -435,11 +492,16 @@ pub async fn receive(path: &Path, device: &str, mode: CodecMode) -> Result<Outco
                 banner_sequence = last_sequence;
             }
             if next_notice != notice {
-                window.set_title(if next_notice {
-                    "IntraLink: LAST FRAME - no new native sample - ESC to disconnect"
+                if next_notice {
+                    window.set_title(
+                        "IntraLink: LAST FRAME - no new native sample - ESC to disconnect",
+                    );
                 } else {
-                    "IntraLink: Remote view - ESC to disconnect"
-                });
+                    window.set_title(&format!(
+                        "IntraLink: Remote view - {}p - ESC to disconnect",
+                        dimensions.1
+                    ));
+                }
                 notice = next_notice;
             }
             let visible = if notice { &banner_pixels } else { &pixels };

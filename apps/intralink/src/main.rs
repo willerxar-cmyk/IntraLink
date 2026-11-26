@@ -341,7 +341,7 @@ enum Command {
         seconds: u64,
         #[arg(long, default_value_t = 60, value_parser = clap::value_parser!(u32).range(1..=60))]
         fps: u32,
-        /// Output height: 540, 720 or 1080. Defaults to 1080; fixed during a session.
+        /// Maximum output height: 540, 720 or 1080. Defaults to 1080.
         #[arg(long, default_value_t = 1080)]
         height: u16,
         /// Maximum JPEG quality (35-90); adaptive by default.
@@ -350,6 +350,9 @@ enum Command {
         /// Keep the locally selected JPEG quality fixed instead of adapting to receipt pressure.
         #[arg(long)]
         fixed_quality: bool,
+        /// Use adaptive-resolution protocol v10; both endpoints must opt in.
+        #[arg(long)]
+        adaptive_resolution: bool,
         /// Explicit compact tiles, basic tiles or independent JPEG mode. Must match the viewer.
         #[arg(long, value_enum, default_value = "compact")]
         codec: MediaMode,
@@ -362,6 +365,9 @@ enum Command {
     ViewDesktop {
         #[arg(long)]
         device: String,
+        /// Request v10 adaptive resolution; host must also opt in.
+        #[arg(long)]
+        adaptive_resolution: bool,
         #[arg(long, value_enum, default_value = "compact")]
         codec: MediaMode,
     },
@@ -374,6 +380,9 @@ enum Command {
         /// Repeat --device for up to eight distinct paired hosts.
         #[arg(long, required = true)]
         device: Vec<String>,
+        /// Request v10 adaptive resolution for every explicitly selected host.
+        #[arg(long)]
+        adaptive_resolution: bool,
         #[arg(long, value_enum, default_value = "compact")]
         codec: MediaMode,
         /// Use a borderless window covering the selected local monitor (primary by default).
@@ -650,6 +659,7 @@ fn main() -> Result<()> {
             height,
             quality,
             fixed_quality,
+            adaptive_resolution,
             codec,
         } => {
             let config = intralink_core::desktop::VideoConfig::new(height, fps, quality, seconds)
@@ -669,7 +679,10 @@ fn main() -> Result<()> {
                         monitor,
                         config,
                         capture,
-                        fixed_quality,
+                        desktop::StreamOptions {
+                            fixed_quality,
+                            protocol: desktop::view_protocol(adaptive_resolution),
+                        },
                     ),
                 )
             })
@@ -678,12 +691,20 @@ fn main() -> Result<()> {
             feature = "desktop-preview",
             any(target_os = "windows", target_os = "linux")
         ))]
-        Command::ViewDesktop { device, codec } => run_async(|| {
+        Command::ViewDesktop {
+            device,
+            codec,
+            adaptive_resolution,
+        } => run_async(|| {
             journal::run(
                 &path,
                 record,
                 Operation::ViewController,
-                desktop::receive(&path, &device, codec.into()),
+                desktop::receive(
+                    &path,
+                    &device,
+                    desktop::view_mode(codec.into(), adaptive_resolution),
+                ),
             )
         }),
         #[cfg(all(
@@ -693,6 +714,7 @@ fn main() -> Result<()> {
         Command::Workspace {
             device,
             codec,
+            adaptive_resolution,
             fullscreen,
             local_monitor,
             all_live,
@@ -700,7 +722,7 @@ fn main() -> Result<()> {
             desktop::workspace::run(
                 &path,
                 &device,
-                codec.into(),
+                desktop::view_mode(codec.into(), adaptive_resolution),
                 fullscreen,
                 local_monitor,
                 all_live,

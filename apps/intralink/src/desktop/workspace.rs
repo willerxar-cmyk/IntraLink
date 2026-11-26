@@ -1,7 +1,8 @@
 //! One foreground window; independent authorized view sessions and decoder workers.
 use anyhow::{Context, Result, anyhow, ensure};
 use intralink_core::{
-    desktop::{CodecMode, ViewPriority},
+    adaptive::{ViewProtocol, is_keyframe},
+    desktop::ViewPriority,
     overview::{self, Action},
     presentation::PresentationSurface,
     telemetry::{Counters, RateSampler, SessionCounters},
@@ -9,7 +10,7 @@ use intralink_core::{
 };
 use intralink_transport::{
     bind_workspace_controller,
-    desktop::{Stats, VideoFrame, view_with_observations},
+    desktop::{Stats, VideoFrame, ViewMode, view_with_observations},
 };
 use intralink_vault::{Direction, Route, Vault};
 use iroh::{Endpoint, EndpointId};
@@ -80,7 +81,7 @@ impl Session {
 
 // Each session has a bounded ordered queue and one independent decode worker.
 // Only fully decoded pixels are shared with the foreground window; no delta is dropped.
-fn start(target: &Target, endpoint: Endpoint, mode: CodecMode, priority: ViewPriority) -> Session {
+fn start(target: &Target, endpoint: Endpoint, mode: ViewMode, priority: ViewPriority) -> Session {
     let identity = target.identity;
     let route = target.route.clone();
     let (stop, mut cancelled) = oneshot::channel();
@@ -113,9 +114,21 @@ fn start(target: &Target, endpoint: Endpoint, mode: CodecMode, priority: ViewPri
                     frame.config.height() as usize,
                 );
                 let decoding = Instant::now();
-                surface.update(frame.sequence, dimensions, |pixels| {
-                    decoder.decode_into(frame.config, &frame.payload, pixels)
-                })?;
+                let decode = |pixels: &mut Vec<u32>| {
+                    decoder.decode_into_protocol(
+                        frame.config,
+                        &frame.payload,
+                        pixels,
+                        mode.protocol,
+                    )
+                };
+                if mode.protocol == ViewProtocol::Adaptive
+                    && is_keyframe(frame.config.mode(), &frame.payload)
+                {
+                    surface.update_keyframe(frame.sequence, dimensions, decode)?;
+                } else {
+                    surface.update(frame.sequence, dimensions, decode)?;
+                }
                 drop(surface);
                 decode_counters.decoded(decoding.elapsed());
                 frame.payload.clear();
@@ -370,7 +383,7 @@ fn update_priorities(sessions: &[Option<Session>], policy: &WorkspacePolicy) {
 pub async fn run(
     path: &Path,
     names: &[String],
-    mode: CodecMode,
+    mode: ViewMode,
     mut fullscreen: bool,
     mut monitor_id: Option<u32>,
     all_live: bool,

@@ -1,13 +1,15 @@
-//! Foreground view-only QUIC v8 and isolated v9 H.264 diagnostic. Shared bounded capture/receipt engine.
+//! Foreground view-only QUIC v8/v10 and isolated v9 H.264 diagnostic.
 use std::{net::SocketAddr, time::Duration};
 
 use anyhow::{Context, Result, bail, ensure};
+#[cfg(test)]
+use intralink_core::desktop::{ALPN, request};
 use intralink_core::desktop::{
-    ALPN, CONFIG_BYTES, CodecMode, CreditWindow, MAX_IN_FLIGHT_RECORDS, MAX_SECONDS, NO_UPDATE,
-    REPEAT, REQUEST_BYTES, Record, VideoConfig, ViewPriority, ack_with_priority, frame_header,
-    parse_length, request,
+    CONFIG_BYTES, CodecMode, CreditWindow, MAX_IN_FLIGHT_RECORDS, MAX_SECONDS, NO_UPDATE, REPEAT,
+    REQUEST_BYTES, Record, VideoConfig, ViewPriority, ack_with_priority, frame_header,
+    parse_length,
 };
-use intralink_core::{h264, pacing::CapturePacer, quality::ReceiptPressure};
+use intralink_core::{adaptive::ViewProtocol, h264, quality::ReceiptPressure};
 use iroh::{Endpoint, EndpointAddr, EndpointId, SecretKey, endpoint::Connection};
 use tokio::{
     sync::{mpsc, oneshot},
@@ -30,6 +32,11 @@ pub struct CaptureRequest {
 
 pub enum Capture {
     Frame(Vec<u8>),
+    /// Explicit v10 changed frame. Height is transported separately from the codec payload.
+    AdaptiveFrame {
+        height: u16,
+        data: Vec<u8>,
+    },
     Repeat(Vec<u8>),
     /// No new observed source generation; never synthesize a Repeat.
     NoUpdate(Vec<u8>),
@@ -51,85 +58,9 @@ pub struct H264Frame {
     pub record_sequence: usize,
 }
 
-#[derive(Clone, Copy)]
-enum SessionProfile {
-    Legacy(VideoConfig),
-    H264(h264::Profile),
-}
-
-#[derive(Clone, Copy)]
-enum RequestedMode {
-    Legacy(CodecMode),
-    H264(h264::Profile),
-}
-
-impl RequestedMode {
-    fn alpn(self) -> &'static [u8] {
-        match self {
-            Self::Legacy(_) => ALPN,
-            Self::H264(_) => h264::ALPN,
-        }
-    }
-
-    fn request(self) -> [u8; REQUEST_BYTES] {
-        match self {
-            Self::Legacy(mode) => request(mode),
-            Self::H264(_) => *h264::REQUEST,
-        }
-    }
-}
-
-impl SessionProfile {
-    fn requested(self) -> RequestedMode {
-        match self {
-            Self::Legacy(config) => RequestedMode::Legacy(config.mode()),
-            Self::H264(profile) => RequestedMode::H264(profile),
-        }
-    }
-
-    fn seconds(self) -> u64 {
-        match self {
-            Self::Legacy(config) => config.seconds(),
-            Self::H264(profile) => profile.seconds(),
-        }
-    }
-
-    fn max_frames(self) -> usize {
-        match self {
-            Self::Legacy(config) => config.max_frames(),
-            Self::H264(profile) => profile.max_frames(),
-        }
-    }
-
-    fn pacer(self) -> CapturePacer {
-        match self {
-            Self::Legacy(config) => CapturePacer::new(config),
-            Self::H264(profile) => CapturePacer::for_h264(profile),
-        }
-    }
-
-    fn h264_state(self) -> Option<h264::StreamState> {
-        match self {
-            Self::Legacy(_) => None,
-            Self::H264(profile) => Some(h264::StreamState::new(profile)),
-        }
-    }
-}
-
-struct MediaFrame {
-    profile: SessionProfile,
-    payload: Vec<u8>,
-    sequence: usize,
-}
-
-fn validate_media(state: &mut Option<h264::StreamState>, bytes: &[u8]) -> Result<()> {
-    if let Some(state) = state {
-        state
-            .accept(bytes)
-            .map_err(|error| anyhow::anyhow!("Invalid H.264 access unit: {error:?}"))?;
-    }
-    Ok(())
-}
+mod profile;
+pub use profile::ViewMode;
+use profile::{MediaFrame, RequestedMode, SessionProfile};
 
 fn require_loopback(endpoint: &Endpoint) -> Result<()> {
     let sockets = endpoint.bound_sockets();
@@ -169,7 +100,15 @@ impl PacerWait for TokioWait {
 }
 
 pub async fn bind_view(secret: SecretKey, addr: SocketAddr) -> Result<Endpoint> {
-    bind_for_protocol(secret, addr, Some(ALPN)).await
+    bind_view_with_protocol(secret, addr, ViewProtocol::Fixed).await
+}
+
+pub async fn bind_view_with_protocol(
+    secret: SecretKey,
+    addr: SocketAddr,
+    protocol: ViewProtocol,
+) -> Result<Endpoint> {
+    bind_for_protocol(secret, addr, Some(protocol.alpn())).await
 }
 
 /// Separate experimental ALPN, never enabled by the normal desktop Host.
@@ -195,10 +134,20 @@ pub async fn serve_view(
     config: VideoConfig,
     source: mpsc::Sender<CaptureRequest>,
 ) -> Result<Stats> {
+    serve_view_with_protocol(endpoint, approved, config, source, ViewProtocol::Fixed).await
+}
+
+pub async fn serve_view_with_protocol(
+    endpoint: &Endpoint,
+    approved: EndpointId,
+    config: VideoConfig,
+    source: mpsc::Sender<CaptureRequest>,
+    protocol: ViewProtocol,
+) -> Result<Stats> {
     Box::pin(serve_media(
         endpoint,
         approved,
-        SessionProfile::Legacy(config),
+        SessionProfile::Desktop(config, protocol),
         source,
         &mut TokioWait,
     ))
@@ -264,7 +213,7 @@ async fn serve_media<W: PacerWait>(
             "Unsupported or unapproved media mode"
         );
         match config {
-            SessionProfile::Legacy(legacy) => {
+            SessionProfile::Desktop(legacy, _) => {
                 timeout(IO_LIMIT, tx.write_all(&legacy.encode())).await??
             }
             SessionProfile::H264(profile) => {
@@ -294,7 +243,7 @@ async fn serve_media<W: PacerWait>(
         let stream = async {
             let deadline = Instant::now() + Duration::from_secs(config.seconds());
             let mut pacer = config.pacer();
-            let mut media_state = config.h264_state();
+            let mut media_state = config.media_guard();
             let mut stats = Stats::default();
             let mut buffer = Vec::new();
             let mut credit = CreditWindow::default();
@@ -339,32 +288,41 @@ async fn serve_media<W: PacerWait>(
                 if Instant::now() >= deadline {
                     break;
                 }
-                let (header, data) = match frame {
+                let (header, data, height) = match frame {
                     Capture::End => break,
                     Capture::Repeat(data) => {
                         ensure!(stats.frames > 0 && data.is_empty(), "Invalid local repeat");
-                        (REPEAT, data)
+                        (REPEAT, data, None)
                     }
                     Capture::NoUpdate(data) => {
                         ensure!(
                             stats.frames > 0 && data.is_empty(),
                             "Invalid local no-update"
                         );
-                        (NO_UPDATE, data)
+                        (NO_UPDATE, data, None)
                     }
                     Capture::Frame(data) => (
                         frame_header(data.len()).context("Invalid local frame length")?,
                         data,
+                        None,
+                    ),
+                    Capture::AdaptiveFrame { height, data } => (
+                        frame_header(data.len()).context("Invalid local frame length")?,
+                        data,
+                        Some(height),
                     ),
                 };
                 let observation = parse_length(header).context("Invalid local record")?;
                 if matches!(observation, Record::Frame(_)) {
-                    validate_media(&mut media_state, &data)?;
+                    media_state.accept(height, &data)?;
                 }
                 let remaining = deadline.saturating_duration_since(Instant::now());
                 timeout(IO_LIMIT.min(remaining), async {
                     tx.write_all(&header).await?;
                     if matches!(observation, Record::Frame(_)) {
+                        if let Some(height) = height {
+                            tx.write_all(&height.to_be_bytes()).await?;
+                        }
                         tx.write_all(&data).await?;
                     }
                     Ok::<(), anyhow::Error>(())
@@ -538,7 +496,7 @@ pub async fn view_with_observations<F, Fut, B, P>(
     endpoint: &Endpoint,
     expected: EndpointId,
     candidates: &[SocketAddr],
-    mode: CodecMode,
+    mode: impl Into<ViewMode>,
     take_buffer: B,
     mut display: F,
     observe: P,
@@ -553,17 +511,17 @@ where
         endpoint,
         expected,
         candidates,
-        RequestedMode::Legacy(mode),
+        RequestedMode::Desktop(mode.into()),
         take_buffer,
         move |frame| {
             let result = match frame.profile {
-                SessionProfile::Legacy(config) => Ok(display(VideoFrame {
+                SessionProfile::Desktop(config, _) => Ok(display(VideoFrame {
                     config,
                     payload: frame.payload,
                     sequence: frame.sequence,
                 })),
                 SessionProfile::H264(_) => {
-                    Err(anyhow::anyhow!("Unexpected H.264 frame in v8 viewer"))
+                    Err(anyhow::anyhow!("Unexpected H.264 frame in software viewer"))
                 }
             };
             async move { result?.await }
@@ -604,7 +562,7 @@ where
                     payload: frame.payload,
                     record_sequence: frame.sequence,
                 })),
-                SessionProfile::Legacy(_) => {
+                SessionProfile::Desktop(_, _) => {
                     Err(anyhow::anyhow!("Unexpected v8 frame in H.264 diagnostic"))
                 }
             };
@@ -649,16 +607,16 @@ where
             timeout(REQUEST_LIMIT, tx.write_all(&profile.encode())).await??;
         }
         let config = match mode {
-            RequestedMode::Legacy(requested) => {
+            RequestedMode::Desktop(requested) => {
                 let mut header = [0; CONFIG_BYTES];
                 timeout(IO_LIMIT, rx.read_exact(&mut header)).await??;
                 let config =
                     VideoConfig::decode(header).context("Invalid desktop configuration")?;
                 ensure!(
-                    config.mode() == requested,
+                    config.mode() == requested.codec,
                     "Host selected a different media mode"
                 );
-                SessionProfile::Legacy(config)
+                SessionProfile::Desktop(config, requested.protocol)
             }
             RequestedMode::H264(expected) => {
                 let mut header = [0; h264::CONFIG_BYTES];
@@ -672,7 +630,7 @@ where
                 SessionProfile::H264(profile)
             }
         };
-        let mut media_state = config.h264_state();
+        let mut media_state = config.media_guard();
         let mut stats = Stats::default();
         timeout(Duration::from_secs(config.seconds() + 10), async {
             loop {
@@ -701,16 +659,23 @@ where
                     }
                     Record::Frame(length) => {
                         ensure!(stats.records() < config.max_frames(), "Too many frames");
+                        let height = if config.is_adaptive() {
+                            let mut bytes = [0; 2];
+                            timeout(IO_LIMIT, rx.read_exact(&mut bytes)).await??;
+                            Some(u16::from_be_bytes(bytes))
+                        } else {
+                            None
+                        };
                         let mut data = take_buffer();
                         prepare_payload(&mut data, length)?;
                         timeout(IO_LIMIT, rx.read_exact(&mut data)).await??;
-                        validate_media(&mut media_state, &data)?;
+                        let frame_profile = media_state.accept(height, &data)?;
                         stats.frames += 1;
                         stats.media_bytes += length as u64;
                         timeout(
                             IO_LIMIT,
                             display(MediaFrame {
-                                profile: config,
+                                profile: frame_profile,
                                 payload: data,
                                 sequence: stats.records(),
                             }),
@@ -754,3 +719,6 @@ mod tests;
 
 #[cfg(test)]
 mod h264_tests;
+
+#[cfg(test)]
+mod adaptive_tests;

@@ -62,4 +62,7 @@ fn portable_share_defaults_to_1080p_and_adaptive_quality() {
     assert!(help.contains("--fixed-quality") && help.contains("adaptive by default"));
     assert!(help.contains("[default: snapshot]") && help.contains("[default: compact]"));
     assert!(!help.contains("h264"));
+    assert!(help.contains("--adaptive-resolution"));
+    assert!(stdout(&["view-desktop", "--help"]).contains("--adaptive-resolution"));
+    assert!(stdout(&["workspace", "--help"]).contains("--adaptive-resolution"));
 }

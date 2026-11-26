@@ -1,6 +1,7 @@
 //! Small, platform-neutral protocol and policy primitives.
 #![forbid(unsafe_code)]
 
+pub mod adaptive;
 pub mod canvas;
 pub mod desktop;
 pub mod h264;

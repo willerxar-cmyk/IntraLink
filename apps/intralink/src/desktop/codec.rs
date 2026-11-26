@@ -6,6 +6,7 @@ use image::{
     ExtendedColorType, ImageFormat, ImageReader, Limits, RgbaImage, codecs::jpeg::JpegEncoder,
 };
 use intralink_core::{
+    adaptive::{ViewProtocol, config_at_height, is_keyframe},
     desktop::{MAX_FRAME_BYTES, VideoConfig},
     media::{self, Delta, JPEG_TAG, LOSSLESS_KEYFRAME_TAG, TILE_TAG},
 };
@@ -59,6 +60,31 @@ impl Encoder {
             "JPEG quality outside the locally approved range"
         );
         self.jpeg_quality = quality;
+        Ok(())
+    }
+
+    /// A resolution transition invalidates the previous tile base. Reuse the
+    /// bounded canvases; the next changed capture must be a complete keyframe.
+    pub fn reconfigure(&mut self, config: VideoConfig) -> Result<()> {
+        let ceiling = if config.height() >= self.config.height() {
+            config
+        } else {
+            self.config
+        };
+        ensure!(
+            config_at_height(ceiling, self.config.height() as u16) == Some(self.config)
+                && config_at_height(ceiling, config.height() as u16) == Some(config),
+            "Only the approved canvas geometry may change"
+        );
+        if self.config != config {
+            let size = (config.width() * config.height() * 3) as usize;
+            self.scratch.resize(size, 0);
+            self.previous.resize(size, 0);
+            self.config = config;
+            self.has_previous = false;
+            self.last_keyframe_size = 0;
+            self.deltas_since_keyframe = 0;
+        }
         Ok(())
     }
 
@@ -164,14 +190,36 @@ impl Decoder {
         data: &[u8],
         pixels: &mut Vec<u32>,
     ) -> Result<()> {
+        self.decode_into_protocol(config, data, pixels, ViewProtocol::Fixed)
+    }
+
+    pub fn decode_into_protocol(
+        &mut self,
+        config: VideoConfig,
+        data: &[u8],
+        pixels: &mut Vec<u32>,
+        protocol: ViewProtocol,
+    ) -> Result<()> {
         ensure!(
             !data.is_empty() && data.len() <= MAX_FRAME_BYTES,
             "Invalid media record size"
         );
-        ensure!(
-            self.config.is_none_or(|previous| previous == config),
-            "Media configuration changed"
-        );
+        if let Some(previous) = self.config
+            && previous != config
+        {
+            let ceiling = if config.height() >= previous.height() {
+                config
+            } else {
+                previous
+            };
+            ensure!(
+                protocol == ViewProtocol::Adaptive
+                    && config_at_height(ceiling, previous.height() as u16) == Some(previous)
+                    && config_at_height(ceiling, config.height() as u16) == Some(config)
+                    && is_keyframe(config.mode(), data),
+                "Media configuration changed without an adaptive keyframe"
+            );
+        }
         match data[0] {
             JPEG_TAG => decode_jpeg(config, &data[1..], pixels)?,
             LOSSLESS_KEYFRAME_TAG => media::apply_keyframe(config, data, pixels)
@@ -194,6 +242,54 @@ impl Decoder {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn adaptive_encoder_forces_keyframe_and_decoder_rejects_unnegotiated_geometry() -> Result<()> {
+        let upper = VideoConfig::new(1080, 60, 75, 30)
+            .unwrap()
+            .with_mode(intralink_core::desktop::CodecMode::Compact);
+        let lower = config_at_height(upper, 540).unwrap();
+        let frame = RgbaImage::from_pixel(1920, 1080, image::Rgba([12, 34, 56, 255]));
+        let mut encoder = Encoder::new(upper);
+        let mut decoder = Decoder::default();
+        let mut fixed = Decoder::default();
+        let mut pixels = Vec::new();
+        let mut fixed_pixels = Vec::new();
+        let Capture::Frame(first) = encoder.encode(&frame, Vec::new())? else {
+            anyhow::bail!("Missing initial keyframe");
+        };
+        decoder.decode_into_protocol(upper, &first, &mut pixels, ViewProtocol::Adaptive)?;
+        fixed.decode_into(upper, &first, &mut fixed_pixels)?;
+        assert_eq!(pixels.len(), 1920 * 1080);
+        encoder.set_jpeg_quality(45)?;
+        encoder.reconfigure(lower)?;
+        let Capture::Frame(second) = encoder.encode(&frame, first)? else {
+            anyhow::bail!("Missing transition keyframe");
+        };
+        assert!(is_keyframe(lower.mode(), &second));
+        assert!(
+            fixed
+                .decode_into(lower, &second, &mut fixed_pixels)
+                .is_err()
+        );
+        assert!(
+            decoder
+                .decode_into_protocol(lower, &[TILE_TAG, 1], &mut pixels, ViewProtocol::Adaptive)
+                .is_err()
+        );
+        assert_eq!(pixels.len(), 1920 * 1080);
+        decoder.decode_into_protocol(lower, &second, &mut pixels, ViewProtocol::Adaptive)?;
+        assert_eq!(pixels.len(), 960 * 540);
+        assert_eq!(pixels[0], 0x0c2238);
+        encoder.reconfigure(upper)?;
+        let Capture::Frame(third) = encoder.encode(&frame, second)? else {
+            anyhow::bail!("Missing recovery keyframe");
+        };
+        decoder.decode_into_protocol(upper, &third, &mut pixels, ViewProtocol::Adaptive)?;
+        assert_eq!(pixels.len(), 1920 * 1080);
+        assert_eq!(pixels[0], 0x0c2238);
+        Ok(())
+    }
     use image::{RgbImage, Rgba};
     use intralink_core::desktop::CodecMode;
 

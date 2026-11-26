@@ -113,3 +113,7 @@ Minimal strict-token worker startup, exact-LUID CUDA/CUVID capability and native
 ### Portable media direction (2026-11-26)
 
 Keep CPU Compact/Tiles/JPEG as the always-available media baseline on supported desktop targets. Default 1080p, selectable 720p/540p, adaptive JPEG quality; preserve 60 FPS as a target/ceiling rather than a universal guarantee. Next: add portable capability negotiation and versioned dynamic resolution/keyframe transitions, then qualify optional vendor/OS-native hardware codec backends and a CPU H.264 path independently. Do not make the isolated NVIDIA diagnostic a dependency of normal sharing. Retain consent, bounded ordered media and strict isolation gates. Platform coverage, physical network measurements and sustained multi-device 1080p60 remain open.
+
+
+### Adaptive software geometry checkpoint
+v10 opt-in geometry transitions and local hysteresis are implemented and locally exercised by automated protocol, encoder and authenticated QUIC loopback tests. The separate v8 fixed mode is still the default until physical v10 qualification; no fallback or native decoder access is implied. Next: locally consented physical 1080/720/540 transitions under controlled load, safe WGC scaler retargeting without new capture privileges, actual capability-based negotiation and CPU/GPU codec backend abstraction. Retain vendor-independent baseline and restricted NVIDIA security gates.

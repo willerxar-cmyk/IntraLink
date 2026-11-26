@@ -71,6 +71,26 @@ impl PresentationSurface {
         dimensions: (usize, usize),
         decode: impl FnOnce(&mut Vec<u32>) -> Result<(), E>,
     ) -> Result<(), E> {
+        self.update_inner(sequence, dimensions, false, decode)
+    }
+
+    /// Only a separately validated complete keyframe may change geometry.
+    pub fn update_keyframe<E: From<SurfaceError>>(
+        &mut self,
+        sequence: usize,
+        dimensions: (usize, usize),
+        decode: impl FnOnce(&mut Vec<u32>) -> Result<(), E>,
+    ) -> Result<(), E> {
+        self.update_inner(sequence, dimensions, true, decode)
+    }
+
+    fn update_inner<E: From<SurfaceError>>(
+        &mut self,
+        sequence: usize,
+        dimensions: (usize, usize),
+        keyframe: bool,
+        decode: impl FnOnce(&mut Vec<u32>) -> Result<(), E>,
+    ) -> Result<(), E> {
         if self.invalidated {
             return Err(SurfaceError::Invalidated.into());
         }
@@ -78,11 +98,20 @@ impl PresentationSurface {
         if sequence == 0
             || !(1..=MAX_WIDTH).contains(&width)
             || !(1..=MAX_HEIGHT).contains(&height)
-            || self
-                .metadata
-                .is_some_and(|old| sequence <= old.sequence || dimensions != old.dimensions)
+            || self.metadata.is_some_and(|old| {
+                sequence <= old.sequence || (!keyframe && dimensions != old.dimensions)
+            })
         {
             return Err(SurfaceError::InvalidMetadata.into());
+        }
+        if keyframe
+            && self
+                .metadata
+                .is_some_and(|old| dimensions != old.dimensions)
+            && Arc::strong_count(&self.pixels) != 1
+        {
+            // A full replacement never needs a copy of an obsolete snapshot.
+            self.pixels = Arc::new(Vec::new());
         }
         let pixels = Arc::make_mut(&mut self.pixels);
         self.metadata = None;
@@ -128,6 +157,32 @@ mod tests {
             pixels.fill(value);
             Ok(())
         })
+    }
+
+    #[test]
+    fn adaptive_keyframe_replaces_geometry_without_mutating_old_snapshot() {
+        let mut surface = PresentationSurface::default();
+        fill(&mut surface, 1, 7).unwrap();
+        let old = surface.snapshot_after(0).unwrap();
+        assert_eq!(
+            surface
+                .update::<SurfaceError>(2, (3, 2), |_| panic!("Geometry change without keyframe")),
+            Err(SurfaceError::InvalidMetadata)
+        );
+        surface
+            .update_keyframe::<SurfaceError>(2, (3, 2), |pixels| {
+                pixels.resize(6, 9);
+                Ok(())
+            })
+            .unwrap();
+        let new = surface.snapshot_after(1).unwrap();
+        assert_eq!(new.dimensions(), (3, 2));
+        assert_eq!(new.pixels(), &[9; 6]);
+        assert_eq!(old.pixels(), &[7; 4]);
+        assert_eq!(
+            surface.update_keyframe::<SurfaceError>(2, (2, 2), |_| panic!("Repeated sequence")),
+            Err(SurfaceError::InvalidMetadata)
+        );
     }
 
     #[test]
