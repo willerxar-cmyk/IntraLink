@@ -1,0 +1,596 @@
+IntraLink AVC negotiation / Android preview.9 validation, 2026-11-27. Known generated fixture and dedicated API 36 x86_64 emulator only. Strict core+transport Clippy, 117 core + 66 transport + 3 multi-host tests passed. Both native Android ABIs strict Release/Clippy and JVM/Gradle gates passed. Native instrumentation and full consent/capture/sync/Stop acceptance passed; c2.android.avc.decoder decoded original 6 and recovered 4 frames with exact visible-plane hashes. MediaCodec c2.android.avc.encoder: 399 buffers / 15012 ms, 15 IDR, no partial/unparsed/key mismatch/non-increasing PTS, observed IDR after sync request 132 ms, PTS delta 39731 us. No physical/runtime network decoder claim. Previous Linux CPU CI step failed apt-get update on unrelated Microsoft Ubuntu 26.04 repo HTTP 403 (exit 100), not a codec test failure; restrict to signed Ubuntu source, corrected CI not yet confirmed.
+
+=== PID 34416 ===
+[Reading last 224 lines (total: 224 lines)]
+
+    Checking intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+    Checking intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+    Checking intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.16s
+   Compiling intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+   Compiling intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+   Compiling intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 16.47s
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_core-3e3e99ad2bbf7776.exe)
+
+running 117 tests
+test canvas::tests::full_size_overwrites_every_byte_and_ignores_alpha ... ok
+test adaptive::tests::pressure_reduces_stepwise_and_recovers_to_approved_ceiling ... ok
+test adaptive::tests::geometry_transitions_are_keyframe_only_bounded_and_atomic ... ok
+test canvas::tests::invalid_lengths_and_dimensions_leave_output_unchanged ... ok
+test adaptive::tests::request_and_alpn_are_distinct_without_fallback ... ok
+test adaptive::tests::static_neutral_and_approved_ceiling_prevent_unwanted_transitions ... ok
+test capabilities::tests::all_masks_are_bounded_and_selection_is_symmetric ... ok
+test capabilities::tests::local_codec_ceiling_and_request_roundtrip ... ok
+test calibration::tests::eight_measured_workers_do_not_divide_their_budget_again ... ok
+test calibration::tests::mixed_ceilings_use_one_observed_cohort_and_keep_manual_bounds ... ok
+test calibration::tests::malformed_or_unmeasured_layouts_are_rejected ... ok
+test desktop::tests::configuration_is_bounded_and_versioned ... ok
+test adaptive::tests::mode_and_payload_bounds_are_enforced ... ok
+test calibration::tests::slow_devices_choose_best_balanced_feasible_layout ... ok
+test desktop::tests::lengths_are_bounded_before_allocation ... ok
+test desktop::tests::priority_feedback_is_ordered_and_cannot_grant_credit ... ok
+test desktop::tests::requests_and_acknowledgments_are_exact ... ok
+test canvas::tests::odd_bars_are_centered_and_old_content_is_erased ... ok
+test desktop::tests::credit_is_bounded_and_receipts_are_ordered ... ok
+test h264::modes::tests::actual_native_sps_is_observed_and_exact_profile_selects ... ok
+test h264::modes::tests::exact_orientation_color_rate_and_local_ceilings ... ok
+test h264::negotiation::tests::canonical_roundtrip_and_exact_choice ... ok
+test h264::negotiation::tests::reject_noncanonical_and_outside_limits ... ok
+test h264::packetizer::observation_tests::observation_uses_explicit_framing_and_reports_types_only ... ok
+test h264::modes::tests::malformed_offers_and_impossible_operating_points ... ok
+test h264::packetizer::native_fixture_tests::generated_native_avc_retains_exact_nal_payloads ... ok
+test h264::parameters::tests::truncated_parameter_sets_and_extra_rbsp_are_rejected ... ok
+test h264::packetizer::tests::rejection_is_atomic_and_cannot_poison_config_or_sequence ... ok
+test h264::packetizer::tests::separate_csd_and_missing_aud_normalize_to_existing_wire ... ok
+test h264::parameters::tests::rbsp_escape_rules_and_exp_golomb_limits ... ok
+test h264::packetizer::tests::malformed_framing_and_overflow_are_bounded ... ok
+test h264::producer::tests::incompatible_keyframe_cannot_escape_queue ... ok
+test h264::producer::tests::actual_loss_and_gop_expiry_do_not_emit_dependent_records ... ok
+test h264::parameters::tests::native_parameter_sets_match_exact_profiles ... ok
+test h264::producer::tests::pressure_drops_entire_unsent_chain_and_resumes_at_idr ... ok
+test h264::producer::tests::stale_picture_loss_requires_new_idr_and_deadline_cannot_be_extended ... ok
+test h264::tests::envelope_rejects_limits_and_unknown_flags ... ok
+test h264::producer::tests::malformed_or_reordered_input_closes_epoch_and_discards_pending ... ok
+test h264::tests::profile_and_wire_version_are_exact ... ok
+test h264::tests::rejected_parameter_change_does_not_advance_state ... ok
+test h264::tests::rejects_missing_headers_b_slices_and_multiple_pictures ... ok
+test h264::tests::state_rejects_missing_base_gaps_and_gop_expiration_atomically ... ok
+test host_calibration::tests::cpu_only_path_can_select_lower_resolution_and_rate ... ok
+test host_calibration::tests::selects_measured_best_backend_at_highest_usable_resolution ... ok
+test host_calibration::tests::rejects_duplicate_unknown_zero_and_over_ceiling_samples ... ok
+test input::tests::canonical_records_reject_reserved_fields_and_hostile_values ... ok
+test input::tests::focus_never_activates_second_slot_before_release ... ok
+test input::tests::ordered_state_requires_activation_and_releases_held_input ... ok
+test input_layout::tests::all_eight_slots_have_disjoint_exact_edges_and_normalized_coordinates ... ok
+test input_layout::tests::unused_cells_are_local_and_tiny_dimensions_are_refused ... ok
+test h264::tests::every_truncation_and_mutation_is_bounded ... ok
+test journal::tests::rejects_duplicate_wrong_and_out_of_order_end_records ... ok
+test journal::tests::roundtrip_preserves_unknown_cancelled_and_completed_outcomes ... ok
+test journal::tests::rejects_truncation_control_fields_and_unbounded_input ... ok
+test journal::tests::maximal_numeric_values_fit_reserved_line_budget ... ok
+test media::compact::tests::palette_padding_and_invalid_index_are_rejected ... ok
+test media::compact::tests::runs_must_cover_the_exact_tile ... ok
+test media::tests::budget_exhaustion_never_emits_partial_updates ... ok
+test media::compact::budget_tests::early_run_budget_rejection_preserves_exact_best_encoding ... ok
+test desktop::tests::credit_cannot_exceed_absolute_sequence_budget ... ok
+test media::tests::compact_records_are_rejected_by_basic_tiles_and_jpeg ... ok
+test media::tests::invalid_keyframes_never_resize_or_mutate_existing_canvas ... ok
+test media::tests::malformed_later_compact_tile_cannot_apply_earlier_tile ... ok
+test network::tests::comparison_is_family_aware_and_normalizes_mapped_values ... ok
+test media::tests::malformed_updates_do_not_mutate_pixels ... ok
+test network::tests::each_family_is_bounded_and_selection_is_idempotent ... ok
+test network::tests::malformed_or_unsupported_destinations_are_not_attempted ... ok
+test network::tests::private_and_shared_ip_labels_do_not_assert_reachability ... ok
+test network::tests::scan_budget_is_bounded_even_for_duplicate_answers ... ok
+test overview::tests::every_layout_has_nonoverlapping_cards_and_distinct_controls ... ok
+test network::tests::mapped_addresses_are_deduplicated_before_family_limits ... ok
+test overview::tests::pointer_mapping_respects_bars_and_nonfinite_input ... ok
+test pacing::tests::intermittent_changes_do_not_enter_idle_mode ... ok
+test pacing::tests::slower_profiles_are_never_accelerated_or_delayed ... ok
+test media::tests::edge_tiles_round_trip_and_solid_tiles_are_nine_bytes ... ok
+test pacing::tests::static_scene_slows_in_two_bounded_steps ... ok
+test pacing::tests::sixty_fps_and_background_cadence ... ok
+test overview::tests::invalid_geometry_and_source_leave_canvas_unchanged ... ok
+test media::tests::keyframe_budget_and_mode_fail_closed ... ok
+test presentation::tests::adaptive_keyframe_replaces_geometry_without_mutating_old_snapshot ... ok
+test presentation::tests::allocation_is_reused_when_no_snapshot_is_held ... ok
+test presentation::tests::concurrent_presentation_keeps_immutable_pixels ... ok
+test presentation::tests::failed_decode_poisoning_preserves_old_snapshot_but_hides_partial_update ... ok
+test presentation::tests::invalid_geometry_is_rejected_before_decoding ... ok
+test presentation::tests::short_decode_cannot_be_published ... ok
+test media::tests::uniform_row_comparison_preserves_nonuniform_edge_tiles ... ok
+test profile_limits::tests::malformed_limits_and_changed_selection_are_rejected ... ok
+test presentation::tests::unchanged_or_older_sequence_never_creates_a_snapshot ... ok
+test overview::tests::thumbnail_preserves_aspect_and_does_not_touch_other_cards ... ok
+test quality::tests::recovery_is_slower_and_never_exceeds_approved_quality ... ok
+test quality::tests::static_and_neutral_interrupt_streaks_and_floor_is_safe ... ok
+test quality::tests::pressure_is_bounded_and_background_does_not_signal_recovery ... ok
+test quality::tests::sustained_high_pressure_reduces_quality_and_floor_is_enforced ... ok
+test resources::tests::cpu_never_reports_unavailable_or_nonfinite_data_as_a_measurement ... ok
+test resources::tests::memory_is_checked_and_used_cannot_underflow ... ok
+test telemetry::tests::actual_elapsed_time_and_distinct_rates ... ok
+test telemetry::tests::resets_never_report_old_session_rates ... ok
+test telemetry::tests::stages_are_independent_and_payload_is_counted_once ... ok
+test tests::accepts_only_single_duckdns_label ... ok
+test tests::only_exact_probe_is_valid ... ok
+test telemetry::tests::concurrent_updates_are_not_lost ... ok
+test profile_limits::tests::valid_limits_and_exact_intersection ... ok
+test tests::roles_are_directional ... ok
+test workspace::tests::bounds_and_all_eight_slots ... ok
+test workspace::tests::inactive_is_distinct_from_background_and_all_live ... ok
+test workspace::tests::three_live_devices_switch_focus_without_deactivation ... ok
+test yuv::tests::averages_chroma_and_preserves_stride_padding ... ok
+test yuv::tests::invalid_layouts_are_atomic ... ok
+test yuv::tests::primary_color_vectors ... ok
+test yuv::tests::black_white_and_neutral_grays ... ok
+test media::tests::lossless_keyframe_and_following_delta_preserve_every_pixel ... ok
+test media::tests::failed_compact_delta_implies_no_complete_keyframe_with_same_or_smaller_budget ... ok
+test media::tests::compact_selects_smallest_exact_tile_representation ... ok
+test media::tests::ordered_deltas_reconstruct_changed_tiles_and_restore_pixels ... ok
+test media::tests::compact_never_exceeds_basic_payload_under_same_budget ... ok
+test media::tests::compact_palette_cardinalities_and_edge_geometry_round_trip ... ok
+test media::tests::lossless_uniform_keyframes_have_full_coverage_at_all_resolutions ... ok
+
+test result: ok. 117 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s
+
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_transport-75da089dcbe7b9a9.exe)
+
+running 66 tests
+test desktop::h264_tests::separate_alpn_and_non_loopback_routes_are_rejected ... ok
+test desktop::adaptive_tests::v8_cannot_negotiate_adaptive_only_endpoint ... ok
+test avc_negotiation::tests::incorrect_identity_and_nonloopback_are_refused ... ok
+test avc_negotiation::tests::no_common_mode_refuses_agreement ... ok
+test desktop::adaptive_tests::adaptive_rejects_delta_as_first_frame_without_delivery ... ok
+test desktop::bounded_tests::bounded_selection_reduces_codec_height_and_fps_before_capture ... ok
+test desktop::adaptive_tests::wrong_identity_cannot_request_adaptive_capture ... ok
+test desktop::pipeline::tests::first_keyframe_cannot_have_overlapping_demand ... ok
+test desktop::pipeline::tests::reservations_share_existing_credit_and_record_limit ... ok
+test desktop::pipeline_tests::capture_grant_rejects_early_duplicate_and_canceled_starts ... ok
+test desktop::h264_tests::invalid_local_access_unit_never_reaches_consumer ... ok
+test desktop::h264_tests::unapproved_identity_never_requests_h264_capture ... ok
+test desktop::adaptive_tests::invalid_peer_geometry_is_rejected_before_consumer_and_receipt ... ok
+test desktop::h264_tests::invalid_peer_access_unit_is_rejected_before_consumer_and_ack ... ok
+test avc_negotiation::tests::pinned_peers_agree_on_exact_portrait_mode ... ok
+test desktop::h264_tests::early_local_timer_does_not_grant_next_capture ... ok
+test desktop::bounded_tests::viewer_rejects_host_exceeding_receiver_limits_before_confirmation ... ok
+test desktop::h264_tests::unapproved_profile_never_requests_capture ... ok
+test desktop::h264_tests::encoder_packetizer_reuses_authenticated_demand_and_receipts ... ok
+test avc_negotiation::tests::mismatched_or_trailing_confirmation_never_completes ... ok
+test desktop::pipeline_tests::reply_without_start_is_rejected ... ok
+test desktop::negotiated_tests::viewer_rejects_host_selection_outside_intersection ... ok
+test desktop::pipeline_tests::wrong_identity_never_reserves_pipeline_capture ... ok
+test desktop::tests::payload_preparation_preserves_allocation_and_rejects_invalid_sizes ... ok
+test desktop::tests::authorized_source_can_stop_without_capture ... ok
+test desktop::negotiated_tests::chooses_mutual_compact_and_reconstructs_real_pixels ... ok
+test desktop::h264_tests::bounded_native_avc_producer_recovers_over_existing_quic_credit ... ok
+test desktop::h264_tests::ordered_h264_records_keep_coded_sequence_distinct_from_receipts ... ok
+test desktop::tests::mismatched_media_mode_never_requests_capture ... ok
+test desktop::negotiated_tests::negotiation_requires_identity_and_explicit_version ... ok
+test desktop::tests::no_update_before_first_frame_is_rejected_by_receiver ... ok
+test desktop::tests::no_update_before_first_frame_is_rejected_by_sender ... ok
+test desktop::tests::rejected_identity_never_requests_capture ... ok
+test desktop::tests::repeat_before_first_frame_is_rejected ... ok
+test input::tests::disconnected_controller_closes_consumer_with_owned_release_plan ... ok
+test desktop::pipeline_tests::two_demands_overlap_and_out_of_order_completion_is_serialized ... ok
+test desktop::negotiated_tests::different_codec_ceilings_negotiate_before_capture ... ok
+test input::tests::coalesced_motion_preserves_exact_quic_click_drag_key_and_focus_order ... ok
+test input_queue::tests::key_and_ack_barriers_are_preserved ... ok
+test input_queue::tests::local_command_age_reduces_remaining_wire_budget ... ok
+test input_queue::tests::movement_replaces_only_unsent_tail_and_never_drag_or_click_barriers ... ok
+test input_queue::tests::saturation_and_shutdown_fail_closed ... ok
+test desktop::bounded_tests::malformed_limits_and_wrong_confirmation_never_request_capture ... ok
+test input_queue::tests::canceled_wait_does_not_consume_next_command ... ok
+test input::tests::local_rejection_is_not_acknowledged ... ok
+test desktop::tests::changed_and_repeat_records_preserve_sequence_and_recycle_buffer ... ok
+test input::tests::wrong_identity_never_reaches_input_sink ... ok
+test desktop::negotiated_tests::invalid_offer_or_confirmation_cannot_start_capture ... ok
+test tests::mapped_ipv4_route_uses_real_ipv4_transport ... ok
+test tests::authorized_probe_on_loopback ... ok
+test tests::unapproved_identity_is_rejected ... ok
+test desktop::tests::three_sessions_are_isolated_when_one_host_refuses ... ok
+test input::tests::malformed_sequence_or_inactive_input_never_reaches_local_sink ... ok
+test tests::multiple_candidates_include_reachable_address ... ok
+test input::tests::expired_client_budget_cancels_pending_host_acceptance ... ok
+test tests::wrong_host_pin_is_rejected ... ok
+test input::tests::three_authenticated_hosts_keep_independent_input_and_release_before_switch ... ok
+test desktop::pipeline_tests::reserved_start_is_based_on_actual_previous_start ... ok
+test desktop::tests::receiver_reuses_consumed_payload_across_ordered_records ... ok
+test desktop::pipeline_tests::reserved_unsent_demands_cannot_expand_credit ... ok
+test desktop::tests::no_update_is_ordered_but_never_decoded_or_counted_as_repeat ... ok
+test input::tests::eight_authenticated_input_hosts_share_one_endpoint ... ok
+test desktop::tests::credit_allows_bounded_records_before_ack_and_drains_at_end ... ok
+test desktop::tests::wrong_ack_cannot_exceed_credit_window ... ok
+test desktop::adaptive_tests::adaptive_downshift_and_recovery_preserve_one_authenticated_session ... ok
+test desktop::tests::diagnostic_protocol_cannot_open_view_listener ... ok
+
+test result: ok. 66 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.44s
+
+     Running tests\multi_host.rs (D:\IntraLink-validation-v020\target\debug\deps\multi_host-290c08cc6c6c1e30.exe)
+
+running 3 tests
+test one_controller_three_paired_hosts_keep_independent_compact_canvases ... ok
+test one_controller_three_paired_hosts_negotiate_independent_receiver_limits ... ok
+test stopping_one_view_preserves_sibling_and_allows_later_connection ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.95s
+
+   Doc-tests intralink_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests intralink_transport
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+✅ Process completed with exit code 0 (runtime: 37.75s)
+
+[executed on device: DESKTOP-54A9GFC (af27c91c-6f94-4f61-a934-0c3dc3c2c0a6)]
+
+=== PID 24516 ===
+[Reading last 185 lines (total: 185 lines)]
+
+    Checking intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+    Checking intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+    Checking intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+    Checking intralink-android v0.22.0 (D:\IntraLink\crates\intralink-android)
+    Finished `release` profile [optimized] target(s) in 1.87s
+   Compiling intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+   Compiling intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+   Compiling intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+   Compiling intralink-android v0.22.0 (D:\IntraLink\crates\intralink-android)
+    Finished `release` profile [optimized] target(s) in 55.41s
+    Checking intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+    Checking intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+    Checking intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+    Checking intralink-android v0.22.0 (D:\IntraLink\crates\intralink-android)
+    Finished `release` profile [optimized] target(s) in 2.45s
+   Compiling intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+   Compiling intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+   Compiling intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+   Compiling intralink-android v0.22.0 (D:\IntraLink\crates\intralink-android)
+    Finished `release` profile [optimized] target(s) in 44.34s
+Built arm64-v8a: apps\android\app\build\generated\jniLibs\arm64-v8a\libintralink_android.so (9695616 bytes)
+Built x86_64: apps\android\app\build\generated\jniLibs\x86_64\libintralink_android.so (11033200 bytes)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:processDebugNavigationResources
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:parseDebugLocalResources
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:mergeDebugResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+
+    Finished `release` profile [optimized] target(s) in 0.48s
+    Finished `release` profile [optimized] target(s) in 0.43s
+> Task :app:buildRust
+Built arm64-v8a: D:\IntraLink\apps\android\app\build\generated\jniLibs\arm64-v8a\libintralink_android.so (9695616 bytes)
+Built x86_64: D:\IntraLink\apps\android\app\build\generated\jniLibs\x86_64\libintralink_android.so (11033200 bytes)
+
+> Task :app:mergeDebugJniLibFolders
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:compileDebugKotlin
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:checkReleaseDuplicateClasses UP-TO-DATE
+> Task :app:generateReleaseResources FROM-CACHE
+> Task :app:packageReleaseResources
+> Task :app:processReleaseNavigationResources FROM-CACHE
+> Task :app:parseReleaseLocalResources FROM-CACHE
+> Task :app:mergeDebugNativeLibs
+> Task :app:generateReleaseRFile UP-TO-DATE
+> Task :app:javaPreCompileRelease UP-TO-DATE
+> Task :app:checkReleaseAarMetadata UP-TO-DATE
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:compileReleaseNavigationResources UP-TO-DATE
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease UP-TO-DATE
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:desugarReleaseFileDependencies UP-TO-DATE
+> Task :app:mergeReleaseStartupProfile UP-TO-DATE
+> Task :app:mergeExtDexRelease UP-TO-DATE
+> Task :app:mergeReleaseArtProfile UP-TO-DATE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets UP-TO-DATE
+> Task :app:compressReleaseAssets UP-TO-DATE
+> Task :app:extractReleaseVersionControlInfo UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :app:collectReleaseDependencies UP-TO-DATE
+> Task :app:sdkReleaseDependencyData UP-TO-DATE
+> Task :app:writeReleaseAppMetadata UP-TO-DATE
+> Task :app:writeReleaseSigningConfigVersions UP-TO-DATE
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:configureReleaseDependencies UP-TO-DATE
+> Task :app:parseReleaseIntegrityConfig UP-TO-DATE
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:generateDebugAndroidTestResources UP-TO-DATE
+> Task :app:packageDebugAndroidTestResources UP-TO-DATE
+> Task :app:processDebugAndroidTestNavigationResources UP-TO-DATE
+> Task :app:parseDebugAndroidTestLocalResources UP-TO-DATE
+> Task :app:generateDebugAndroidTestRFile UP-TO-DATE
+> Task :app:javaPreCompileDebugAndroidTest UP-TO-DATE
+> Task :app:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeDebugAndroidTestAssets
+> Task :app:mergeReleaseResources
+> Task :app:processReleaseManifestForPackage
+> Task :app:checkDebugAndroidTestDuplicateClasses UP-TO-DATE
+> Task :app:desugarDebugAndroidTestFileDependencies UP-TO-DATE
+> Task :app:compressDebugAndroidTestAssets
+> Task :app:mergeExtDexDebugAndroidTest UP-TO-DATE
+> Task :app:mergeLibDexDebugAndroidTest UP-TO-DATE
+> Task :app:checkDebugAndroidTestAarMetadata UP-TO-DATE
+> Task :app:mapDebugAndroidTestSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugAndroidTestNavigationResources UP-TO-DATE
+> Task :app:stripDebugDebugSymbols
+> Task :app:mergeDebugAndroidTestResources UP-TO-DATE
+> Task :app:processDebugAndroidTestManifest UP-TO-DATE
+> Task :app:processDebugAndroidTestResources UP-TO-DATE
+> Task :app:mergeDebugAndroidTestJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugAndroidTestNativeLibs NO-SOURCE
+> Task :app:stripDebugAndroidTestDebugSymbols NO-SOURCE
+> Task :app:validateSigningDebugAndroidTest UP-TO-DATE
+> Task :app:writeDebugAndroidTestSigningConfigVersions UP-TO-DATE
+> Task :app:generateDebugLintReportModel
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:writeRuntimeDependencyInventory
+> Task :app:processDebugManifestForPackage
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :app:processReleaseResources
+> Task :app:optimizeReleaseResources
+> Task :app:processDebugResources
+> Task :app:dexBuilderDebug
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:mergeProjectDexDebug
+> Task :app:bundleReleaseResources
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:generateDebugUnitTestLintModel
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+> Task :app:lintAnalyzeDebugUnitTest
+> Task :app:compileDebugAndroidTestKotlin
+> Task :app:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugAndroidTestJavaRes UP-TO-DATE
+> Task :app:mergeDebugAndroidTestJavaResource UP-TO-DATE
+> Task :app:dexBuilderDebugAndroidTest
+> Task :app:mergeProjectDexDebugAndroidTest
+> Task :app:packageDebugAndroidTest
+> Task :app:createDebugAndroidTestApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebugAndroidTest
+> Task :app:compileReleaseKotlin
+> Task :app:compileReleaseJavaWithJavac NO-SOURCE
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:dexBuilderRelease
+> Task :app:mergeReleaseGlobalSynthetics UP-TO-DATE
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:processReleaseJavaRes UP-TO-DATE
+> Task :app:mergeReleaseJavaResource UP-TO-DATE
+> Task :app:mergeDexRelease
+> Task :app:compileReleaseArtProfile
+> Task :app:buildReleasePreBundle
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:lintAnalyzeDebug
+
+> Task :app:lintReportDebug
+Wrote HTML report to file:///D:/IntraLink/apps/android/app/build/reports/lint-results-debug.html
+
+> Task :app:packageReleaseBundle
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+> Task :app:lintDebug
+> Task :app:signReleaseBundle
+> Task :app:produceReleaseBundleIdeListingFile
+> Task :app:createReleaseBundleListingFileRedirect UP-TO-DATE
+> Task :app:bundleRelease
+
+BUILD SUCCESSFUL in 8s
+130 actionable tasks: 65 executed, 3 from cache, 62 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.3.1/userguide/configuration_cache_enabling.html
+Capture policy: geometry, lifecycle, AVC and sync-frame observation checks PASSED (host JVM).
+✅ Process completed with exit code 0 (runtime: 114.45s)
+
+[executed on device: DESKTOP-54A9GFC (af27c91c-6f94-4f61-a934-0c3dc3c2c0a6)]
+
+=== PID 32312 ===
+[Reading last 27 lines (total: 27 lines)]
+
+Performing Streamed Install
+Success
+Performing Streamed Install
+Success
+
+IntraLink JNI onboarding: PASSED
+IntraLink AVC buffer boundary: PASSED
+IntraLink SPS metadata boundary: PASSED
+IntraLink Android software decoder fixture: PASSED; codec=c2.android.avc.decoder; frames=6+4; recovered YUV bytes=12441600; exact hashes match; sampled error <=12
+
+Success
+Real system consent denial and no active projection: PASSED
+Encoder: c2.android.avc.encoder
+Size: 1080 � 1920
+Configured FPS: 30
+Output buffers: 399
+Encoded bytes counted: 4272652
+Elapsed ms: 15012
+AVC picture buffers: 399 (26.6/s) � IDR: 15
+Config: 1 � Partial: 0 � Unparsed: 0
+Key flag differences: 0 � PTS not increasing: 0
+SPS profile/level: 66/41 � 1080 � 1920
+CSD mask: 384 � Format changes: 1 � Color: 1/2/3
+PTS delta min/max: 11965/158965 �s � Span: 14352338 �s
+Sync probe: 2 � Delay: 132 ms � PTS: 39731 �s
+Actual MediaProjection / MediaCodec / Rust AVC/SPS/PTS and sync-frame observation: PASSED
+Fresh consent, foreground Stop and resource closure: PASSED
+✅ Process completed with exit code 0 (runtime: 90.31s)
+
+[executed on device: DESKTOP-54A9GFC (af27c91c-6f94-4f61-a934-0c3dc3c2c0a6)]
+
+=== PID 34004 ===
+[Reading last 19 lines (total: 19 lines)]
+
+Exact prior JVM artifact and POM hashes match
+app-debug.apk: arm64-v8a 9695616 bytes, ELF LOAD alignment 16384, SHA256 cc1159922d782293a12e2dad1b6685325a9ada87cba55cbb535c8a0761ab036f
+app-debug.apk: x86_64 11033200 bytes, ELF LOAD alignment 16384, SHA256 fc313834125d4c4bb7d8d631144c14a5b6da8167812e82d8649fbdff67ab9b8b
+app-release-unsigned.apk: arm64-v8a 9695616 bytes, ELF LOAD alignment 16384, SHA256 cc1159922d782293a12e2dad1b6685325a9ada87cba55cbb535c8a0761ab036f
+app-release-unsigned.apk: x86_64 11033200 bytes, ELF LOAD alignment 16384, SHA256 fc313834125d4c4bb7d8d631144c14a5b6da8167812e82d8649fbdff67ab9b8b
+app-release.aab: arm64-v8a 9695616 bytes, ELF LOAD alignment 16384, SHA256 cc1159922d782293a12e2dad1b6685325a9ada87cba55cbb535c8a0761ab036f
+app-release.aab: x86_64 11033200 bytes, ELF LOAD alignment 16384, SHA256 fc313834125d4c4bb7d8d631144c14a5b6da8167812e82d8649fbdff67ab9b8b
+{"version": "0.22.0-preview.9", "version_code": 220009, "scope": "encrypted onboarding, manual pairing, foreground private IPv4 diagnostics and local consented AVC encoder diagnostic only", "abis": ["arm64-v8a", "x86_64"], "permissions": ["android.permission.ACCESS_NETWORK_STATE", "android.permission.FOREGROUND_SERVICE", "android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION", "android.permission.INTERNET", "android.permission.POST_NOTIFICATIONS"], "debug_and_test_signed": true, "release_signed": false, "lint_diagnostics": [["Warning", "AndroidGradlePluginVersion"]], "physical_runtime_qualified": false, "public_release": false}
+Verified local Android candidate: dist\android-avc-negotiation-preview9-20261127
+4c14e68c9f1b44703cc104f2dbd93cc81e2794f7d7abafbb115e59ed39b070bd  android-jvm-notices-validation-20261127.zip
+37abf916cbc5086ec15a937a4c947b5c01195059b0a2da60448b72d329b86e1c  android-pairing-arm64-notices-20261127.zip
+56337ae0970bf14a140d24510c0302c97c08d03a9d0050f34ab14761167947a8  android-pairing-x86_64-notices-20261127.zip
+385ae0577229a2050ae0640789809c9dcdedc7c1e81ae40012e1c4c0684457a2  ANDROID.md
+1188271586afb16caa817685b97e675b89c2f13d790a5f2dc3434eb9944160ae  CANDIDATE.json
+5dbe263c9a8807556b35b0d0e0a3d4aa1b03bc13d81dbe376ae9b3a63af4b64a  intralink-android-capture-debug.apk
+53f311cc2f7cb97046b5aa3f05e7b857e3d5f633d971e748e1731764dbe026ad  intralink-android-capture-instrumentation.apk
+decb804e66be2af04e125d94d29e7aced966c45e00f30f352cba6d36142f2a60  intralink-android-capture-release-unsigned.aab
+ce4fc777a757bbdf839ba9752623662f34d6301c19602b09ed0200f07b13536d  intralink-android-capture-release-unsigned.apk
+fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85  LICENSE
+✅ Process completed with exit code 0 (runtime: 2.87s)
+
+[executed on device: DESKTOP-54A9GFC (af27c91c-6f94-4f61-a934-0c3dc3c2c0a6)]
+
+=== PID 29520 ===
+[Reading last 105 lines (total: 105 lines)]
+
+2026-11-27T17:25:00.0617400Z test store::tests::authenticated_role_changes_preserve_identity_and_replay_state ... ok
+2026-11-27T17:25:00.0618204Z [1m[92m   Doc-tests[0m intralink_core
+2026-11-27T17:25:00.0618364Z
+2026-11-27T17:25:00.0618569Z test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 33.30s
+2026-11-27T17:25:00.0618846Z
+2026-11-27T17:25:00.1106459Z
+2026-11-27T17:25:00.1107346Z running 0 tests
+2026-11-27T17:25:00.1107588Z
+2026-11-27T17:25:00.1107936Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-11-27T17:25:00.1108259Z
+2026-11-27T17:25:00.1122224Z [1m[92m   Doc-tests[0m intralink_d3d11
+2026-11-27T17:25:00.1231081Z
+2026-11-27T17:25:00.1231815Z running 0 tests
+2026-11-27T17:25:00.1232010Z
+2026-11-27T17:25:00.1232278Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-11-27T17:25:00.1232594Z
+2026-11-27T17:25:00.1241380Z [1m[92m   Doc-tests[0m intralink_input_win
+2026-11-27T17:25:00.1348239Z
+2026-11-27T17:25:00.1348908Z running 0 tests
+2026-11-27T17:25:00.1349100Z
+2026-11-27T17:25:00.1349381Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-11-27T17:25:00.1349702Z
+2026-11-27T17:25:00.1357762Z [1m[92m   Doc-tests[0m intralink_input_x11
+2026-11-27T17:25:00.1731137Z
+2026-11-27T17:25:00.1731962Z running 0 tests
+2026-11-27T17:25:00.1732165Z
+2026-11-27T17:25:00.1732441Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-11-27T17:25:00.1732694Z
+2026-11-27T17:25:00.1741136Z [1m[92m   Doc-tests[0m intralink_transport
+2026-11-27T17:25:00.2517061Z
+2026-11-27T17:25:00.2517591Z running 0 tests
+2026-11-27T17:25:00.2517769Z
+2026-11-27T17:25:00.2518011Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-11-27T17:25:00.2518275Z
+2026-11-27T17:25:00.2536471Z [1m[92m   Doc-tests[0m intralink_vault
+2026-11-27T17:25:00.3322344Z
+2026-11-27T17:25:00.3322869Z running 0 tests
+2026-11-27T17:25:00.3323035Z
+2026-11-27T17:25:00.3323263Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-11-27T17:25:00.3323518Z
+2026-11-27T17:25:00.3428665Z ##[group]Run set -euo pipefail
+2026-11-27T17:25:00.3429052Z [36;1mset -euo pipefail[0m
+2026-11-27T17:25:00.3429475Z [36;1mif ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then[0m
+2026-11-27T17:25:00.3429942Z [36;1m  sudo apt-get update[0m
+2026-11-27T17:25:00.3430257Z [36;1m  sudo apt-get install -y ffmpeg[0m
+2026-11-27T17:25:00.3430580Z [36;1mfi[0m
+2026-11-27T17:25:00.3430983Z [36;1mpython3 -B tools/verify_avc_recovery_cpu.py --output avc-cpu-recovery-ci.json[0m
+2026-11-27T17:25:00.3471598Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-27T17:25:00.3471871Z env:
+2026-11-27T17:25:00.3472054Z   CARGO_HOME: /home/runner/.cargo
+2026-11-27T17:25:00.3472259Z   CARGO_INCREMENTAL: 0
+2026-11-27T17:25:00.3472442Z   CARGO_TERM_COLOR: always
+2026-11-27T17:25:00.3472626Z ##[endgroup]
+2026-11-27T17:25:00.3873850Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [152 B]
+2026-11-27T17:25:00.4059919Z Hit:2 http://us-east-1.ec2.archive.ubuntu.com/ubuntu resolute InRelease
+2026-11-27T17:25:00.4077104Z Hit:3 http://us-east-1.ec2.archive.ubuntu.com/ubuntu resolute-updates InRelease
+2026-11-27T17:25:00.4104124Z Hit:4 http://us-east-1.ec2.archive.ubuntu.com/ubuntu resolute-backports InRelease
+2026-11-27T17:25:00.4118323Z Hit:5 http://us-east-1.ec2.archive.ubuntu.com/ubuntu resolute-security InRelease
+2026-11-27T17:25:00.4125120Z Err:6 https://packages.microsoft.com/ubuntu/26.04/prod resolute InRelease
+2026-11-27T17:25:00.4125639Z   403  Forbidden [IP: 13.107.246.40 443]
+2026-11-27T17:25:01.1648793Z Reading package lists...
+2026-11-27T17:25:01.1752764Z E: Failed to fetch https://packages.microsoft.com/ubuntu/26.04/prod/dists/resolute/InRelease  403  Forbidden [IP: 13.107.246.40 443]
+2026-11-27T17:25:01.1753718Z E: The repository 'https://packages.microsoft.com/ubuntu/26.04/prod resolute InRelease' is no longer signed.
+2026-11-27T17:25:01.1781358Z ##[error]Process completed with exit code 100.
+2026-11-27T17:25:01.2285925Z ##[group]Run cargo build --locked --workspace --release
+2026-11-27T17:25:01.2286254Z [36;1mcargo build --locked --workspace --release[0m
+2026-11-27T17:25:01.2316247Z shell: /usr/bin/bash -e {0}
+2026-11-27T17:25:01.2316467Z env:
+2026-11-27T17:25:01.2316651Z   CARGO_HOME: /home/runner/.cargo
+2026-11-27T17:25:01.2316856Z   CARGO_INCREMENTAL: 0
+2026-11-27T17:25:01.2317221Z   CARGO_TERM_COLOR: always
+2026-11-27T17:25:01.2317412Z ##[endgroup]
+2026-11-27T17:25:01.4129207Z [1m[92m   Compiling[0m proc-macro2 v1.0.107
+2026-11-27T17:25:01.4130584Z [1m[92m   Compiling[0m unicode-ident v1.0.27
+2026-11-27T17:25:01.4130944Z [1m[92m   Compiling[0m quote v1.0.47
+2026-11-27T17:25:01.4132012Z [1m[92m   Compiling[0m libc v0.2.191
+2026-11-27T17:25:01.4664163Z [1m[92m   Compiling[0m cfg-if v1.0.5
+2026-11-27T17:25:01.4948383Z [1m[92m   Compiling[0m log v0.4.35
+2026-11-27T17:25:01.5263525Z [1m[92m   Compiling[0m pin-project-lite v0.2.18
+2026-11-27T17:25:01.5614132Z [1m[92m   Compiling[0m typenum v1.20.1
+2026-11-27T17:25:01.6295142Z [1m[92m   Compiling[0m version_check v0.9.5
+2026-11-27T17:25:01.7901824Z [1m[92m   Compiling[0m futures-core v0.3.34
+
+          shell: bash
+        - run: cargo clippy --locked --workspace --all-targets -- -D warnings
+        - run: cargo test --locked --workspace
+          if: ${{ !cancelled() && hashFiles('Cargo.lock') != '' }}
+>       - name: Verify recovered generated AVC with a CPU decoder
+          if: runner.os == 'Linux'
+          shell: bash
+          run: |
+            set -euo pipefail
+            if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+              sudo apt-get update
+              sudo apt-get install -y ffmpeg
+            fi
+            python3 -B tools/verify_avc_recovery_cpu.py --output avc-cpu-recovery-ci.json
+        - name: Preserve CPU decoder recovery evidence
+          if: runner.os == 'Linux'
+          uses: actions/upload-artifact@v4
+          with:
+            name: avc-cpu-recovery-${{ github.sha }}
+            path: avc-cpu-recovery-ci.json
+
+
+✅ Process completed with exit code 0 (runtime: 1.51s)
+
+[executed on device: DESKTOP-54A9GFC (af27c91c-6f94-4f61-a934-0c3dc3c2c0a6)]
