@@ -1,0 +1,15 @@
+=== pipeline repeat 1 ===
+pipeline=false, records=60, changed=59, repeats=1, no_updates=0, native_samples=60, overlapping_captures=0, elapsed_s=1.408, records_fps=42.62, changed_fps=41.91, capture_ms=587.406, encode_ms=563.235, media_bytes=36169216
+pipeline=true, records=60, changed=60, repeats=0, no_updates=0, native_samples=60, overlapping_captures=7, elapsed_s=1.302, records_fps=46.09, changed_fps=46.09, capture_ms=417.875, encode_ms=639.137, media_bytes=40291697
+pipeline_check=passed; generated owned window and authenticated QUIC loopback only.
+repeat 1 exit=0
+=== pipeline repeat 2 ===
+pipeline=false, records=60, changed=60, repeats=0, no_updates=0, native_samples=60, overlapping_captures=0, elapsed_s=1.294, records_fps=46.37, changed_fps=46.37, capture_ms=389.719, encode_ms=648.142, media_bytes=42783770
+pipeline=true, records=60, changed=60, repeats=0, no_updates=0, native_samples=60, overlapping_captures=4, elapsed_s=1.264, records_fps=47.47, changed_fps=47.47, capture_ms=351.440, encode_ms=648.574, media_bytes=41949219
+pipeline_check=passed; generated owned window and authenticated QUIC loopback only.
+repeat 2 exit=0
+=== pipeline repeat 3 ===
+pipeline=false, records=60, changed=59, repeats=1, no_updates=0, native_samples=60, overlapping_captures=0, elapsed_s=1.257, records_fps=47.75, changed_fps=46.95, capture_ms=337.876, encode_ms=672.441, media_bytes=43594541
+pipeline=true, records=60, changed=59, repeats=1, no_updates=0, native_samples=60, overlapping_captures=4, elapsed_s=1.276, records_fps=47.01, changed_fps=46.23, capture_ms=347.664, encode_ms=671.111, media_bytes=41939371
+pipeline_check=passed; generated owned window and authenticated QUIC loopback only.
+repeat 3 exit=0
