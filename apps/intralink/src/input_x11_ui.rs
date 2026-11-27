@@ -167,7 +167,11 @@ pub(super) async fn workspace(path: &Path, names: &[String]) -> Result<()> {
     let local = async {
         loop {
             let active = focus.active();
-            match decide(pad.poll()?, active.is_some()) {
+            let poll = pad.poll()?;
+            if let Some(reason) = poll.stop_reason {
+                println!("Local X11 pad closed: {reason}");
+            }
+            match decide(poll, active.is_some()) {
                 Decision::Disconnect => break,
                 Decision::Ignore => {}
                 Decision::Local => switch(&mut focus, None, &slots, &mut pad).await?,

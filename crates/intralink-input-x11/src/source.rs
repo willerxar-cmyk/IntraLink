@@ -5,7 +5,7 @@ use std::{
     collections::BTreeSet,
     time::{Duration, Instant},
 };
-use xcb::{Connection, Extension, x, xkb};
+use xcb::{Connection, Extension, Xid, x, xkb};
 
 use crate::{keyboard::Keyboard, native::require_local_x11};
 
@@ -32,6 +32,7 @@ pub struct Poll {
     pub ready: bool,
     pub interrupted: bool,
     pub closed: bool,
+    pub stop_reason: Option<&'static str>,
     pub events: Vec<PadEvent>,
 }
 
@@ -41,6 +42,8 @@ pub struct Pad {
     conn: Connection,
     window: x::Window,
     gc: x::Gcontext,
+    wm_protocols: x::Atom,
+    wm_delete: x::Atom,
     keyboard: Keyboard,
     keys: BTreeSet<u8>,
     buttons: BTreeSet<u8>,
@@ -49,6 +52,7 @@ pub struct Pad {
     visible: bool,
     mapped: bool,
     closed: bool,
+    stop_reason: Option<&'static str>,
     width: u16,
     height: u16,
     position: Option<(u16, u16)>,
@@ -167,6 +171,8 @@ impl Pad {
             conn,
             window,
             gc,
+            wm_protocols: atoms.wm_protocols,
+            wm_delete: atoms.wm_delete,
             keyboard,
             keys: BTreeSet::new(),
             buttons: BTreeSet::new(),
@@ -175,6 +181,7 @@ impl Pad {
             visible: false,
             mapped: false,
             closed: false,
+            stop_reason: None,
             width: WIDTH,
             height: HEIGHT,
             position: None,
@@ -252,6 +259,11 @@ impl Pad {
         self.focused && self.inside && self.visible && self.mapped && !self.closed
     }
 
+    fn close(&mut self, reason: &'static str) {
+        self.closed = true;
+        self.stop_reason.get_or_insert(reason);
+    }
+
     fn interrupt(&mut self, output: &mut Poll) {
         output.interrupted = true;
         output.events.clear();
@@ -295,7 +307,7 @@ impl Pad {
             return;
         }
         match key.usage() {
-            41 if down => self.closed = true,
+            41 if down => self.close("local Escape"),
             58..=65 if !down => output
                 .events
                 .push(PadEvent::Select(usize::from(key.usage() - 58))),
@@ -369,6 +381,7 @@ impl Pad {
     pub fn poll(&mut self) -> Result<Poll> {
         let mut output = Poll::default();
         let mut drained = false;
+        let mut mapping_notice = false;
         for _ in 0..LIMIT {
             let Some(event) = self.conn.poll_for_event()? else {
                 drained = true;
@@ -431,16 +444,20 @@ impl Pad {
                     self.button(e.detail(), false, &mut output);
                 }
                 xcb::Event::X(x::Event::UnmapNotify(e)) if e.window() == self.window => {
-                    self.closed = true
+                    self.close("pad unmapped");
                 }
                 xcb::Event::X(x::Event::DestroyNotify(e)) if e.window() == self.window => {
-                    self.closed = true
+                    self.close("pad destroyed");
                 }
                 xcb::Event::X(x::Event::ClientMessage(e)) if e.window() == self.window => {
-                    self.closed = true
+                    if e.r#type() == self.wm_protocols
+                        && matches!(e.data(), x::ClientMessageData::Data32(data) if data[0] == self.wm_delete.resource_id())
+                    {
+                        self.close("window manager close");
+                    }
                 }
                 xcb::Event::X(x::Event::MappingNotify(_)) | xcb::Event::Xkb(_) => {
-                    self.closed = true
+                    mapping_notice = true;
                 }
                 _ => {}
             }
@@ -449,7 +466,10 @@ impl Pad {
             }
         }
         if !drained && !self.closed {
-            self.closed = true;
+            self.close("event batch limit exceeded");
+        }
+        if !self.closed && mapping_notice && Keyboard::read(&self.conn)? != self.keyboard {
+            self.close("native keyboard or pointer map changed");
         }
         if !self.closed {
             // Pipeline independent queries and confirm actual focus.
@@ -471,7 +491,7 @@ impl Pad {
                 self.interrupt(&mut output);
             }
             if self.mapped && !mapped {
-                self.closed = true;
+                self.close("pad no longer viewable");
             }
             self.focused = focused;
             self.inside = inside;
@@ -482,6 +502,7 @@ impl Pad {
         }
         output.ready = self.ready();
         output.closed = self.closed;
+        output.stop_reason = self.stop_reason;
         if !output.ready || output.interrupted || output.closed {
             output.events.clear();
         }
@@ -557,7 +578,9 @@ mod tests {
         assert!(pad.neutral()?);
         let key = Key::new(4).unwrap();
         let a = pad.keyboard.code(key)?;
-        let f1 = pad.keyboard.code(Key::new(58).unwrap())?;
+        let f1_key = Key::new(58).unwrap();
+        let f1 = pad.keyboard.code(f1_key)?;
+        assert_eq!(pad.keyboard.key_for_code(f1), Some(f1_key));
         inject(2, f1, 0, 0)?;
         inject(3, f1, 0, 0)?;
         let _ = pad
@@ -566,10 +589,11 @@ mod tests {
         let select = pad.poll()?;
         assert!(
             select.events.contains(&PadEvent::Select(0)),
-            "selection missing; ready={}, interrupted={}, closed={}",
+            "selection missing; ready={}, interrupted={}, closed={}, stop_reason={:?}",
             select.ready,
             select.interrupted,
-            select.closed
+            select.closed,
+            select.stop_reason
         );
         assert!(
             !select

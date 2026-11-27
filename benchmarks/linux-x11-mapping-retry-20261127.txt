@@ -1,0 +1,3 @@
+    Checking intralink-input-x11 v0.22.0 (D:\IntraLink\crates\intralink-input-x11)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.40s
+EXIT 0
