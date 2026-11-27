@@ -160,8 +160,11 @@ def main():
                 and int(csd[1]) & 384 == 384 and int(csd[2]) >= 1
                 and 0 < int(pts[1]) <= int(pts[2]) <= int(pts[3])):
             raise RuntimeError("Actual SPS/CSD or observed PTS geometry was not established")
+        sync = re.search(r"Sync probe: (\d+)\D+Delay: (\d+) ms\D+PTS: (\d+)", result)
+        if not (sync and int(sync[1]) == 2 and 0 <= int(sync[2]) < 2000 and int(sync[3]) > 0):
+            raise RuntimeError("No fresh IDR observed after the local sync-frame request")
         emu.no_active_capture()
-        print("Actual MediaProjection / MediaCodec / Rust AVC/SPS and PTS inspection: PASSED")
+        print("Actual MediaProjection / MediaCodec / Rust AVC/SPS/PTS and sync-frame observation: PASSED")
         # The running fixture and 250 ms metric refresh may prevent
         # UiAutomator from reaching idle. Read the anchored bottom Stop button
         # bounds from the completed screen, then verify actual active OS

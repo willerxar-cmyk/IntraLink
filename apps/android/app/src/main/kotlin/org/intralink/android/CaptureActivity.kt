@@ -230,7 +230,8 @@ class CaptureActivity : Activity() {
                     avc.format.sps?.width ?: -1, avc.format.sps?.height ?: -1,
                     avc.format.csdMask, avc.format.changes, avc.format.colorStandard,
                     avc.format.colorRange, avc.format.colorTransfer,
-                    avc.minDeltaUs, avc.maxDeltaUs, avc.ptsSpanUs)))
+                    avc.minDeltaUs, avc.maxDeltaUs, avc.ptsSpanUs,
+                    avc.sync.phase.ordinal, avc.sync.latencyMs, avc.sync.ptsDeltaUs)))
     }
 
     private class Fixture(activity: Activity) : View(activity) {

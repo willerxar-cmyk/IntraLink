@@ -65,3 +65,7 @@ Shared Rust adapter implements complete Annex B/length-prefixed units, separate 
 ## AVC CPU recovery fixture (2026-11-27)
 
 The external developer-only CPU h264 decoder verified the exact generated NVENC fixture after the Rust bounded producer drops two unsent P pictures and resumes at the next IDR. All four retained decoded YUV frames match the original byte-for-byte, sampled maximum YUV error 1. No hardware acceleration or remote bitstream. See AVC-PRODUCER.md and benchmarks/avc-cpu-recovery-20261127.json. Runtime software AVC decoder integration and isolation remain open.
+
+## Native Android decoder fixture gate (preview.9)
+
+Instrumentation uses a declared software MediaCodec decoder for the exact generated NVENC 1080p fixture, with original six and recovered four access units, ordered timestamps, visible geometry, per-plane strides, sampled YUV colors and full visible-plane hashes. The retained frames match exactly between the two Android decodes. No runtime or arbitrary remote bitstream decoder, no GPU requirement, no real display or throughput claim. See ANDROID.md.

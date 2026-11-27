@@ -1,4 +1,5 @@
 import org.intralink.android.AvcObservation;
+import org.intralink.android.KeyframeProbe;
 import org.intralink.android.CaptureProfiles;
 import org.intralink.android.CaptureRun;
 import org.intralink.android.CaptureSize;
@@ -59,6 +60,27 @@ class AndroidCaptureHostCheck {
         stats = avc.snapshot();
         check(stats.getNonIncreasingPts() == 2 && stats.getPtsSpanUs() == 35
               && stats.getMinDeltaUs() == 10 && stats.getMaxDeltaUs() == 25, "PTS high-water mark");
-        System.out.println("Capture policy: geometry, lifecycle and AVC observation checks PASSED (host JVM, no Android runtime).");
+        var sync = new KeyframeProbe();
+        sync.observe(32, true, 0, 0);
+        sync.observe(2, false, 20, 1);
+        check(!sync.ready(), "need two dependent pictures");
+        sync.observe(2, false, 40, 2);
+        check(sync.ready(), "ready for one sync request");
+        sync.requested(3, true);
+        sync.observe(32, true, 40, 4);
+        check(sync.snapshot().getPhase() == KeyframeProbe.Phase.REQUESTED, "stale IDR ignored");
+        sync.observe(2, false, 60, 5);
+        sync.observe(32, true, 80, 6);
+        check(sync.snapshot().getPhase() == KeyframeProbe.Phase.OBSERVED
+            && sync.snapshot().getLatencyMs() == 3 && sync.snapshot().getPtsDeltaUs() == 40
+            && sync.snapshot().getInterveningPictures() == 1 && !sync.ready(), "fresh IDR after request");
+        var expired = new KeyframeProbe();
+        expired.observe(32, true, 0, 0);
+        expired.observe(2, false, 1, 1);
+        expired.observe(2, false, 2, 2);
+        expired.requested(3, true);
+        expired.observe(32, true, 3, 2003);
+        check(expired.snapshot().getPhase() == KeyframeProbe.Phase.EXPIRED, "deadline cannot be revived");
+        System.out.println("Capture policy: geometry, lifecycle, AVC and sync-frame observation checks PASSED (host JVM).");
     }
 }

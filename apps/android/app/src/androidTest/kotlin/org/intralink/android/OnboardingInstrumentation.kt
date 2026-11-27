@@ -145,7 +145,8 @@ class OnboardingInstrumentation : Instrumentation() {
             check(observed.width == 1920 && observed.height == 1080 && observed.csdMask == 384)
             check(observed.sps == SpsMetadata(1920, 1080, 100, 42, 0, 3, 2))
             check(NativeBridge.inspectAvcSps(direct.slice(), avc.size, 0) == -1L)
-            results.putString("stream", "\nIntraLink JNI onboarding: PASSED\nIntraLink AVC buffer boundary: PASSED\nIntraLink SPS metadata boundary: PASSED\n")
+            val decoded = AvcDecoderFixture.run(context)
+            results.putString("stream", "\nIntraLink JNI onboarding: PASSED\nIntraLink AVC buffer boundary: PASSED\nIntraLink SPS metadata boundary: PASSED\n$decoded\n")
             resultCode = Activity.RESULT_OK
         } catch (error: Exception) {
             results.putString("stream", "\nIntraLink JNI onboarding: FAILED: " + error.javaClass.simpleName + "\n")

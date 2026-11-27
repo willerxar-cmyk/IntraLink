@@ -14,7 +14,8 @@ internal class AvcObservation {
         val ptsSpanUs: Long = 0,
         val minDeltaUs: Long = 0,
         val maxDeltaUs: Long = 0,
-        val format: AvcFormatObservation = AvcFormatObservation()
+        val format: AvcFormatObservation = AvcFormatObservation(),
+        val sync: KeyframeProbe.Stats = KeyframeProbe.Stats()
     )
 
     private var stats = Stats()

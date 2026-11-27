@@ -79,7 +79,7 @@
     <string name="capture_explanation">Test H.264 encoding on this moving fixture for up to 15 seconds. Android will ask for screen capture consent. Encoded buffers are inspected locally for frame metadata only, then released. No captured image is saved, viewed remotely or sent over the network. Stay on this screen. Leaving it stops the diagnostic.</string>
     <string name="capture_avc_metrics">AVC picture buffers: %1$d (%2$.1f/s) · IDR: %3$d\nConfig: %4$d · Partial: %5$d · Unparsed: %6$d\nKey flag differences: %7$d · PTS not increasing: %8$d</string>
     <string name="capture_metrics_combined">%1$s\n%2$s</string>
-    <string name="capture_format_metrics">SPS profile/level: %1$d/%2$d · %3$d × %4$d\nCSD mask: %5$d · Format changes: %6$d · Color: %7$d/%8$d/%9$d\nPTS delta min/max: %10$d/%11$d µs · Span: %12$d µs</string>
+    <string name="capture_format_metrics">SPS profile/level: %1$d/%2$d · %3$d × %4$d\nCSD mask: %5$d · Format changes: %6$d · Color: %7$d/%8$d/%9$d\nPTS delta min/max: %10$d/%11$d µs · Span: %12$d µs\nSync probe: %13$d · Delay: %14$d ms · PTS: %15$d µs</string>
     <string name="capture_idle">Ready for a new local consent request.</string>
     <string name="capture_start">Start local diagnostic</string>
     <string name="capture_stop">Stop capture</string>

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased - AVC negotiation and preview.9 native decoder qualification
+
+- Add canonical bounded exact operating-point negotiation over pinned-identity Iroh QUIC, with independent confirmation, explicit rejection and separate loopback-only ALPN. No capture or decoder authorization.
+- Add a one-shot local MediaCodec sync-frame request after a complete observed reference chain, with bounded post-request IDR observation. No remote input or media exposure.
+- Qualify an actual Android software AVC decoder in instrumentation against the preserved generated fixture, comparing recovered planar YUV hashes and sampled colors. Keep fixture and test harness out of runtime APK/AAB.
+- Restrict the optional Linux CI FFmpeg package installation to the signed Ubuntu archive, avoiding unrelated third-party repository failure.
+
 ## Unreleased - bounded AVC producer and preview.8 format observations
 
 - Add two-picture bounded Rust AVC producer with loss/age/GOP recovery, fresh validated IDR, real PTS ordering and bounded keyframe requests. Reuse existing strict diagnostic packetizer and QUIC demand/receipt path; no wire change.

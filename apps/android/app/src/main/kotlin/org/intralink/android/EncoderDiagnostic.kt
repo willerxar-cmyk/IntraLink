@@ -7,6 +7,7 @@ import android.hardware.display.VirtualDisplay
 import android.media.MediaCodec
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
+import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.SystemClock
@@ -40,6 +41,7 @@ internal class EncoderDiagnostic(
     private var metrics = CaptureRun.Snapshot(id = id)
     private val info = MediaCodec.BufferInfo()
     private val observation = AvcObservation()
+    private val keyframeProbe = KeyframeProbe()
 
     private val callback = object : MediaProjection.Callback() {
         override fun onStop() = finish(CaptureRun.Phase.SYSTEM_STOP)
@@ -127,9 +129,17 @@ internal class EncoderDiagnostic(
                 val encoder = requireNotNull(codec)
                 var count = metrics.buffers
                 var bytes = metrics.bytes
+                var drained = false
                 for (attempt in 0 until 32) {
+                    if (!CaptureRun.active(id)) {
+                        finish(CaptureRun.Phase.STOPPED)
+                        return
+                    }
                     val index = encoder.dequeueOutputBuffer(info, 0)
-                    if (index == MediaCodec.INFO_TRY_AGAIN_LATER) break
+                    if (index == MediaCodec.INFO_TRY_AGAIN_LATER) {
+                        drained = true
+                        break
+                    }
                     if (index == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                         observation.recordFormat(AvcOutputFormat.read(encoder.outputFormat,
                             observation.snapshot().format.changes + 1))
@@ -149,14 +159,33 @@ internal class EncoderDiagnostic(
                                     AvcBuffers.inspect(encoder.getOutputBuffer(index), info.size)
                                 } else -1
                                 observation.record(mask, config, partial, key, info.presentationTimeUs)
+                                if (!config && !partial && mask > 0) {
+                                    keyframeProbe.observe(mask, key, info.presentationTimeUs,
+                                        SystemClock.elapsedRealtime())
+                                }
                             }
                         } finally {
                             encoder.releaseOutputBuffer(index, false)
                         }
                     }
                 }
-                val elapsed = SystemClock.elapsedRealtime() - startMs
-                metrics = metrics.copy(buffers = count, bytes = bytes, elapsedMs = elapsed, avc = observation.snapshot())
+                val now = SystemClock.elapsedRealtime()
+                // Only request after the currently available output is drained
+                // and the owner has actually observed a reference chain.
+                if (drained && keyframeProbe.ready() && CaptureRun.active(id) &&
+                    now - startMs < DURATION_MS - 2_000L) {
+                    val accepted = try {
+                        encoder.setParameters(Bundle().apply {
+                            putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0)
+                        })
+                        true
+                    } catch (_: Exception) { false }
+                    keyframeProbe.requested(now, accepted)
+                }
+                keyframeProbe.expire(now)
+                val elapsed = now - startMs
+                metrics = metrics.copy(buffers = count, bytes = bytes, elapsedMs = elapsed,
+                    avc = observation.snapshot().copy(sync = keyframeProbe.snapshot()))
                 CaptureRun.update(metrics)
                 if (elapsed >= DURATION_MS) {
                     finish(if (count > 0) CaptureRun.Phase.COMPLETE else CaptureRun.Phase.NO_OUTPUT)

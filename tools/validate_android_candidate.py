@@ -124,6 +124,16 @@ def main():
     verify_archive(debug, "")
     verify_archive(release, "")
     bundle_signed = verify_archive(aab, "base/")
+    # The known decoder fixture belongs only to the instrumentation APK.
+    asset = "assets/headless-bands-1080p.h264"
+    expected_fixture = "283ab72056ae1b9edf57a6bae51edd255db01ffd72593e1b0113e6914db0cda0"
+    with zipfile.ZipFile(test) as archive:
+        if archive.namelist().count(asset) != 1 or sha(archive.read(asset)) != expected_fixture:
+            raise ValueError("Missing or changed instrumentation-only AVC fixture")
+    for path in (debug, release, aab):
+        with zipfile.ZipFile(path) as archive:
+            if any(name.endswith("/headless-bands-1080p.h264") for name in archive.namelist()):
+                raise ValueError("Test AVC fixture leaked into runtime package")
     for apk in (debug, release, test):
         run(zipalign, "-c", "-P", "16", "4", apk)
         badging = run(aapt, "dump", "badging", apk)
