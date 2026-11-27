@@ -21,7 +21,7 @@ fn local_display(display: &str) -> bool {
     parts.next().is_some_and(numeric) && parts.next().is_none_or(numeric) && parts.next().is_none()
 }
 
-fn require_local_x11() -> Result<String> {
+pub(crate) fn require_local_x11() -> Result<String> {
     ensure!(
         std::env::var("XDG_SESSION_TYPE").as_deref() == Ok("x11"),
         "Use an actual local X11 login session"

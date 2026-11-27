@@ -16,7 +16,7 @@ wgc-preview = ["desktop-preview", "dep:windows-capture", "dep:intralink-d3d11"]
 nvenc-preview = ["wgc-preview", "intralink-d3d11/nvenc-preview"]
 # Opt-in foreground Windows input sharing, independent of WGC and CUDA.
 input-preview = ["desktop-preview", "dep:intralink-input-win"]
-# Explicit X11 receiving host; independent of video capture and GPU.
+# Explicit X11 receiving host and focused controller pad; independent of video capture and GPU.
 input-x11-preview = ["dep:intralink-input-x11"]
 vaapi-probe = ["dep:libva"]
 resource-monitor = ["dep:sysinfo", "dep:serde_json", "dep:serde"]

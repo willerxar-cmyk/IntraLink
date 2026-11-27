@@ -116,6 +116,13 @@ impl Keyboard {
         Ok(Self(table))
     }
 
+    pub fn key_for_code(&self, code: u8) -> Option<Key> {
+        self.0
+            .iter()
+            .position(|entry| *entry == Some(code))
+            .and_then(|usage| Key::new(usage as u8))
+    }
+
     pub fn code(&self, key: Key) -> Result<u8> {
         self.0[key.usage() as usize].context("Unsupported physical key")
     }

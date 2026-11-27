@@ -297,10 +297,11 @@ fn visual_fidelity_diagnostic_is_explicit_and_separate_from_benchmarks() {
 fn input_host_is_explicit_and_rejects_unattended_start() {
     let help = stdout(&["input", "--help"]);
     assert!(help.contains("host"));
-    #[cfg(target_os = "windows")]
     assert!(help.contains("workspace"));
+    let workspace = stdout(&["input", "workspace", "--help"]);
+    assert!(workspace.contains("--device"));
     #[cfg(target_os = "linux")]
-    assert!(!help.contains("workspace"));
+    assert!(!workspace.contains("--spatial"));
     let host = stdout(&["input", "host", "--help"]);
     assert!(host.contains("--bind") && host.contains("--controller") && host.contains("--seconds"));
     let temporary = tempfile::tempdir().expect("Temporary local profile");

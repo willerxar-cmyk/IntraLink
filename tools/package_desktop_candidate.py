@@ -77,7 +77,7 @@ def contents(args, revision):
         note.extend([
             "Run ./intralink --help in an X11 session with the required system",
             "libraries installed.",
-            ("Opt-in X11 receiving host; no Linux controller or physical KVM qualification."
+            ("Opt-in X11 host and focused controller; physical KVM is not qualified."
              if args.x11_input_preview else "Input KVM is not enabled in this Linux candidate."),
             "Wayland and physical Linux capture remain unqualified.",
         ])

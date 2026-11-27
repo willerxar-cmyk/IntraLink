@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - Linux X11 focused BASE
+
+- Add native focused XCB controller pad with physical XKB events and per-client detectable repeat, preserving ordered short taps and mouse transitions.
+- Share the existing bounded QUIC slot workers, target validation and vault lock with the Windows controller. Require neutral local input, release/activate ACK and post-ACK window checks; disconnect on observed focus/boundary loss.
+- Correct X11 window-manager atom creation and test native input receiving and source boundaries in isolated Xvfb. Linux manual F1-F8 selection only; no global hooks, Wayland or physical screen-edge claim.
+
 ## Unreleased - native Linux X11 input host
 
 - Add opt-in XCB/XTEST receiving adapter with XKB physical positions, single-monitor RandR geometry, checked input requests, visible local stop and owned-state cleanup.

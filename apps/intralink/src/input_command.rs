@@ -17,11 +17,11 @@ pub enum Action {
         #[arg(long, default_value_t = 300, value_parser = clap::value_parser!(u16).range(1..=3600))]
         seconds: u16,
     },
-    /// Open an input-only focused pad for up to eight paired hosts (Windows).
-    #[cfg(target_os = "windows")]
+    /// Open an input-only focused pad for up to eight paired hosts.
     Workspace {
         #[arg(long, required = true)]
         device: Vec<String>,
+        #[cfg(target_os = "windows")]
         /// Numbered spatial pad; F9 explicitly arms automatic zone switching.
         #[arg(long)]
         spatial: bool,
@@ -44,6 +44,8 @@ impl Action {
             Self::Workspace { device, spatial } => {
                 super::input_ui::workspace(path, &device, spatial).await
             }
+            #[cfg(target_os = "linux")]
+            Self::Workspace { device } => super::input_x11_ui::workspace(path, &device).await,
         }
     }
 }

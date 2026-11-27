@@ -6,10 +6,10 @@ use xcb::{Connection, x};
 
 xcb::atoms_struct! {
     struct Atoms {
-        wm_protocols => b"WM_PROTOCOLS",
-        wm_delete => b"WM_DELETE_WINDOW",
-        wm_state => b"_NET_WM_STATE",
-        wm_above => b"_NET_WM_STATE_ABOVE",
+        wm_protocols => b"WM_PROTOCOLS" only_if_exists = false,
+        wm_delete => b"WM_DELETE_WINDOW" only_if_exists = false,
+        wm_state => b"_NET_WM_STATE" only_if_exists = false,
+        wm_above => b"_NET_WM_STATE_ABOVE" only_if_exists = false,
     }
 }
 

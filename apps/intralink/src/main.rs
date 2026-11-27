@@ -19,8 +19,15 @@ mod input_command;
     all(feature = "input-x11-preview", target_os = "linux")
 ))]
 mod input_host;
+#[cfg(any(
+    all(feature = "input-preview", target_os = "windows"),
+    all(feature = "input-x11-preview", target_os = "linux")
+))]
+mod input_slots;
 #[cfg(all(feature = "input-preview", target_os = "windows"))]
 mod input_ui;
+#[cfg(all(feature = "input-x11-preview", target_os = "linux"))]
+mod input_x11_ui;
 mod journal;
 mod local;
 #[cfg(feature = "resource-monitor")]

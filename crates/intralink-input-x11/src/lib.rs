@@ -7,3 +7,6 @@ mod keyboard;
 mod native;
 
 pub use native::NativeInput;
+
+mod source;
+pub use source::{Pad, PadEvent, Poll};
