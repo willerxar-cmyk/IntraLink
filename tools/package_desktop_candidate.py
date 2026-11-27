@@ -41,7 +41,9 @@ def contents(args, revision):
                 raise ValueError(f"Unexpected notice archive path: {path}")
             files[path] = notice.read(path)
     inventory = json.loads(files["dependency-inventory.json"])
-    if inventory["target"] != TARGETS[args.platform] or not inventory["packages"]:
+    if (inventory["target"] != TARGETS[args.platform]
+            or inventory.get("build_host") != TARGETS[args.platform]
+            or not inventory["packages"]):
         raise ValueError("Inventory target or package graph mismatch")
     required = ("intralink/jpeg-simd", "intralink/jpeg-parallel",
                 "intralink/resource-monitor")
@@ -63,6 +65,10 @@ def contents(args, revision):
         "Not a production release. Native consent, capture and physical KVM",
         "must be qualified separately on real authorized devices.",
     ]
+    review = [f"{row['name']} {row['version']}" for row in inventory["packages"]
+              if row.get("review_required")]
+    if review:
+        note.append("Original notice provenance requires independent review: " + ", ".join(review))
     if args.platform == "linux":
         note.extend([
             "Run ./intralink --help in an X11 session with the required system",
