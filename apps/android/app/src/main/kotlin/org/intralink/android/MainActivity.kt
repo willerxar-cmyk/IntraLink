@@ -306,6 +306,11 @@ class MainActivity : Activity() {
         }
         if (role == "BASE" || role == "HYBRID") action(getString(R.string.pair_client)) { showPair(true) }
         if (role == "CLIENT" || role == "HYBRID") action(getString(R.string.pair_base)) { showPair(false) }
+        if (role == "CLIENT" || role == "HYBRID") {
+            action(getString(R.string.capture_title)) {
+                startActivity(android.content.Intent(this, CaptureActivity::class.java))
+            }
+        }
         action(getString(R.string.change_role)) { showRoleChange(role) }
         action(getString(R.string.rename_device)) { showRename() }
         action(getString(R.string.lock)) { showUnlock() }

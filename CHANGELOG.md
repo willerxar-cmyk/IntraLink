@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - Android local capture diagnostic
+
+- Add non-exported local moving-fixture Activity and non-sticky mediaProjection foreground service, with explicit OS consent, visible notification/Stop and bounded worker cleanup.
+- Select real AVC Surface encoder capabilities, hardware optional, with aligned 1080/720/540 profiles and configured 60/30/24 fps. Release encoded buffers immediately; local metrics only, no network stream or stored images.
+- Add exact manifest checks and compiled Kotlin host geometry/lifecycle tests; advance Android candidate versionCode to 220006. No physical Android encoder qualification claim.
+
 ## Unreleased - Linux X11 focused BASE
 
 - Add native focused XCB controller pad with physical XKB events and per-client detectable repeat, preserving ordered short taps and mouse transitions.

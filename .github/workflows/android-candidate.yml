@@ -1,4 +1,4 @@
-name: Android pairing candidate
+name: Android capture candidate
 on:
   workflow_dispatch:
 permissions:
@@ -36,6 +36,8 @@ jobs:
         shell: bash
         run: |
           bash apps/android/gradlew -p apps/android :app:assembleDebug :app:assembleRelease :app:bundleRelease :app:assembleDebugAndroidTest :app:lintDebug :app:writeRuntimeDependencyInventory --console=plain --warning-mode all
+      - name: Exercise compiled Kotlin capture policy on host JVM
+        run: python3 -B tools/check_android_capture_host.py
       - name: Preserve native and JVM notice provenance
         env:
           GH_TOKEN: ${{ github.token }}
@@ -47,10 +49,10 @@ jobs:
           python3 tools/android_jvm_notices.py apps/android/app/build/reports/runtime-dependencies.json dist/android-jvm-notices.zip
       - name: Validate candidate without pretending to sign a release
         run: |
-          python3 -B tools/validate_android_candidate.py dist/android-pairing-candidate --notices dist/android-arm64-notices.zip dist/android-x86_64-notices.zip dist/android-jvm-notices.zip
+          python3 -B tools/validate_android_candidate.py dist/android-capture-candidate --notices dist/android-arm64-notices.zip dist/android-x86_64-notices.zip dist/android-jvm-notices.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: intralink-android-pairing-${{ github.sha }}
-          path: dist/android-pairing-candidate/
+          name: intralink-android-capture-${{ github.sha }}
+          path: dist/android-capture-candidate/
           if-no-files-found: error
       # No production keys or automatic public release. Device tests are separate.

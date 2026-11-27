@@ -33,7 +33,7 @@
     <string name="public_identity">Public identity</string>
     <string name="saved_grants">Saved directional grants: %1$d</string>
     <string name="revoked_grants">Role updated. Revoked incompatible grants: %1$d</string>
-    <string name="preview_scope">Manual pairing and foreground authenticated diagnostics are enabled. Screen sharing and remote input are not enabled.</string>
+    <string name="preview_scope">Manual pairing and foreground authenticated diagnostics are enabled. Local capture testing is available on CLIENT. Remote screen sharing and input are not enabled.</string>
     <string name="change_role">Change role</string>
     <string name="rename_device">Rename device</string>
     <string name="lock">Lock</string>
@@ -75,4 +75,22 @@
     <string name="probe_busy">A diagnostic is already active.</string>
     <string name="stop_probe">Stop diagnostic</string>
     <string name="probe_stopping">Stopping the diagnostic.</string>
+    <string name="capture_title">Local screen encoder diagnostic</string>
+    <string name="capture_explanation">Test H.264 encoding on this moving fixture for up to 15 seconds. Android will ask for screen capture consent. No captured image is saved, viewed remotely or sent over the network. Stay in this screen. Leaving it stops the diagnostic.</string>
+    <string name="capture_idle">Ready for a new local consent request.</string>
+    <string name="capture_start">Start local diagnostic</string>
+    <string name="capture_stop">Stop capture</string>
+    <string name="capture_channel">Local capture diagnostics</string>
+    <string name="capture_notification">Local encoder test only. No network or recording. Tap Stop to end.</string>
+    <string name="capture_notifications_required">Enable IntraLink notifications, then press Start again. Visible stop controls are required.</string>
+    <string name="capture_denied">Screen capture was not authorized.</string>
+    <string name="capture_starting">Preparing the encoder and authorized projection…</string>
+    <string name="capture_running">Local capture active. No image bytes are retained or transmitted.</string>
+    <string name="capture_stopping">Stopping and releasing the encoder…</string>
+    <string name="capture_complete">Local diagnostic completed.</string>
+    <string name="capture_stopped">Capture stopped.</string>
+    <string name="capture_resized">Captured content dimensions changed. Start again with fresh consent.</string>
+    <string name="capture_no_output">No encoded output received during this diagnostic.</string>
+    <string name="capture_error">Capture could not start or finish safely.</string>
+    <string name="capture_metrics">Encoder: %1$s\nSize: %2$d × %3$d\nConfigured FPS: %4$d\nOutput buffers: %5$d\nEncoded bytes counted: %6$d\nElapsed ms: %7$d</string>
 </resources>

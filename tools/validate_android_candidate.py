@@ -18,7 +18,12 @@ from build_android_native import ndk_bin
 ABIS = {"arm64-v8a": 183, "x86_64": 62}
 EXPORTS = {"createProfile", "openProfile", "changeRole", "renameDevice", "pairDevice", "revokeDevice",
            "initializeNetwork", "reserveProbe", "cancelProbe", "runProbe"}
-PERMISSIONS = {"android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE"}
+PERMISSIONS = {
+    "android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.FOREGROUND_SERVICE",
+    "android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION",
+    "android.permission.POST_NOTIFICATIONS",
+}
 ROOT = Path(__file__).resolve().parent.parent
 BUILD = ROOT / "apps/android/app/build"
 
@@ -130,6 +135,18 @@ def main():
             permissions = set(re.findall(r"uses-permission:\s+name='([^']+)'", run(aapt, "dump", "permissions", apk)))
             if permissions != PERMISSIONS:
                 raise ValueError(f"Unexpected Android permission set: {permissions}")
+            xml = run(aapt, "dump", "xmltree", apk, "AndroidManifest.xml")
+            for component, kind in ((".CaptureActivity", "activity"), (".CaptureService", "service")):
+                blocks = re.split(r"(?m)^\s*E: (?:activity|service|receiver|provider) \(line=\d+\)", xml)
+                matching = [block for block in blocks
+                            if re.search(r'android:name[^=]*="(?:org\.intralink\.android)?' + re.escape(component) + '"', block)]
+                if len(matching) != 1:
+                    raise ValueError(f"Missing or duplicate capture component: {component}")
+                block = matching[0]
+                if not re.search(r"android:exported[^=]*=\(type 0x12\)0x0(?:\s|$)", block):
+                    raise ValueError(f"Capture {kind} is exported: {component}")
+                if kind == "service" and not re.search(r"android:foregroundServiceType[^=]*=\(type 0x11\)0x20(?:\s|$)", block):
+                    raise ValueError("Capture service is missing the exact mediaProjection type")
     run("java", "-jar", apksigner, "verify", "--verbose", debug)
     run("java", "-jar", apksigner, "verify", "--verbose", test)
     release_signed = subprocess.run(
@@ -153,10 +170,10 @@ def main():
                 raise ValueError("Invalid notice archive")
     args.output.mkdir(parents=True, exist_ok=False)
     files = {
-        "intralink-android-pairing-debug.apk": debug,
-        "intralink-android-pairing-instrumentation.apk": test,
-        "intralink-android-pairing-release" + (".apk" if release_signed else "-unsigned.apk"): release,
-        "intralink-android-pairing-release" + (".aab" if bundle_signed else "-unsigned.aab"): aab,
+        "intralink-android-capture-debug.apk": debug,
+        "intralink-android-capture-instrumentation.apk": test,
+        "intralink-android-capture-release" + (".apk" if release_signed else "-unsigned.apk"): release,
+        "intralink-android-capture-release" + (".aab" if bundle_signed else "-unsigned.aab"): aab,
         "LICENSE": ROOT / "LICENSE",
         "ANDROID.md": ROOT / "docs/ANDROID.md",
     }
@@ -166,7 +183,7 @@ def main():
         shutil.copy2(source, args.output / name)
     info = {
         "version": version, "version_code": version_code,
-        "scope": "encrypted onboarding, manual pairing, foreground private IPv4 diagnostic only", "abis": list(ABIS),
+        "scope": "encrypted onboarding, manual pairing, foreground private IPv4 diagnostics and local consented AVC encoder diagnostic only", "abis": list(ABIS),
         "permissions": sorted(PERMISSIONS),
         "debug_and_test_signed": True, "release_signed": release_signed,
         "lint_diagnostics": issues, "physical_runtime_qualified": False,

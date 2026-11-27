@@ -1,0 +1,11 @@
+Capture policy: 6 geometry and 8 lifecycle checks PASSED (host JVM, no Android runtime).
+HOST_EXIT 0
+app-debug.apk: arm64-v8a 9686504 bytes, ELF LOAD alignment 16384, SHA256 9131050ff720127ca3a97b1a05589697c52c83929a55d9db65a15a9afa9bc7f4
+app-debug.apk: x86_64 11018424 bytes, ELF LOAD alignment 16384, SHA256 bbf4293ddeafb20000890f2f945e89233ecd9ee8ab7f0c8d5ee11a4fb2c97149
+app-release-unsigned.apk: arm64-v8a 9686504 bytes, ELF LOAD alignment 16384, SHA256 9131050ff720127ca3a97b1a05589697c52c83929a55d9db65a15a9afa9bc7f4
+app-release-unsigned.apk: x86_64 11018424 bytes, ELF LOAD alignment 16384, SHA256 bbf4293ddeafb20000890f2f945e89233ecd9ee8ab7f0c8d5ee11a4fb2c97149
+app-release.aab: arm64-v8a 9686504 bytes, ELF LOAD alignment 16384, SHA256 9131050ff720127ca3a97b1a05589697c52c83929a55d9db65a15a9afa9bc7f4
+app-release.aab: x86_64 11018424 bytes, ELF LOAD alignment 16384, SHA256 bbf4293ddeafb20000890f2f945e89233ecd9ee8ab7f0c8d5ee11a4fb2c97149
+{"version": "0.22.0-preview.6", "version_code": 220006, "scope": "encrypted onboarding, manual pairing, foreground private IPv4 diagnostics and local consented AVC encoder diagnostic only", "abis": ["arm64-v8a", "x86_64"], "permissions": ["android.permission.ACCESS_NETWORK_STATE", "android.permission.FOREGROUND_SERVICE", "android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION", "android.permission.INTERNET", "android.permission.POST_NOTIFICATIONS"], "debug_and_test_signed": true, "release_signed": false, "lint_diagnostics": [["Warning", "AndroidGradlePluginVersion"]], "physical_runtime_qualified": false, "public_release": false}
+Verified local Android candidate: dist\android-capture-candidate-20261127
+VALIDATOR_EXIT 0
