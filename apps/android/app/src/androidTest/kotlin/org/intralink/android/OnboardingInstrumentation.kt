@@ -27,6 +27,20 @@ class OnboardingInstrumentation : Instrumentation() {
             LanProbeFixture.run(this, testArguments)
             return
         }
+        if (testArguments.getString("denseAvc") == "true") {
+            val result = Bundle()
+            try {
+                result.putString("stream", "\n" + DenseAvcFixture.run(targetContext) + "\n")
+                finish(Activity.RESULT_OK, result)
+            } catch (error: Exception) {
+                result.putString("stream", "\nDense AVC FAILED: ${error.message}\n")
+                finish(Activity.RESULT_CANCELED, result)
+            } catch (_: LinkageError) {
+                result.putString("stream", "\nDense AVC native library unavailable\n")
+                finish(Activity.RESULT_CANCELED, result)
+            }
+            return
+        }
         if (testArguments.getString("encoderFixture") == "true") {
             val result = Bundle()
             try {

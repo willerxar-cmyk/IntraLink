@@ -48,15 +48,18 @@ internal object LanProbeFixture {
             instrumentation.sendStatus(1, Bundle().apply {
                 putString("stream", "\nLAN_ANDROID_ID $identity\n")
             })
-            val surface = args.getString("lanMediaFixture") == "surface"
+            val dense = args.getString("lanMediaFixture") == "dense"
+            val surface = dense || args.getString("lanMediaFixture") == "surface"
             val media = surface || args.getString("lanMediaFixture") == "true"
             check(!surface || direction == "inbound")
             fun execute(reservation: Long): String = if (surface) {
                 val screenRequest = JSONObject().put("name", "windows-test").put("peer_id", peer)
-                    .put("host", host).put("port", port).put("height", 1080).put("fps", 30)
+                    .put("host", host).put("port", port).put("height", 1080)
+                    .put("fps", if (dense) 60 else 30).put("seconds", if (dense) 90 else 15)
                 val secret = password.copyOf()
                 try {
-                    PortableFrameSource(PortableSurfaceFixture(), 1_000) { true }.use { source ->
+                    val producer = if (dense) DenseMotionFixture() else PortableSurfaceFixture()
+                    PortableFrameSource(producer, 1_000) { true }.use { source ->
                         NativeBridge.runScreen(path, screenRequest.toString(), reservation, secret, source)
                     }
                 } finally { secret.fill(0) }
@@ -67,7 +70,8 @@ internal object LanProbeFixture {
             reservation = 0L
             val elapsed = response.getLong(if (surface) "screen_elapsed_ms" else "probe_elapsed_ms")
             val detail = if (media) {
-                check(response.getInt("frames") == 60 && response.getLong("media_bytes") > 0)
+                check(response.getInt("frames") == (if (dense) DenseMotionFixture.FRAMES else 60) &&
+                    response.getLong("media_bytes") > 0)
                 " frames=${response.getInt("frames")} bytes=${response.getLong("media_bytes")}"
             } else ""
             check(elapsed >= 0)

@@ -16,6 +16,7 @@ pub mod network;
 pub mod overview;
 pub mod pacing;
 pub mod portable_capture;
+mod portable_motion;
 pub mod presentation;
 pub mod profile_limits;
 pub mod quality;

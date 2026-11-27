@@ -3,6 +3,8 @@
 //! every pixel; approved-preview mode requires fresh on-device consent.
 #[path = "../src/desktop/decoder.rs"]
 mod decoder;
+#[path = "support/dense_motion.rs"]
+mod dense_motion;
 
 use anyhow::{Context, Result, ensure};
 use intralink_core::{
@@ -32,7 +34,8 @@ async fn main() -> Result<()> {
         .parse()?;
     let selection = args.next();
     let physical = selection.as_deref() == Some("--surface-fixture");
-    let navigation = selection.as_deref() == Some("--approved-navigation");
+    let dense = selection.as_deref() == Some("--dense-motion");
+    let navigation = selection.as_deref() == Some("--approved-navigation") || dense;
     let preview = selection.as_deref() == Some("--approved-preview") || navigation;
     ensure!(
         selection.is_none() || physical || preview,
@@ -67,6 +70,8 @@ async fn main() -> Result<()> {
     let mut window = Window::new(
         if physical {
             "IntraLink - physical generated Surface acceptance (ESC to stop)"
+        } else if dense {
+            "IntraLink - generated dense-motion quality benchmark (ESC to stop)"
         } else if navigation {
             "IntraLink - owner-approved entire-display navigation (ESC to stop)"
         } else if preview {
@@ -128,6 +133,7 @@ async fn main() -> Result<()> {
     let mut tile_frames = 0usize;
     let mut lossless_frames = 0usize;
     let mut last_sample = Instant::now();
+    let mut quality = dense_motion::Quality::default();
     let result = (|| -> Result<()> {
         while window.is_open()
             && !window.is_key_down(Key::Escape)
@@ -163,6 +169,9 @@ async fn main() -> Result<()> {
                     pixels.len() == dimensions.0 * dimensions.1,
                     "Invalid decoded geometry"
                 );
+                if dense {
+                    quality.observe(frames, dimensions, &pixels, frame.payload.len())?;
+                }
                 if physical {
                     verify_generated_surface(frames, dimensions, &pixels)?;
                     fixture_frames += 1;
@@ -293,6 +302,17 @@ async fn main() -> Result<()> {
             presented >= 5 && changed >= 5 && fixture_frames >= 3,
             "Insufficient changing fixture frames: decoded={frames}, changed={changed}, fixture={fixture_frames}"
         );
+    }
+    if dense {
+        ensure!(
+            frames == 210
+                && changed == 210
+                && withheld == 0
+                && stats.repeats == 0
+                && stats.no_updates == 0,
+            "Incomplete dense fixture"
+        );
+        quality.report()?;
     }
     if navigation {
         println!(

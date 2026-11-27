@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - Android preview.12 portable motion
+
+- Adapt dense-motion JPEG quality using measured encoded payload and existing receipt pressure, with bounded recovery and a soft nominal target. Preserve exact lossless eligibility for sparse UI.
+- Refresh the complete Compact base when returning from a lossy epoch to sparse motion; reuse the Windows JPEG output buffer without exposing failed decodes.
+- Add deterministic physical generated-motion A/B and bounded offline native AVC admission diagnostics. Retain strict v9 validation; no new remote AVC/input authorization or permission.
+
 ## Unreleased - Android preview.11 entire-display navigation
 
 - Add a separate explicit 90-second entire-display read-only sharing scope, preserving the 15-second default preview and requiring fresh local system consent. Bound navigation by authenticated capture demand, visible notification, screen-lock/task/rotation and service lifecycle checks.
