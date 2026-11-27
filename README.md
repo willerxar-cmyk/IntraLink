@@ -6,7 +6,7 @@ Version 0.22.0 — development preview. The complete locked Windows workspace ha
 
 ### v0.22 additions
 
-- Explicit fixed-v8 `share-desktop --pipeline --fixed-quality` overlaps two reserved local capture demands with one ordered CPU encoder. Existing eight-record credit, visible local approval, fixed geometry and payload bounds remain enforced. Native generated-window loopback diagnostic: `desktop-profile-check --pipeline`. See [ORDERED-PIPELINE.md](docs/ORDERED-PIPELINE.md).
+- Explicit fixed-v8 `share-desktop --pipeline --fixed-quality` overlaps two reserved local capture demands with one ordered CPU encoder. Existing eight-record credit, visible local approval, fixed geometry and payload bounds remain enforced. Native labeled generated-window loopback diagnostic: `desktop-profile-check --pipeline`; full-pixel comparison: `desktop-profile-check --visual`. See [ORDERED-PIPELINE.md](docs/ORDERED-PIPELINE.md) and [VISUAL-FIDELITY.md](docs/VISUAL-FIDELITY.md).
 
 - Optional `jpeg-parallel` feature splits software JPEG keyframes into MCU-aligned strips and joins them using standard JPEG restart markers, without GPU or a new wire protocol. Local encoder diagnostics measure the serial, two-worker and four-worker paths and individual production encode stages. See [JPEG-PARALLEL.md](docs/JPEG-PARALLEL.md).
 

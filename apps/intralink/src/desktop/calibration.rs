@@ -38,13 +38,16 @@ pub struct ProfileCheckArgs {
     /// Compare ordered serial/overlapped capture on an owned window and QUIC loopback.
     #[arg(long, conflicts_with_all = ["host", "encoder", "hardware", "slots"])]
     pipeline: bool,
+    /// Compare every decoded pixel against an owned local captured reference (not a benchmark).
+    #[arg(long, conflicts_with_all = ["host", "encoder", "hardware", "slots", "pipeline"])]
+    visual: bool,
 }
 
 impl ProfileCheckArgs {
     pub fn run(self) -> Result<()> {
-        if self.pipeline {
+        if self.pipeline || self.visual {
             #[cfg(all(target_os = "windows", feature = "wgc-preview"))]
-            return crate::run_async(super::pipeline_check::run);
+            return crate::run_async(|| super::pipeline_check::run(self.visual));
             #[cfg(not(all(target_os = "windows", feature = "wgc-preview")))]
             anyhow::bail!("Native pipeline diagnostic requires Windows wgc-preview");
         }

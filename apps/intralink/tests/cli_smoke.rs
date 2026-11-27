@@ -251,3 +251,21 @@ fn pipeline_requires_explicit_fixed_profile_before_connection() {
         );
     }
 }
+
+#[cfg(all(
+    feature = "desktop-preview",
+    any(target_os = "windows", target_os = "linux")
+))]
+#[test]
+fn visual_fidelity_diagnostic_is_explicit_and_separate_from_benchmarks() {
+    let help = stdout(&["desktop-profile-check", "--help"]);
+    assert!(help.contains("--visual"));
+    for flag in ["--pipeline", "--encoder", "--host", "--hardware"] {
+        let output = Command::new(env!("CARGO_BIN_EXE_intralink"))
+            .args(["desktop-profile-check", "--visual", flag])
+            .output()
+            .expect("Parse visual diagnostic mode");
+        assert!(!output.status.success());
+        assert!(String::from_utf8_lossy(&output.stderr).contains("cannot be used with"));
+    }
+}

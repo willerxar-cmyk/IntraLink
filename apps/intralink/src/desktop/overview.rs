@@ -307,7 +307,7 @@ pub(super) fn last_frame_banner(
     Ok(())
 }
 
-fn glyph(c: char) -> [u8; 7] {
+pub(super) fn glyph(c: char) -> [u8; 7] {
     match c {
         'A' => [14, 17, 17, 31, 17, 17, 17],
         'B' => [30, 17, 17, 30, 17, 17, 30],

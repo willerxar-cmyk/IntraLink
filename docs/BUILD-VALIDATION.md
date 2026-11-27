@@ -64,3 +64,8 @@ Run the standalone harness, strict CPU/WGC/NVENC parallel and independent scalar
 ### Ordered Host pipeline gate
 
 Validate FIFO pending requests, shared credit reservation and record budget, initial-frame and priority constraints, authenticated QUIC ordering and saturated credit, unauthorized identity, local two-frame lane and exact delta base, cancellation/join and CLI restrictions. Run locked CPU/NVENC parallel workspace and scalar app suites, four strict Clippy configurations, standalone harness, WGC portable Release and owned-window native pipeline, retarget and geometry checks. No physical network or sustained FPS claim. See [ORDERED-PIPELINE.md](ORDERED-PIPELINE.md).
+
+
+### Visual fidelity gate
+
+Run generated visual scene/marker, deliberate RGB swap/local block corruption/lossless mismatch, real software codec and CLI conflict tests. Qualify strict CPU/WGC/NVENC/scalar builds and locked portable WGC Release. Run `desktop-profile-check --visual` (full-canvas reference comparison) and separately `--pipeline` (calm scene performance), with no high-entropy visible pattern. Regress native retarget/geometry checks. Record actual decoded pixel counts and errors; do not compare old dense and new calm FPS directly. See [VISUAL-FIDELITY.md](VISUAL-FIDELITY.md).

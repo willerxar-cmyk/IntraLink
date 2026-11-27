@@ -31,6 +31,9 @@ mod receive_limits;
 mod resize;
 pub use receive_limits::ReceiveProfileArgs;
 mod source_status;
+#[cfg(any(test, all(target_os = "windows", feature = "wgc-preview")))]
+mod visual_fidelity;
+mod visual_fixture;
 #[cfg(all(target_os = "windows", feature = "wgc-preview"))]
 mod wgc_check;
 pub mod workspace;

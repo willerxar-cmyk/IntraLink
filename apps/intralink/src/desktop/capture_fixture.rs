@@ -113,9 +113,9 @@ pub struct PatternArgs {
     static_pattern: bool,
     #[arg(long, conflicts_with = "static_pattern")]
     geometry_pattern: bool,
-    /// Generated dense animation for local capture/encode diagnostics.
+    /// Calm labeled UI animation for local capture/encode diagnostics.
     #[arg(long, conflicts_with_all = ["static_pattern", "geometry_pattern"])]
-    dense_pattern: bool,
+    visual_pattern: bool,
 }
 
 impl PatternArgs {
@@ -124,7 +124,7 @@ impl PatternArgs {
             self.height,
             self.static_pattern,
             self.geometry_pattern,
-            self.dense_pattern,
+            self.visual_pattern,
         )
     }
 }
@@ -134,15 +134,11 @@ fn pattern_source(
     height: u16,
     static_pattern: bool,
     geometry_pattern: bool,
-    dense_pattern: bool,
+    visual_pattern: bool,
 ) -> Result<()> {
     #[cfg(not(all(target_os = "windows", feature = "wgc-preview")))]
     ensure!(!geometry_pattern, "Geometry fixture requires wgc-preview");
     let (width, height) = dimensions(height)?;
-    // Prepare the generated canvases before exposing the capture target.
-    let mut dense = dense_pattern
-        .then(|| dense_canvases(width, height))
-        .transpose()?;
     let mut window = window(TITLE, width, height)?;
     window.set_position(20, 20);
     let mut pixels = vec![0; width * height];
@@ -183,21 +179,15 @@ fn pattern_source(
             phase = usize::from(started.elapsed() >= Duration::from_secs(3));
         }
         if last_painted != Some(phase) {
-            let image = if let Some(canvases) = &mut dense {
-                let canvas = &mut canvases[phase % 2];
-                // Change a small corner even when native capture skips a phase.
-                canvas[..32].fill((phase as u32 * 0x010307) & 0x00ffffff);
-                canvas.as_slice()
+            if visual_pattern {
+                super::visual_fixture::draw(&mut pixels, width, height, phase);
+            } else if static_pattern {
+                draw_static_pattern(&mut pixels, width, height, phase == 1);
             } else {
-                if static_pattern {
-                    draw_static_pattern(&mut pixels, width, height, phase == 1);
-                } else {
-                    draw_pattern(&mut pixels, width, height, phase);
-                }
-                pixels.as_slice()
-            };
+                draw_pattern(&mut pixels, width, height, phase);
+            }
             window
-                .update_with_buffer(image, width, height)
+                .update_with_buffer(&pixels, width, height)
                 .map_err(|error| anyhow!("Pattern presentation: {error}"))?;
             last_painted = Some(phase);
         } else {
@@ -209,18 +199,6 @@ fn pattern_source(
         thread::sleep(PERIOD.saturating_sub(tick.elapsed()));
     }
     Ok(())
-}
-
-fn dense_canvases(width: usize, height: usize) -> Result<[Vec<u32>; 2]> {
-    let frame = super::host_calibration::dense_fixture((width as u32, height as u32))?;
-    let mut alternate = frame.clone();
-    super::host_calibration::change_fixture(&mut alternate);
-    Ok([frame, alternate].map(|image| {
-        image
-            .pixels()
-            .map(|p| (u32::from(p[0]) << 16) | (u32::from(p[1]) << 8) | u32::from(p[2]))
-            .collect()
-    }))
 }
 
 pub(super) struct Fixture(pub(super) Child);

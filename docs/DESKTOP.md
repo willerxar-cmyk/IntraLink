@@ -133,3 +133,8 @@ The software JPEG path uses the pinned Rust encoder with optional runtime AVX2 a
 ## Optional ordered Host pipeline
 
 `share-desktop --pipeline --fixed-quality` enables two locally reserved ordered demands on fixed v8. Incompatible with adaptive geometry/codec negotiation in this first version. The visible stop window, approved display and peer, existing wire credit and ordered deltas remain enforced. `desktop-profile-check --pipeline` compares the one- and two-demand paths on a generated WGC window through authenticated QUIC loopback. See [ORDERED-PIPELINE.md](ORDERED-PIPELINE.md).
+
+
+## Visual fidelity diagnostics
+
+The pipeline test window is now labeled as generated local content, with stable color references and localized neutral motion. `desktop-profile-check --visual` compares every changed decoded pixel against the actual owned-window capture (exact lossless or scene-specific lossy tolerances). This is distinct from the performance diagnostic. See [VISUAL-FIDELITY.md](VISUAL-FIDELITY.md).

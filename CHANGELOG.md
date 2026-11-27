@@ -2,6 +2,8 @@
 
 ## 0.22.0 — shared endpoint and full application validation
 
+- Replace the visible high-entropy alternating pipeline diagnostic with a calm labeled scene; add independent full-canvas captured/decoded RGB comparison with local corruption and channel-swap regression tests. No production codec or wire change.
+
 - Add opt-in fixed-v8 ordered capture/encode overlap, with at most two reserved local demands sharing existing credit, a one-worker stateful encoder lane and foreground-controlled publication/cancellation. Add generated dense-window QUIC loopback comparison; no wire change or speculative display readback.
 
 - Add opt-in bounded two/four-worker JPEG encoding using standard restart markers, exact serial/parallel decoded-pixel regression checks, and local production stage timing. Preserve default serial path, 4:4:4 sampling, quality and record limits.

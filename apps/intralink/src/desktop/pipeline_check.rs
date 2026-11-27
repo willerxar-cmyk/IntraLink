@@ -18,8 +18,10 @@ use tokio::{sync::mpsc, task::JoinHandle};
 use super::{
     capture_fixture::{Fixture, TITLE, find_fixture},
     codec::Decoder,
-    host_calibration::verify_marker,
     host_pipeline::EncodeLane,
+    resize::CanvasResizer,
+    visual_fidelity::{Fidelity, Reference},
+    visual_fixture,
     wgc_check::CaptureSession,
 };
 
@@ -58,11 +60,13 @@ async fn produce(
     target: &xcap::Window,
     mut requests: mpsc::Receiver<CaptureRequest>,
     server: &JoinHandle<Result<Stats>>,
+    references: Option<mpsc::Sender<Reference>>,
 ) -> Result<Observations> {
     let started = Instant::now();
     let pid = child.0.id();
     let mut session = None::<CaptureSession>;
     let mut lane = EncodeLane::new(config);
+    let mut reference_resize = CanvasResizer::default();
     let mut stats = Observations::default();
     let mut first_demand = None::<Instant>;
     let mut next_capture = Instant::now();
@@ -80,11 +84,25 @@ async fn produce(
                 done = lane.complete(), if busy => {
                     let done = done?;
                     let source = session.as_mut().context("Missing owned capture session")?;
-                    if let Some(frame) = done.frame { source.recycle(frame); }
                     check_source(child,target,started)?;
                     source.check_health()?;
                     ensure!(!done.reply.is_closed(), "Diagnostic response canceled");
-                    ensure!(done.reply.send(Ok(done.record?)).is_ok(), "Diagnostic response dropped");
+                    let record = done.record?;
+                    if let Some(sender) = &references
+                        && let Capture::Frame(data) = &record
+                    {
+                        let image = done.frame.as_ref().context("Missing captured reference")?;
+                        let size = (config.width(), config.height());
+                        let mut rgb = vec![0; (size.0 * size.1 * 3) as usize];
+                        reference_resize.fill_rgb(image, &mut rgb, size)?;
+                        sender.try_send(Reference {
+                            sequence: stats.completed + 1,
+                            tag: data[0],
+                            rgb,
+                        }).context("Visual reference window exceeded")?;
+                    }
+                    if let Some(frame) = done.frame { source.recycle(frame); }
+                    ensure!(done.reply.send(Ok(record)).is_ok(), "Diagnostic response dropped");
                     stats.completed += 1;
                     stats.encode += done.elapsed;
                     lane.advance()?;
@@ -115,8 +133,7 @@ async fn produce(
                     check_source(child,target,started)?;
                     source.check_health()?;
                     if let Some((ref image, _)) = frame {
-                        let p = image.get_pixel(image.width()/2,image.height()/2);
-                        ensure!(p[0].abs_diff(70)<=3 && p[1].abs_diff(120)<=3 && p[2].abs_diff(180)<=3, "Owned dense pattern marker mismatch");
+                        visual_fixture::verify_native(image)?;
                         stats.native += 1;
                         stats.overlapping += usize::from(overlapping);
                     }
@@ -138,7 +155,7 @@ async fn produce(
     Ok(stats)
 }
 
-async fn run_one(overlap: bool) -> Result<()> {
+async fn run_one(overlap: bool, verify: bool) -> Result<()> {
     let config = VideoConfig::new(1080, 60, 75, 12)
         .unwrap()
         .with_mode(CodecMode::Compact);
@@ -148,10 +165,10 @@ async fn run_one(overlap: bool) -> Result<()> {
                 "desktop-test-pattern",
                 "--height",
                 "1080",
-                "--dense-pattern",
+                "--visual-pattern",
             ])
             .spawn()
-            .context("Start owned dense animation")?,
+            .context("Start owned labeled visual diagnostic")?,
     );
     let target = find_fixture(&mut child.0)?;
     let host = bind_view(SecretKey::generate(), "127.0.0.1:0".parse()?).await?;
@@ -168,6 +185,8 @@ async fn run_one(overlap: bool) -> Result<()> {
     let host_id = host.id();
     let approved = controller.id();
     let (source, requests) = mpsc::channel(1);
+    let (reference_tx, mut reference_rx) =
+        mpsc::channel::<Reference>(intralink_core::desktop::MAX_IN_FLIGHT_RECORDS);
     let host_endpoint = host.clone();
     let server = tokio::spawn(async move {
         if overlap {
@@ -181,7 +200,8 @@ async fn run_one(overlap: bool) -> Result<()> {
         let mut decoder = Decoder::default();
         let mut pixels = Vec::new();
         let mut previous = 0;
-        view(
+        let mut fidelity = Fidelity::default();
+        let received = view(
             &viewer_endpoint,
             host_id,
             std::slice::from_ref(&address),
@@ -194,13 +214,35 @@ async fn run_one(overlap: bool) -> Result<()> {
                     );
                     previous = frame.sequence;
                     decoder.decode_into(config, &frame.payload, &mut pixels)?;
-                    verify_marker(config, &pixels)
+                    visual_fixture::verify_decoded(config, &pixels)?;
+                    if verify {
+                        let reference = reference_rx
+                            .try_recv()
+                            .context("Missing ordered capture reference")?;
+                        ensure!(
+                            reference.sequence == frame.sequence
+                                && reference.tag == frame.payload[0],
+                            "Visual reference sequence/tag mismatch"
+                        );
+                        fidelity.check(config, &reference, &pixels)?;
+                    }
+                    Ok(())
                 })())
             },
         )
-        .await
+        .await?;
+        ensure!(reference_rx.try_recv().is_err(), "Unused visual reference");
+        Ok::<_, anyhow::Error>((received, fidelity))
     });
-    let observations = produce(config, &mut child, &target, requests, &server).await;
+    let observations = produce(
+        config,
+        &mut child,
+        &target,
+        requests,
+        &server,
+        verify.then_some(reference_tx),
+    )
+    .await;
     if observations.is_err() {
         server.abort();
         viewer.abort();
@@ -210,7 +252,7 @@ async fn run_one(overlap: bool) -> Result<()> {
     controller.close().await;
     let local = observations?;
     let served = served??;
-    let viewed = viewed??;
+    let (viewed, fidelity) = viewed??;
     ensure!(
         served == viewed && served.frames + served.repeats + served.no_updates == SAMPLES,
         "Local pipeline transfer/receipt counts differ"
@@ -223,6 +265,22 @@ async fn run_one(overlap: bool) -> Result<()> {
         overlap || local.overlapping == 0,
         "Serial diagnostic overlapped capture"
     );
+    if verify {
+        ensure!(
+            fidelity.frames == viewed.frames,
+            "Not every changed frame was compared"
+        );
+        println!(
+            "visual_fidelity pipeline={overlap}, frames={}, pixels={}, lossless_frames={}, max_channel_mae={:.4}, max_block_mae={:.4}, max_large_error_fraction={:.6}",
+            fidelity.frames,
+            fidelity.pixels,
+            fidelity.lossless_frames,
+            fidelity.max_channel_mae,
+            fidelity.max_block_mae,
+            fidelity.max_large_fraction
+        );
+        return Ok(());
+    }
     println!(
         "pipeline={overlap}, records={SAMPLES}, changed={}, repeats={}, no_updates={}, native_samples={}, overlapping_captures={}, elapsed_s={:.3}, records_fps={:.2}, changed_fps={:.2}, capture_ms={:.3}, encode_ms={:.3}, media_bytes={}",
         served.frames,
@@ -240,10 +298,20 @@ async fn run_one(overlap: bool) -> Result<()> {
     Ok(())
 }
 
-pub(super) async fn run() -> Result<()> {
+pub(super) async fn run(verify: bool) -> Result<()> {
     super::require_graphical_environment()?;
-    run_one(false).await?;
-    run_one(true).await?;
-    println!("pipeline_check=passed; generated owned window and authenticated QUIC loopback only.");
+    println!(
+        "Local labeled visual test window only. No real monitor capture. Focus window and press ESC to cancel."
+    );
+    run_one(false, verify).await?;
+    run_one(true, verify).await?;
+    println!(
+        "{}=passed; generated owned window and authenticated QUIC loopback only.",
+        if verify {
+            "visual_check"
+        } else {
+            "pipeline_check"
+        }
+    );
     Ok(())
 }
