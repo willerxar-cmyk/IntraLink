@@ -223,6 +223,8 @@ struct Spatial {
     was_down: bool,
     last_cell: Option<usize>,
     effect: Option<((usize, usize), Instant, bool)>,
+    portal_mode: portal::Mode,
+    portal_patch: portal::Patch,
 }
 
 impl Spatial {
@@ -237,6 +239,8 @@ impl Spatial {
             was_down: false,
             last_cell: None,
             effect: None,
+            portal_mode: portal::Mode::default(),
+            portal_patch: portal::Patch::default(),
         })
     }
 
@@ -279,6 +283,15 @@ impl Spatial {
             self.last_cell = cell;
         }
         if !self.armed {
+            // F10 is a local visual preference only in SAFE. When armed,
+            // F10 remains a normal forwarded key for the active client.
+            if focus.active().is_none()
+                && local_buttons(window).is_empty()
+                && window.is_key_pressed(LocalKey::F10, KeyRepeat::No)
+            {
+                self.portal_mode = self.portal_mode.next();
+                self.effect = None;
+            }
             // Rearrange only while SAFE; remote input is never forwarded
             // during a layout drag. Labels remain attached to the same peer.
             let down = window.get_mouse_down(MouseButton::Left);
@@ -394,19 +407,24 @@ impl Spatial {
             }
         });
         let state = (ready, focus.active(), self.armed);
-        let animation = self.effect.and_then(|(at, start, confirmed)| {
-            let elapsed = start.elapsed().as_millis();
-            (elapsed < portal::DURATION_MS).then_some((
-                at,
-                elapsed as f32 / portal::DURATION_MS as f32,
-                confirmed,
-            ))
-        });
+        let animation = self
+            .effect
+            .filter(|_| self.portal_mode != portal::Mode::Off)
+            .and_then(|(at, start, confirmed)| {
+                let elapsed = start.elapsed().as_millis();
+                (elapsed < portal::DURATION_MS).then_some((
+                    at,
+                    elapsed as f32 / portal::DURATION_MS as f32,
+                    confirmed,
+                ))
+            });
         if self.effect.is_some() && animation.is_none() {
             self.effect = None;
-            self.painted = None;
         }
-        if self.painted != Some(state) || animation.is_some() {
+        let size = (pad::WIDTH, pad::HEIGHT);
+        let restored = self.portal_patch.restore(&mut self.canvas, size);
+        let changed = self.painted != Some(state);
+        if changed {
             pad::render(
                 self.layout,
                 &mut self.canvas,
@@ -414,13 +432,16 @@ impl Spatial {
                 focus.active(),
                 self.armed,
             );
-            if let Some((at, p, confirmed)) = animation {
-                portal::draw(&mut self.canvas, pad::WIDTH, pad::HEIGHT, at, p, confirmed);
-            }
+            self.painted = Some(state);
+        }
+        if let Some((at, p, confirmed)) = animation {
+            self.portal_patch
+                .draw(&mut self.canvas, size, at, p, confirmed, self.portal_mode);
+        }
+        if changed || restored || animation.is_some() {
             window
                 .update_with_buffer(&self.canvas, pad::WIDTH, pad::HEIGHT)
                 .map_err(|error| anyhow::anyhow!("Spatial input pad: {error}"))?;
-            self.painted = Some(state);
         }
         Ok(())
     }
@@ -433,11 +454,14 @@ fn title(slots: &[Slot], focus: &Focus, spatial: Option<&Spatial>) -> String {
     let connected = slots.iter().filter(|slot| slot.connected()).count();
     let controls = match spatial {
         Some(pad) if pad.armed => "SPATIAL ARMED | 0 local, F12 disarm, ESC close",
-        Some(_) => "SAFE | Drag screens to arrange | F9 arm | ESC close",
+        Some(_) => "SAFE | Drag screens | F9 arm | F10 portal | ESC close",
         None => "F1-F8 select, F12 local, ESC close",
     };
+    let portal = spatial.map_or(String::new(), |pad| {
+        format!(" | Portal: {}", pad.portal_mode.label())
+    });
     format!(
-        "IntraLink INPUT | {target} | {connected}/{} connected | {controls}",
+        "IntraLink INPUT | {target} | {connected}/{} connected | {controls}{portal}",
         slots.len()
     )
 }
@@ -473,7 +497,7 @@ pub(super) async fn workspace(path: &Path, names: &[String], spatial: bool) -> R
     let mut spatial = spatial.then(|| Spatial::new(slots.len())).transpose()?;
     if spatial.is_some() {
         println!(
-            "Spatial pad: 0 is LOCAL; drag numbered screens while SAFE to arrange the layout. Press F9 to arm; cross inside the pad with keys/buttons released. F12 disarms."
+            "Spatial pad: 0 is LOCAL; drag numbered screens while SAFE to arrange the layout. Press F9 to arm; cross inside the pad with keys/buttons released. F12 disarms. F10 while SAFE cycles the local portal effect (full, reduced, off)."
         );
     }
     let local = async {
