@@ -159,3 +159,7 @@ The sole MediaCodec owner passes an exact direct buffer slice synchronously to t
 ## Local AVC producer and exact-mode policy (2026-11-27)
 
 A two-picture Rust producer owns one ordered v9 encoder epoch, invalidates unsent dependent pictures on loss/age/pressure, requests IDR and packetizes only on demand. It reuses the existing authenticated transport credit; no alternate connection engine. Exact tested operating-point selection has independent local ceilings and supports orientation-specific geometry. The policy and new SPS metadata observation do not change the wire or authorization. See AVC-PRODUCER.md.
+
+## Authenticated AVC operating-point agreement (preview.9)
+
+The shared core defines canonical fixed-size bounded offers and independently reproducible exact intersection. The shared Iroh transport exposes a separate loopback-only diagnostic ALPN with pinned peers, bounded exchange and full confirmation. No capture, decoder, remote listener or role authority is granted by the selected mode. Android tests separately exercise actual local sync-frame requests and a fixture-only software decoder. See AVC-NEGOTIATION.md and ANDROID.md.

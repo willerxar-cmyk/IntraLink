@@ -114,6 +114,18 @@ impl Limits {
         })
     }
 
+    pub const fn dimensions(self) -> (u16, u16) {
+        (self.width, self.height)
+    }
+
+    pub const fn fps(self) -> u8 {
+        self.fps
+    }
+
+    pub const fn bitrate(self) -> u32 {
+        self.bitrate
+    }
+
     pub fn permits(self, mode: Mode) -> bool {
         mode.sps.width <= self.width
             && mode.sps.height <= self.height

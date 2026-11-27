@@ -148,3 +148,7 @@ The local consented diagnostic now reads the exact borrowed direct-buffer slice 
 ## AVC recovery and SPS metadata boundary (2026-11-27)
 
 Queue ownership, age, IDR deadline and exact packetizer validation prevent publication of dependent pictures after local loss; no arbitrary P-frame dropping. All malformed or incompatible units close the local epoch. New SPS prefix observation only reports bounded numeric metadata, not full bitstream admission or decoder safety. v9 loopback-only and the existing strict SPS/PPS validator remain unchanged. External CPU decoder test accepts only a known embedded generated fixture; not a native decoder sandbox. See AVC-PRODUCER.md.
+
+## AVC negotiation and native decoder test boundary
+
+The independent negotiation protocol is loopback-only and has no media or command parser. Canonical offers, local limits, role direction, pinned endpoint identity and exact response echo/FIN are mandatory. It never authorizes a capture or decoder session. The Android software-decoder harness accepts only the hash-pinned fixture from its instrumentation asset; the asset and harness are not shipped in runtime packages. Local sync-frame requests happen on the authorized foreground codec worker only. Native decoder isolation for arbitrary network input, independent media grant, runtime presentation and cross-device tests remain required.

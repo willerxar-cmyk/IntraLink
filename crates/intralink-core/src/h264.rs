@@ -12,6 +12,8 @@ pub use packetizer::{Framing, Packetizer, inspect_nal_types, inspect_sps};
 pub use parameters::SpsInfo;
 #[path = "h264_modes.rs"]
 pub mod modes;
+#[path = "h264_negotiation.rs"]
+pub mod negotiation;
 
 pub const ALPN: &[u8] = b"intralink/view/9-h264";
 pub const REQUEST: &[u8; 17] = b"INTRALINK/9 VIEW\x03";

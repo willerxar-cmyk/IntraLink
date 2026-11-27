@@ -11,6 +11,7 @@ use iroh::{
 };
 use tokio::time::timeout;
 
+pub mod avc_negotiation;
 pub mod desktop;
 pub mod input;
 pub mod input_queue;
