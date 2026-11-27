@@ -315,3 +315,18 @@ pub async fn diagnose(path: &Path, device: &str, wan_ip: Option<IpAddr>) -> Resu
     );
     Ok(())
 }
+
+// Create only the selected command's future. A single async dispatch match
+// embeds the largest command state in every invocation, including --help,
+// and can overflow the small default Windows main-thread stack in Debug.
+#[inline(never)]
+pub(crate) fn run_async<F, Fut>(make: F) -> Result<()>
+where
+    F: FnOnce() -> Fut,
+    Fut: std::future::Future<Output = Result<()>>,
+{
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?;
+    runtime.block_on(Box::pin(make()))
+}

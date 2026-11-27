@@ -1724,6 +1724,7 @@ dependencies = [
  "image",
  "intralink-core",
  "intralink-d3d11",
+ "intralink-input-win",
  "intralink-transport",
  "intralink-vault",
  "iroh",
@@ -1760,6 +1761,15 @@ dependencies = [
  "mini-nvcodec",
  "windows",
  "windows-capture",
+]
+
+[[package]]
+name = "intralink-input-win"
+version = "0.22.0"
+dependencies = [
+ "anyhow",
+ "intralink-core",
+ "windows",
 ]
 
 [[package]]

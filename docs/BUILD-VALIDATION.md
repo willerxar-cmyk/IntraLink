@@ -84,3 +84,7 @@ Retain every capture-start grant gate. Add `desktop-profile-check --capture-lock
 ### Bounded staged readback experiment (2026-11-27)
 
 Run the full previous gate, including capture-lock, plus `desktop-profile-check --staged-readback`. The native geometry check now exercises staged exact RGBA, pending overwrite/reset rejection, duplicate completion, staging reuse and fresh readback after dropping a pending copy. The comparison uses four 180-record runs and separate staged full-pixel visual validation. Record nonblocking Map polling and interpoll delay separately. Keep the Host synchronous until experimental behavior is separately qualified. See [STAGED-READBACK.md](STAGED-READBACK.md).
+
+## Input preview build gates
+
+The opt-in Windows input-preview crate must pass strict Clippy and actual workspace tests including input-preview,wgc-preview,jpeg-parallel,resource-monitor. Standalone core tests include input protocol/state/layout; actual QUIC tests cover independently authenticated three/eight hosts, release ordering, wrong peer, malformed sequence, rejection and disconnect release plan. Native scan mapping unit tests construct INPUT values without injecting into the developer desktop. Preserve CPU, NVIDIA, WGC and scalar gates; check that the portable input Release dependency graph contains neither mini-cuda nor mini-nvcodec. Run input --help, input host --help and input workspace --help on the exact Release binary. Physical input acceptance is not inferred from these tests. Preserve native video regressions and benchmark logs.

@@ -9,6 +9,8 @@ mod ddns;
 mod desktop;
 mod discovery;
 mod enrollment;
+#[cfg(all(feature = "input-preview", target_os = "windows"))]
+mod input_ui;
 mod journal;
 mod local;
 #[cfg(feature = "resource-monitor")]
@@ -424,6 +426,12 @@ enum Command {
         #[arg(long)]
         all_live: bool,
     },
+    /// Explicit foreground input-only sharing (experimental Windows software KVM).
+    #[cfg(all(feature = "input-preview", target_os = "windows"))]
+    Input {
+        #[command(subcommand)]
+        action: input_ui::Action,
+    },
     /// Resolve a saved route; classify addresses and an optional owner-supplied router WAN IP.
     Diagnose {
         #[arg(long)]
@@ -447,20 +455,7 @@ enum Command {
     },
 }
 
-// Create only the selected command's future. A single async dispatch match
-// embeds the largest command state in every invocation, including --help,
-// and can overflow the small default Windows main-thread stack in Debug.
-#[inline(never)]
-fn run_async<F, Fut>(make: F) -> Result<()>
-where
-    F: FnOnce() -> Fut,
-    Fut: std::future::Future<Output = Result<()>>,
-{
-    let runtime = tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()?;
-    runtime.block_on(Box::pin(make()))
-}
+use local::run_async;
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -574,6 +569,8 @@ fn main() -> Result<()> {
         Command::ConfirmInvite { name } => enrollment::confirm(&path, &name),
         Command::CancelInvite => enrollment::cancel(&path),
         Command::Devices => local::devices(&path),
+        #[cfg(all(feature = "input-preview", target_os = "windows"))]
+        Command::Input { action } => run_async(|| action.run(&path)),
         Command::History => journal::show(&path),
         Command::Revoke { name } => local::revoke(&path, &name),
         Command::Listen {

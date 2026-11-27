@@ -138,3 +138,7 @@ Capture timing remains local to the app and native adapter. The native readback 
 ### Bounded staged readback experiment (2026-11-27)
 
 Staged D3D11 copy completion is an explicit owned-window experiment. One retained staging copy is tied to a single already-started capture grant. The native adapter checks the exact context/device and output geometry; the foreground scheduler can publish an earlier result between nonblocking Map polls. The normal Host remains synchronous. No additional protocol credit, native codec or remote permission. See [STAGED-READBACK.md](STAGED-READBACK.md).
+
+## Independent input / KVM preview (2026-11-27)
+
+The Windows input-preview feature adds an independent intralink/input/1 QUIC ALPN. The portable core owns the canonical record, sequence, focus and spatial-layout state; transport owns peer pinning, deadlines, rate bounds and acceptance ACKs; intralink-input-win isolates the native SendInput sink; the app owns fresh consent and its visible foreground pad/host stop window. Eight connected slots share a controller endpoint but only one input focus. Transfer requires release confirmation from the old host before activation on the new one. Video remains a separate capability and unchanged wire protocol. The explicit spatial pad is not a global physical-monitor edge hook. Hybrid profiles can reverse roles in separate approved commands, not simultaneous multiplexed control. See INPUT-SHARING.md.

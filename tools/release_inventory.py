@@ -41,10 +41,12 @@ def upstream_notices(package, root):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=pathlib.Path)
+    parser.add_argument("--input-preview", action="store_true", help="Inventory the explicit Windows input build")
     args = parser.parse_args()
+    features = FEATURES + (",intralink/input-preview" if args.input_preview else "")
     if args.output.exists():
         raise FileExistsError(args.output)
-    flags = ["--locked", "--offline", "--no-default-features", "--features", FEATURES]
+    flags = ["--locked", "--offline", "--no-default-features", "--features", features]
     metadata = json.loads(capture("cargo", "metadata", "--format-version", "1",
                                   "--filter-platform", TARGET, *flags))
     tree = capture("cargo", "tree", "-p", "intralink", "--target", TARGET, "-e",
@@ -114,7 +116,7 @@ def main():
         raise ValueError("Undeclared license in resolved dependency graph")
     text = [
         "IntraLink Windows x64 portable preview — third-party inventory",
-        f"Target: {TARGET}", f"Cargo features: {FEATURES}",
+        f"Target: {TARGET}", f"Cargo features: {features}",
         "Includes the resolved normal/build dependency graph; build-only packages "
         "may not be linked into the executable.",
         "License declarations and original notices are preserved; this is not a "
@@ -128,7 +130,7 @@ def main():
     with zipfile.ZipFile(args.output, "x", zipfile.ZIP_DEFLATED) as output:
         output.writestr("THIRD-PARTY-NOTICES.txt", "\n".join(text) + "\n")
         output.writestr("dependency-inventory.json", json.dumps({
-            "target": TARGET, "features": FEATURES, "scope": "normal and build dependencies",
+            "target": TARGET, "features": features, "scope": "normal and build dependencies",
             "packages": rows,
         }, indent=2) + "\n")
         for name, content in sorted(notices.items()):

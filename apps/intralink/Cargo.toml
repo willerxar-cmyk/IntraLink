@@ -14,6 +14,8 @@ jpeg-parallel = []
 desktop-preview = ["dep:xcap", "dep:image", "dep:minifb", "dep:fast_image_resize", "dep:jpeg-encoder"]
 wgc-preview = ["desktop-preview", "dep:windows-capture", "dep:intralink-d3d11"]
 nvenc-preview = ["wgc-preview", "intralink-d3d11/nvenc-preview"]
+# Opt-in foreground Windows input sharing, independent of WGC and CUDA.
+input-preview = ["desktop-preview", "dep:intralink-input-win"]
 vaapi-probe = ["dep:libva"]
 resource-monitor = ["dep:sysinfo", "dep:serde_json", "dep:serde"]
 
@@ -46,6 +48,7 @@ minifb = { workspace = true, optional = true }
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-capture = { workspace = true, optional = true }
 intralink-d3d11 = { workspace = true, optional = true, features = ["readback"] }
+intralink-input-win = { workspace = true, optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 libva = { workspace = true, optional = true }

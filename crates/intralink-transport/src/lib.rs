@@ -12,6 +12,7 @@ use iroh::{
 use tokio::time::timeout;
 
 pub mod desktop;
+pub mod input;
 
 use intralink_core::network::{MAX_CANDIDATES, select_candidates};
 

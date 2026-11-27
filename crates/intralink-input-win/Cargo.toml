@@ -1,0 +1,17 @@
+[package]
+name = "intralink-input-win"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[target.'cfg(target_os = "windows")'.dependencies]
+anyhow.workspace = true
+intralink-core.workspace = true
+windows = { workspace = true, features = ["Win32_UI_Input_KeyboardAndMouse"] }
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[lints.clippy]
+undocumented_unsafe_blocks = "deny"

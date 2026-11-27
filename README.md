@@ -18,7 +18,8 @@ IntraLink is an independent Rust remote-access project designed for a single con
 | Software Compact/Tiles/JPEG, 540p–1080p, up to 60 FPS target | Implemented; no NVIDIA codec required |
 | Workspace with up to eight independent device slots, fullscreen, overview | Preview; three-host loopback validated, physical device matrix open |
 | Adaptive resolution/quality and explicit bounded profile negotiation | Implemented in supported matching wire profiles |
-| Shared mouse and keyboard, seamless screen-edge switching | In development; separate input consent and media-independent sessions planned |
+| Input-only mouse, keyboard, wheel, up to eight hosts | Experimental Windows preview; focused pad, explicit F-key or spatial zone switching, physical acceptance open |
+| Seamless physical desktop edge switching and simultaneous Hybrid control | In development; not a global hook or unattended control |
 | macOS, Wayland, Android, iOS host/controller adapters | Not distributed in this release |
 
 The Windows portable build uses optional WGC/D3D11 capture and scaling; the software codec does not require CUDA, NVENC or a dedicated NVIDIA card. The scalar CPU codec path remains separately tested. No background service, unattended control, arbitrary shell or automatic firewall changes.
@@ -112,7 +113,23 @@ Repeat pairing and local sharing approval on each additional host; use each host
 .\intralink.exe workspace --device workstation --device notebook --device server --fullscreen
 ```
 
-Tab opens the overview. F1–F8 switch slots, F9 toggles the selected slot, F10 changes adaptive/all-live mode, F11 toggles fullscreen, F12 selects the next local monitor. Escape closes the overview or workspace. Every slot has independent media state and cancellation. A new host session requires fresh approval. The current viewer is read-only.
+Tab opens the overview. F1–F8 switch slots, F9 toggles the selected slot, F10 changes adaptive/all-live mode, F11 toggles fullscreen, F12 selects the next local monitor. Escape closes the overview or workspace. Every slot has independent media state and cancellation. A new host session requires fresh approval. The current video viewer is read-only. Input is a separate capability and does not become enabled by viewing a screen.
+
+### 5. Try input-only software KVM (experimental Windows build)
+
+Use the separately labeled build with `input-preview`. On each distinct paired host, close any existing screen listener using the same vault and port, then run:
+
+```powershell
+.\intralink.exe input host --bind HOST_IP:45100 --controller central --seconds 300
+```
+
+Approve keyboard/mouse access explicitly on the host. A red stop window remains visible. On the central computer:
+
+```powershell
+.\intralink.exe input workspace --device workstation --device notebook --spatial
+```
+
+Press F9 to arm the numbered spatial pad; zone 0 is local, zones 1–8 map to the device order. Move the pointer between regions with keys/buttons released. F12 disarms and returns local; Escape closes. Omit `--spatial` for explicit F1–F8 selection. No screen transmission is required. This is a focused in-window KVM, not global desktop-edge switching. **Physical keyboard/mouse acceptance on two real devices is still pending**; use only on distinct, nonsensitive, owner-approved private-LAN desktops. See [INPUT-SHARING.md](docs/INPUT-SHARING.md).
 
 See [desktop options](docs/DESKTOP.md), [workspace](docs/WORKSPACE.md), [signed invitations](docs/ENROLLMENT.md), [networking](docs/NETWORKING.md), and [protocol compatibility](docs/PROTOCOL.md). A reachable direct UDP route is required. DNS does not bypass NAT/CGNAT or restrictive firewalls; internet exposure is not qualified.
 
@@ -127,7 +144,7 @@ cargo clippy --locked --workspace --all-targets --features intralink/wgc-preview
 cargo build --locked --release -p intralink --no-default-features --features wgc-preview,jpeg-simd,jpeg-parallel,resource-monitor
 ```
 
-For a Windows/X11 software desktop build, use `desktop-preview` rather than `wgc-preview`. Omit `jpeg-simd` to test scalar encoding. Optional NVIDIA and VA-API diagnostics are not the standard portable release.
+For a Windows/X11 software desktop build, use `desktop-preview` rather than `wgc-preview`. On Windows, add `input-preview` only when explicitly testing the foreground input mode. Omit `jpeg-simd` to test scalar encoding. Optional NVIDIA and VA-API diagnostics are not the standard portable release.
 
 ## Architecture and development
 
@@ -135,6 +152,7 @@ For a Windows/X11 software desktop build, use `desktop-preview` rather than `wgc
 - `intralink-transport`: authenticated Iroh QUIC and bounded session state.
 - `intralink-vault`: encrypted local profiles and directional grants.
 - `intralink-d3d11`: isolated optional Windows graphics boundary.
+- `intralink-input-win`: isolated, optional Windows input application boundary.
 - `apps/intralink`: foreground CLI and native preview windows.
 
 See [latest validation](docs/APP-VALIDATION.md), [performance](docs/PERFORMANCE.md), [architecture](docs/ARCHITECTURE.md), [changelog](CHANGELOG.md), [security](docs/SECURITY.md), and [contributor handoff](docs/NEXT-MODEL-PROMPT.md). Raw measurements are preserved in `benchmarks/`. The fixed 1080p60 setting is a ceiling, not a promise; capture, delivered frames and presentation are different measurements.
