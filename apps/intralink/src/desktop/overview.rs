@@ -242,7 +242,7 @@ fn button(canvas: &mut [u32], rect: Rect, label: &str, color: u32) {
 
 /// Small built-in bitmap labels for the experimental viewer. ASCII is rendered
 /// locally; unsupported characters show '?' and the full name remains in the title.
-pub(super) fn text(
+pub(crate) fn text(
     canvas: &mut [u32],
     origin: (usize, usize),
     value: &str,

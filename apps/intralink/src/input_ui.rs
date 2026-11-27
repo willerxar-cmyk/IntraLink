@@ -218,9 +218,10 @@ struct Spatial {
     armed: bool,
     hover: Option<(usize, Instant)>,
     canvas: Vec<u32>,
-    painted: Option<(u8, Option<usize>, bool)>,
+    painted: Option<(u8, Option<usize>, bool, portal::Mode)>,
     drag: Option<usize>,
     was_down: bool,
+    pressed_control: Option<pad::LocalControl>,
     last_cell: Option<usize>,
     effect: Option<((usize, usize), Instant, bool)>,
     portal_mode: portal::Mode,
@@ -236,7 +237,8 @@ impl Spatial {
             canvas: vec![0; pad::WIDTH * pad::HEIGHT],
             painted: None,
             drag: None,
-            was_down: false,
+            was_down: true,
+            pressed_control: None,
             last_cell: None,
             effect: None,
             portal_mode: portal::Mode::default(),
@@ -255,7 +257,8 @@ impl Spatial {
             self.armed = false;
             self.hover = None;
             self.drag = None;
-            self.was_down = false;
+            self.was_down = window.get_mouse_down(MouseButton::Left);
+            self.pressed_control = None;
             self.last_cell = None;
             self.effect = None;
             return Ok(());
@@ -272,6 +275,7 @@ impl Spatial {
             self.hover = None;
             self.drag = None;
             self.was_down = window.get_mouse_down(MouseButton::Left);
+            self.pressed_control = None;
             self.last_cell = None;
             self.effect = None;
             return Ok(());
@@ -280,6 +284,7 @@ impl Spatial {
             self.armed = true;
             self.hover = None;
             self.drag = None;
+            self.pressed_control = None;
             self.last_cell = cell;
         }
         if !self.armed {
@@ -292,21 +297,69 @@ impl Spatial {
                 self.portal_mode = self.portal_mode.next();
                 self.effect = None;
             }
-            // Rearrange only while SAFE; remote input is never forwarded
-            // during a layout drag. Labels remain attached to the same peer.
+            // Controls require a complete click inside the local BASE card.
+            // Other drags may only rearrange the disarmed layout.
             let down = window.get_mouse_down(MouseButton::Left);
+            let control = point.and_then(|p| pad::local_control(self.layout, p));
             if down && !self.was_down {
-                self.drag = cell.filter(|c| self.layout.label(*c).is_some());
-            } else if !down
-                && self.was_down
-                && let (Some(from), Some(to)) = (self.drag.take(), cell)
-                && self.layout.relocate(from, to)
-            {
-                self.painted = None;
+                self.pressed_control = control;
+                self.drag = if control.is_none() {
+                    cell.filter(|c| self.layout.label(*c).is_some())
+                } else {
+                    None
+                };
+            } else if !down && self.was_down {
+                let clicked = self.pressed_control.take().filter(|c| Some(*c) == control);
+                match clicked {
+                    Some(pad::LocalControl::Arm)
+                        if focus.active().is_none()
+                            && local_keys(window).is_empty()
+                            && local_buttons(window).is_empty() =>
+                    {
+                        self.armed = true;
+                        self.last_cell = cell;
+                        self.hover = None;
+                    }
+                    Some(pad::LocalControl::Portal) => {
+                        self.portal_mode = self.portal_mode.next();
+                        self.effect = None;
+                    }
+                    _ => {
+                        if let (Some(from), Some(to)) = (self.drag.take(), cell)
+                            && self.layout.relocate(from, to)
+                        {
+                            self.painted = None;
+                        }
+                    }
+                }
+                self.drag = None;
             }
             self.was_down = down;
             return Ok(());
         }
+        // The armed local stop button never receives clicks from a remote
+        // zone or from an active client. The F12 emergency stop remains.
+        let down = window.get_mouse_down(MouseButton::Left);
+        let local_stop = focus.active().is_none()
+            && point.and_then(|p| pad::local_control(self.layout, p))
+                == Some(pad::LocalControl::Arm);
+        if down && !self.was_down {
+            self.pressed_control = local_stop.then_some(pad::LocalControl::Arm);
+        } else if !down && self.was_down {
+            let stop = self.pressed_control.take() == Some(pad::LocalControl::Arm) && local_stop;
+            if stop {
+                self.armed = false;
+                self.hover = None;
+                self.effect = None;
+                self.last_cell = None;
+                self.was_down = false;
+                return Ok(());
+            }
+        }
+        if !local_stop {
+            self.pressed_control = None;
+        }
+        self.was_down = down;
         let prior = self.last_cell;
         self.last_cell = cell;
         if let (Some(from), Some(to), Some(at)) = (prior, cell, point)
@@ -406,7 +459,7 @@ impl Spatial {
                 mask
             }
         });
-        let state = (ready, focus.active(), self.armed);
+        let state = (ready, focus.active(), self.armed, self.portal_mode);
         let animation = self
             .effect
             .filter(|_| self.portal_mode != portal::Mode::Off)
@@ -425,12 +478,17 @@ impl Spatial {
         let restored = self.portal_patch.restore(&mut self.canvas, size);
         let changed = self.painted != Some(state);
         if changed {
+            let names: Vec<_> = slots.iter().map(|slot| slot.name.as_str()).collect();
             pad::render(
                 self.layout,
                 &mut self.canvas,
-                ready,
-                focus.active(),
-                self.armed,
+                pad::View {
+                    names: &names,
+                    ready,
+                    active: focus.active(),
+                    armed: self.armed,
+                    portal: self.portal_mode.label(),
+                },
             );
             self.painted = Some(state);
         }
@@ -454,7 +512,7 @@ fn title(slots: &[Slot], focus: &Focus, spatial: Option<&Spatial>) -> String {
     let connected = slots.iter().filter(|slot| slot.connected()).count();
     let controls = match spatial {
         Some(pad) if pad.armed => "SPATIAL ARMED | 0 local, F12 disarm, ESC close",
-        Some(_) => "SAFE | Drag screens | F9 arm | F10 portal | ESC close",
+        Some(_) => "SAFE | Drag screens | Click START or F9 | F10 portal | ESC close",
         None => "F1-F8 select, F12 local, ESC close",
     };
     let portal = spatial.map_or(String::new(), |pad| {
