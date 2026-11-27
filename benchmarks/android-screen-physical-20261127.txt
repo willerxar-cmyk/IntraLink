@@ -1,0 +1,10 @@
+2026-11-27, physical TB373FU API36 ARM64, owner-assisted actual Android consent. Normal installed preview.10 unchanged. Private addresses, public identities and test passphrases omitted.
+PID 26900: strict viewer Clippy and Release build passed.
+PID 35916 exit 1: UI pairing completed, owner allowed notifications, owner-authorized actual foreground projection observed, Windows rejected initial decoded frame: Approved preview fixture not visible. Resources released; only newly created temporary test profile removed.
+PID 26388 exit 0: corrected startup withholding and strict Clippy/Release build passed.
+PID 35104 exit 0: UI pairing completed, OWNER_CONSENT_ACCEPTED: Android system projection active.
+PHYSICAL SCREEN PREVIEW PASS: frames=799 bytes=5794111 repeats=0 no_updates=1 changed=796 fixture=796 first_ms=171 total_ms=15073 decode_us=37918 presented=796 active_span_ms=14886 presentation_us=12856537 withheld=3
+Projection and foreground service closure: PASSED
+PID 33500: app files contains no test profile; projection null; no app services; versionCode 220010 / 0.22.0-preview.10.
+Windows acceptance viewer SHA256 ddab6598043d6855416bf8d40ccd71d482823ddbbfab7859317016346ff0947d
+Real physical screen preview via bounded software media, 53.41 new presented frames/s over first-to-last valid frame, ~3.08 Mbit/s encoded payload over session. Three startup frames withheld. No media recording, physical permission automation, input control, H.264 network decode or general 60FPS production claim.

@@ -1,6 +1,6 @@
-//! Local acceptance viewer for the disposable AVD, or an explicitly selected
-//! physical Android generated-Surface fixture. No recording, user vault or
-//! remote input. Physical mode validates every generated pixel before painting.
+//! Local acceptance viewer for a disposable AVD or owner-selected Android.
+//! No recording, user vault or remote input. Generated Surface mode checks
+//! every pixel; approved-preview mode requires fresh on-device consent.
 #[path = "../src/desktop/decoder.rs"]
 mod decoder;
 
@@ -30,19 +30,21 @@ async fn main() -> Result<()> {
         .next()
         .context("Supply loopback UDP forward")?
         .parse()?;
-    let physical = match args.next().as_deref() {
-        None => false,
-        Some("--surface-fixture") => true,
-        _ => anyhow::bail!("Unknown acceptance mode"),
-    };
-    let allowed = if physical {
+    let selection = args.next();
+    let physical = selection.as_deref() == Some("--surface-fixture");
+    let preview = selection.as_deref() == Some("--approved-preview");
+    ensure!(
+        selection.is_none() || physical || preview,
+        "Unknown acceptance mode"
+    );
+    let allowed = if physical || preview {
         matches!(remote, SocketAddr::V4(v) if v.ip().is_private())
     } else {
         remote.ip().is_loopback()
     };
     ensure!(
         allowed && remote.port() >= 1024 && args.next().is_none(),
-        "Require explicit local emulator or private generated-Surface target"
+        "Require explicit local emulator or private approved Android target"
     );
     let endpoint = bind_controller(SecretKey::generate(), &[remote]).await?;
     println!("EMULATOR_BASE_ID {}", endpoint.id());
@@ -54,11 +56,18 @@ async fn main() -> Result<()> {
         peer.to_string() == line.trim() && peer != endpoint.id(),
         "Invalid peer identity"
     );
-    let mode = ViewMode::new(CodecMode::Compact, ViewProtocol::Bounded)
-        .with_limits(ReceiverLimits::new(if physical { 1080 } else { 720 }, 30).unwrap());
+    let mode = ViewMode::new(CodecMode::Compact, ViewProtocol::Bounded).with_limits(
+        ReceiverLimits::new(
+            if physical || preview { 1080 } else { 720 },
+            if preview { 60 } else { 30 },
+        )
+        .unwrap(),
+    );
     let mut window = Window::new(
         if physical {
             "IntraLink - physical generated Surface acceptance (ESC to stop)"
+        } else if preview {
+            "IntraLink - owner-approved Android screen preview (ESC to stop)"
         } else {
             "IntraLink - dedicated Android preview acceptance (ESC to stop)"
         },
@@ -106,11 +115,17 @@ async fn main() -> Result<()> {
     let mut last_frame = None;
     let mut presented = 0usize;
     let mut presentation_us = 0u128;
+    let mut withheld = 0usize;
+    let mut visible = !preview;
+    let mut blank = Vec::new();
+    let mut first_decoded: Option<Instant> = None;
+    let mut last_marker_counts = (0usize, 0usize, 0usize);
     let result = (|| -> Result<()> {
         while window.is_open()
             && !window.is_key_down(Key::Escape)
             && started.elapsed() < Duration::from_secs(35)
         {
+            let mut new_visible = false;
             if let Ok(frame) = rx.try_recv() {
                 ensure!(frame.sequence > seq, "Out-of-order frame");
                 let time = Instant::now();
@@ -141,6 +156,7 @@ async fn main() -> Result<()> {
                 // Approximate colors also allow the bounded JPEG fallback.
                 let mut navy = 0usize;
                 let mut mint = 0usize;
+                let mut black = 0usize;
                 let mut hash = 0xcbf29ce484222325u64;
                 for &pixel in pixels.iter().step_by(17) {
                     let near = |r: i32, g: i32, b: i32| {
@@ -155,26 +171,60 @@ async fn main() -> Result<()> {
                     if near(104, 216, 191) {
                         mint += 1;
                     }
+                    if near(0, 0, 0) {
+                        black += 1;
+                    }
                     hash = (hash ^ u64::from(pixel)).wrapping_mul(0x100000001b3);
                 }
-                if !physical && navy > 100 && mint > 10 {
+                let recognized = navy > 100 && mint > 10;
+                if !physical && recognized {
                     fixture_frames += 1;
                 }
-                if previous != Some(hash) {
-                    changed += 1;
+                last_marker_counts = (navy, mint, black);
+                first_decoded.get_or_insert_with(Instant::now);
+                // The approved surface may first publish a blank transition.
+                // Continue ordered decoding, but never paint an unrecognized
+                // screen. Once the fixture is visible, loss ends the test.
+                if preview && !recognized {
+                    if visible {
+                        anyhow::bail!("Approved preview fixture disappeared");
+                    }
+                    withheld += 1;
+                    blank.resize(pixels.len(), 0);
+                } else {
+                    visible = true;
+                    new_visible = true;
+                    if previous != Some(hash) {
+                        changed += 1;
+                    }
+                    previous = Some(hash);
+                    first_frame.get_or_insert(started.elapsed().as_millis());
+                    last_frame = Some(started.elapsed().as_millis());
                 }
-                previous = Some(hash);
-                first_frame.get_or_insert(started.elapsed().as_millis());
-                last_frame = Some(started.elapsed().as_millis());
                 seq = frame.sequence;
                 frames += 1;
             }
+            if preview
+                && !visible
+                && first_decoded.is_some_and(|t| t.elapsed() >= Duration::from_secs(3))
+            {
+                anyhow::bail!(
+                    "Preview startup not visible: received={frames}, withheld={withheld}, navy/mint/black={last_marker_counts:?}"
+                );
+            }
+            if !visible {
+                blank.resize(dimensions.0 * dimensions.1, 0);
+            }
             let painting = Instant::now();
             window
-                .update_with_buffer(&pixels, dimensions.0, dimensions.1)
+                .update_with_buffer(
+                    if visible { &pixels } else { &blank },
+                    dimensions.0,
+                    dimensions.1,
+                )
                 .map_err(|e| anyhow::anyhow!("Presentation failed: {e}"))?;
-            if presented < frames {
-                presented = frames;
+            if new_visible {
+                presented += 1;
                 presentation_us += painting.elapsed().as_micros();
             }
             if task.is_finished() && rx.is_empty() {
@@ -191,7 +241,7 @@ async fn main() -> Result<()> {
     result?;
     let stats = network??;
     ensure!(
-        presented == frames && frames == stats.frames,
+        presented + withheld == frames && frames == stats.frames,
         "Presentation/transport count mismatch"
     );
     if physical {
@@ -205,12 +255,12 @@ async fn main() -> Result<()> {
         );
     } else {
         ensure!(
-            frames >= 5 && changed >= 5 && fixture_frames >= 3,
+            presented >= 5 && changed >= 5 && fixture_frames >= 3,
             "Insufficient changing fixture frames: decoded={frames}, changed={changed}, fixture={fixture_frames}"
         );
     }
     println!(
-        "EMULATOR_VIEW_PASSED frames={} bytes={} repeats={} no_updates={} changed={} fixture={} first_ms={} total_ms={} decode_us={} presented={} active_span_ms={} presentation_us={}",
+        "EMULATOR_VIEW_PASSED frames={} bytes={} repeats={} no_updates={} changed={} fixture={} first_ms={} total_ms={} decode_us={} presented={} active_span_ms={} presentation_us={} withheld={}",
         frames,
         stats.media_bytes,
         stats.repeats,
@@ -224,7 +274,8 @@ async fn main() -> Result<()> {
         last_frame
             .unwrap_or_default()
             .saturating_sub(first_frame.unwrap_or_default()),
-        presentation_us
+        presentation_us,
+        withheld
     );
     Ok(())
 }
