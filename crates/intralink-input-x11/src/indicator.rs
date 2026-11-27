@@ -18,6 +18,8 @@ pub(crate) struct Indicator {
     gc: x::Gcontext,
     visible: bool,
     stopped: bool,
+    mapping_notice: bool,
+    stop_reason: Option<&'static str>,
 }
 
 impl Indicator {
@@ -92,6 +94,8 @@ impl Indicator {
             gc,
             visible: false,
             stopped: false,
+            mapping_notice: false,
+            stop_reason: None,
         };
         conn.send_and_check_request(&x::MapWindow { window })?;
         let start = Instant::now();
@@ -127,9 +131,20 @@ impl Indicator {
         Ok(())
     }
 
+    fn stop(&mut self, reason: &'static str) {
+        self.stopped = true;
+        self.stop_reason.get_or_insert(reason);
+    }
+
+    pub fn reason(&self) -> &'static str {
+        self.stop_reason.unwrap_or("stop window unavailable")
+    }
+
+    pub fn take_mapping_notice(&mut self) -> bool {
+        std::mem::take(&mut self.mapping_notice)
+    }
+
     fn drain(&mut self, conn: &Connection) -> Result<()> {
-        // Bound the amount of event processing per iteration. An event flood
-        // is an unsafe local state, not an opportunity to continue blindly.
         for _ in 0..128 {
             let Some(event) = conn.poll_for_event()? else {
                 return Ok(());
@@ -140,39 +155,38 @@ impl Indicator {
                 {
                     self.visible = event.state() == x::Visibility::Unobscured;
                     if !self.visible {
-                        self.stopped = true;
+                        self.stop("stop window obscured");
                     }
                 }
                 xcb::Event::X(x::Event::Expose(event)) if event.window() == self.window => {
                     self.paint(conn)?
                 }
                 xcb::Event::X(x::Event::ButtonPress(event)) if event.event() == self.window => {
-                    self.stopped = true
+                    self.stop("local stop button")
                 }
                 xcb::Event::X(x::Event::KeyPress(event)) if event.event() == self.window => {
-                    self.stopped = true
+                    self.stop("local stop key")
                 }
                 xcb::Event::X(x::Event::UnmapNotify(event)) if event.window() == self.window => {
-                    self.stopped = true
+                    self.stop("stop window unmapped")
                 }
                 xcb::Event::X(x::Event::DestroyNotify(event)) if event.window() == self.window => {
-                    self.stopped = true
+                    self.stop("stop window destroyed")
                 }
                 xcb::Event::X(x::Event::ClientMessage(event)) if event.window() == self.window => {
-                    self.stopped = true
+                    self.stop("stop window close requested")
                 }
-                xcb::Event::X(x::Event::MappingNotify(_))
-                | xcb::Event::RandR(_)
-                | xcb::Event::Xkb(_) => {
-                    self.stopped = true;
+                xcb::Event::X(x::Event::MappingNotify(_)) | xcb::Event::Xkb(_) => {
+                    self.mapping_notice = true
                 }
+                xcb::Event::RandR(_) => self.stop("display topology notification"),
                 _ => {}
             }
             if self.stopped {
                 return Ok(());
             }
         }
-        self.stopped = true;
+        self.stop("local X11 event queue limit exceeded");
         Ok(())
     }
 
@@ -185,7 +199,7 @@ impl Indicator {
             window: self.window,
         }))?;
         if attributes.map_state() != x::MapState::Viewable {
-            self.stopped = true;
+            self.stop("stop window is not viewable");
         }
         Ok(!self.stopped)
     }

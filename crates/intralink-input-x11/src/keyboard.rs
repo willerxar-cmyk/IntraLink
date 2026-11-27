@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 
 use anyhow::{Context, Result, ensure};
 use intralink_core::input::Key;
-use xcb::{Connection, xkb};
+use xcb::{Connection, x, xkb};
 
 fn position(key: Key) -> &'static str {
     let usage = key.usage();
@@ -73,7 +73,14 @@ fn position(key: Key) -> &'static str {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct Keyboard([Option<u8>; 256]);
+pub(crate) struct Keyboard {
+    physical: [Option<u8>; 256],
+    keysyms_per_keycode: u8,
+    keysyms: Vec<x::Keysym>,
+    keycodes_per_modifier: u8,
+    modifiers: Vec<x::Keycode>,
+    pointer: Vec<u8>,
+}
 
 impl Keyboard {
     pub fn read(conn: &Connection) -> Result<Self> {
@@ -113,18 +120,41 @@ impl Keyboard {
                 .all(|u| table[u as usize].is_some()),
             "XKB physical keymap does not support the complete input subset"
         );
-        Ok(Self(table))
+        // XKB may announce a core-device change on first use of a keyboard.
+        // Compare the complete core mapping, modifier table, physical names
+        // and pointer mapping; only an unchanged snapshot is harmless.
+        let setup = conn.get_setup();
+        let first_keycode = setup.min_keycode();
+        let count = u8::try_from(u16::from(setup.max_keycode()) - u16::from(first_keycode) + 1)
+            .context("Invalid X11 core keyboard range")?;
+        let keys = conn.send_request(&x::GetKeyboardMapping {
+            first_keycode,
+            count,
+        });
+        let modifiers = conn.send_request(&x::GetModifierMapping {});
+        let pointer = conn.send_request(&x::GetPointerMapping {});
+        let keys = conn.wait_for_reply(keys)?;
+        let modifiers = conn.wait_for_reply(modifiers)?;
+        let pointer = conn.wait_for_reply(pointer)?;
+        Ok(Self {
+            physical: table,
+            keysyms_per_keycode: keys.keysyms_per_keycode(),
+            keysyms: keys.keysyms().to_vec(),
+            keycodes_per_modifier: modifiers.keycodes_per_modifier(),
+            modifiers: modifiers.keycodes().to_vec(),
+            pointer: pointer.map().to_vec(),
+        })
     }
 
     pub fn key_for_code(&self, code: u8) -> Option<Key> {
-        self.0
+        self.physical
             .iter()
             .position(|entry| *entry == Some(code))
             .and_then(|usage| Key::new(usage as u8))
     }
 
     pub fn code(&self, key: Key) -> Result<u8> {
-        self.0[key.usage() as usize].context("Unsupported physical key")
+        self.physical[key.usage() as usize].context("Unsupported physical key")
     }
 }
 

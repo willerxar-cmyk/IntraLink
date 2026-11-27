@@ -200,11 +200,15 @@ impl NativeInput {
     }
 
     pub fn poll(&mut self) -> Result<bool> {
-        if self.failed || !self.indicator.poll(&self.conn)? {
+        if self.failed {
+            return Ok(false);
+        }
+        if !self.indicator.poll(&self.conn)? {
+            eprintln!("X11 input stopped: {}", self.indicator.reason());
             self.failed = true;
             return Ok(false);
         }
-        if self.last_check.elapsed() >= REFRESH {
+        if self.indicator.take_mapping_notice() || self.last_check.elapsed() >= REFRESH {
             let geometry = Geometry::read(&self.conn, self.root)?;
             let keyboard = Keyboard::read(&self.conn)?;
             let map = self
@@ -214,6 +218,7 @@ impl NativeInput {
                 || keyboard != self.keyboard
                 || !map.map().starts_with(&[1, 2, 3, 4, 5, 6, 7])
             {
+                eprintln!("X11 input stopped: native mapping or geometry changed");
                 self.failed = true;
                 return Ok(false);
             }
@@ -391,8 +396,16 @@ mod tests {
         let mut native = NativeInput::open_display(&display)?;
         let key = Key::new(4).unwrap();
         let code = native.keyboard.code(key)?;
-        let apply =
-            |native: &mut NativeInput, sequence, event| native.apply(Record { sequence, event });
+        native.conn.send_and_check_request(&x::SetInputFocus {
+            revert_to: x::InputFocus::PointerRoot,
+            focus: native.root,
+            time: x::CURRENT_TIME,
+        })?;
+        let apply = |native: &mut NativeInput, sequence, event| {
+            native
+                .apply(Record { sequence, event })
+                .with_context(|| format!("native test record {sequence}"))
+        };
         apply(&mut native, 1, Event::Activate)?;
         apply(
             &mut native,

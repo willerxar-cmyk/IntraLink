@@ -560,8 +560,17 @@ mod tests {
         let f1 = pad.keyboard.code(Key::new(58).unwrap())?;
         inject(2, f1, 0, 0)?;
         inject(3, f1, 0, 0)?;
+        let _ = pad
+            .conn
+            .wait_for_reply(pad.conn.send_request(&x::GetInputFocus {}))?;
         let select = pad.poll()?;
-        assert!(select.events.contains(&PadEvent::Select(0)));
+        assert!(
+            select.events.contains(&PadEvent::Select(0)),
+            "selection missing; ready={}, interrupted={}, closed={}",
+            select.ready,
+            select.interrupted,
+            select.closed
+        );
         assert!(
             !select
                 .events
@@ -578,6 +587,9 @@ mod tests {
         inject(5, 1, 0, 0)?;
         inject(4, 4, 0, 0)?;
         inject(5, 4, 0, 0)?;
+        let _ = pad
+            .conn
+            .wait_for_reply(pad.conn.send_request(&x::GetInputFocus {}))?;
         let events: Vec<_> = pad
             .poll()?
             .events
@@ -610,6 +622,9 @@ mod tests {
         inject(6, 0, 200, 200)?;
         inject(2, a, 0, 0)?;
         inject(3, a, 0, 0)?;
+        let _ = pad
+            .conn
+            .wait_for_reply(pad.conn.send_request(&x::GetInputFocus {}))?;
         let interrupted = pad.poll()?;
         assert!(interrupted.interrupted && interrupted.events.is_empty());
         assert!(pad.neutral()?);
