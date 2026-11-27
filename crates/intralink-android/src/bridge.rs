@@ -334,3 +334,56 @@ pub extern "system" fn Java_org_intralink_android_NativeBridge_runScreen<'local>
         Ok(result)
     })
 }
+
+/// Local app canvas input only, after independent foreground approval.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_org_intralink_android_NativeBridge_runInput<'local>(
+    mut env: JNIEnv<'local>,
+    _receiver: JObject<'local>,
+    path: JString<'local>,
+    request: JString<'local>,
+    id: jlong,
+    password: JByteArray<'local>,
+    target: JObject<'local>,
+) -> jstring {
+    use jni::objects::JValue;
+    reply(&mut env, |env| {
+        let lease = SESSIONS.claim(id)?;
+        ensure!(
+            APPLICATION_CONTEXT
+                .lock()
+                .map_err(|_| anyhow::anyhow!("Network context unavailable"))?
+                .is_some(),
+            "Android network context was not initialized"
+        );
+        let (path, secret) = inputs(env, &path, &password)?;
+        env.set_byte_array_region(&password, 0, &vec![0i8; secret.len()])?;
+        let request: String = env.get_string(&request)?.into();
+        let count = session::run_input(
+            lease,
+            Path::new(&path),
+            secret,
+            session::decode(&request)?,
+            |record| {
+                let bytes = record.encode()?;
+                let accepted = env
+                    .call_method(
+                        &target,
+                        "acceptRecord",
+                        "(IIIII)Z",
+                        &[
+                            JValue::Int(record.sequence as i32),
+                            JValue::Int(i32::from(bytes[4])),
+                            JValue::Int(i32::from(bytes[5])),
+                            JValue::Int(i32::from(u16::from_be_bytes([bytes[6], bytes[7]]))),
+                            JValue::Int(i32::from(u16::from_be_bytes([bytes[8], bytes[9]]))),
+                        ],
+                    )?
+                    .z()?;
+                ensure!(accepted, "Foreground input target rejected event");
+                Ok(())
+            },
+        )?;
+        Ok(json!({"ok": true, "input_records": count}))
+    })
+}

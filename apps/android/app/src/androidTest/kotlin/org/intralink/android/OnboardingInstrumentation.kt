@@ -23,6 +23,10 @@ class OnboardingInstrumentation : Instrumentation() {
     }
 
     override fun onStart() {
+        if (testArguments.getString("lanInput") == "true") {
+            InputLanFixture.run(this,testArguments)
+            return
+        }
         if (testArguments.containsKey("lanProbe")) {
             LanProbeFixture.run(this, testArguments)
             return
@@ -61,6 +65,15 @@ class OnboardingInstrumentation : Instrumentation() {
         val password = ByteArray(32).also(SecureRandom()::nextBytes)
         val wrongPassword = password.copyOf().also { it[0] = (it[0].toInt() xor 1).toByte() }
         try {
+            val cardId = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+            val baseCard = "ILC1:BASE:$cardId"
+            val clientCard = "ILC1:CLIENT:$cardId:192.168.7.2:45100"
+            check(ConnectionCard.parse(baseCard)?.encode() == baseCard)
+            check(ConnectionCard.parse(clientCard)?.encode() == clientCard)
+            check(ConnectionCard.parse(clientCard + ":extra") == null)
+            check(ConnectionCard.parse("ILC1:CLIENT:$cardId:8.8.8.8:45100") == null)
+            check(ConnectionCard.parse("ILC1:CLIENT:$cardId:192.168.007.2:45100") == null)
+            check(ConnectionCard.parse("ILC1:CLIENT:$cardId:192.168.7.2:045100") == null)
             val temp = Files.createTempDirectory(targetContext.cacheDir.toPath(), "intralink-test-").toFile()
             directory = temp
             val path = File(temp, "profile.vault").absolutePath

@@ -30,6 +30,7 @@ mod input_ui;
 mod input_x11_ui;
 mod journal;
 mod local;
+mod pair_card;
 #[cfg(feature = "resource-monitor")]
 mod resources;
 mod routing;
@@ -177,6 +178,16 @@ enum Command {
     },
     /// Show the local public identity for independent verification.
     Identity,
+    /// Copy this device's public connection card (CLIENT includes private IP:port).
+    ConnectionCard {
+        #[arg(long)]
+        address: Option<std::net::SocketAddrV4>,
+    },
+    /// Paste a peer's connection card and review its full identity before pairing.
+    PairCard {
+        #[arg(long)]
+        name: String,
+    },
     /// Add a locally approved diagnostic-only grant. No remote enrollment.
     Pair {
         #[arg(long)]
@@ -610,6 +621,8 @@ fn main() -> Result<()> {
         Command::RenameDevice { name } => local::rename_device(&path, &name),
         Command::Init { role } => local::initialize(&path, role.into()),
         Command::Identity => local::identity(&path),
+        Command::ConnectionCard { address } => pair_card::show(&path, address),
+        Command::PairCard { name } => pair_card::import(&path, &name),
         Command::Pair {
             name,
             peer_id,

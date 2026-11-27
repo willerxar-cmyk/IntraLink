@@ -25,6 +25,13 @@ def hide_keyboard(emu):
 
 
 def field(emu, label, value):
+    # Preview.13 may prefill the exact active private route. Do not append
+    # a second copy of an IP address to an already populated field.
+    if label == "This device private IPv4 address":
+        for node in emu.ui().iter("node"):
+            if (node.get("package") == PACKAGE and node.get("class") == "android.widget.EditText"
+                    and node.get("text") == value):
+                return
     emu.click(label)
     text(emu, value)
     hide_keyboard(emu)

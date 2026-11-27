@@ -76,7 +76,9 @@ class ScreenShareActivity : Activity() {
         })
         body.addView(TextView(this).apply { text = getString(R.string.screen_share_review, name, identity) })
         form = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        address = field(R.string.local_ip, 15)
+        address = field(R.string.local_ip, 15).apply {
+            setText(ConnectionCard.localAddress(this@ScreenShareActivity).orEmpty())
+        }
         port = field(R.string.port, 5).apply {
             inputType = InputType.TYPE_CLASS_NUMBER
             setText(R.string.default_port)

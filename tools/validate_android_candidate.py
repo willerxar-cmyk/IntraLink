@@ -17,7 +17,7 @@ from build_android_native import ndk_bin
 
 ABIS = {"arm64-v8a": 183, "x86_64": 62}
 EXPORTS = {"createProfile", "openProfile", "changeRole", "renameDevice", "pairDevice", "revokeDevice",
-           "initializeNetwork", "reserveProbe", "cancelProbe", "runProbe", "inspectAvc", "inspectAvcSps", "runScreen"}
+           "initializeNetwork", "reserveProbe", "cancelProbe", "runProbe", "inspectAvc", "inspectAvcSps", "runScreen", "runInput"}
 PERMISSIONS = {
     "android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE",
     "android.permission.FOREGROUND_SERVICE",
@@ -149,7 +149,8 @@ def main():
                 raise ValueError(f"Unexpected Android permission set: {permissions}")
             xml = run(aapt, "dump", "xmltree", apk, "AndroidManifest.xml")
             for component, kind in ((".CaptureActivity", "activity"), (".CaptureService", "service"),
-                                    (".ScreenShareActivity", "activity"), (".ScreenShareService", "service")):
+                                    (".ScreenShareActivity", "activity"), (".ScreenShareService", "service"),
+                                    (".InputPreviewActivity", "activity")):
                 blocks = re.split(r"(?m)^\s*E: (?:activity|service|receiver|provider) \(line=\d+\)", xml)
                 matching = [block for block in blocks
                             if re.search(r'android:name[^=]*="(?:org\.intralink\.android)?' + re.escape(component) + '"', block)]
@@ -196,7 +197,7 @@ def main():
         shutil.copy2(source, args.output / name)
     info = {
         "version": version, "version_code": version_code,
-        "scope": "encrypted onboarding, manual pairing, foreground private IPv4 diagnostics, local AVC diagnostic, separately consented v12 read-only screen preview and bounded entire-display navigation (Android 12L+); no remote input", "abis": list(ABIS),
+        "scope": "encrypted onboarding, manual pairing, foreground private IPv4 diagnostics, local AVC diagnostic, separately consented v12 read-only screen preview and bounded entire-display navigation (Android 12L+); separate foreground app-canvas input preview; no system-wide input", "abis": list(ABIS),
         "permissions": sorted(PERMISSIONS),
         "debug_and_test_signed": True, "release_signed": release_signed,
         "lint_diagnostics": issues, "physical_runtime_qualified": False,

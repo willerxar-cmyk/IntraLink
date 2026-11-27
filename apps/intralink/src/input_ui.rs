@@ -23,6 +23,8 @@ use crate::{
 mod keys;
 #[path = "input_pad.rs"]
 mod pad;
+#[path = "input_portal.rs"]
+mod portal;
 
 const POLL: Duration = Duration::from_millis(8);
 
@@ -217,16 +219,24 @@ struct Spatial {
     hover: Option<(usize, Instant)>,
     canvas: Vec<u32>,
     painted: Option<(u8, Option<usize>, bool)>,
+    drag: Option<usize>,
+    was_down: bool,
+    last_cell: Option<usize>,
+    effect: Option<((usize, usize), Instant, bool)>,
 }
 
 impl Spatial {
     fn new(slots: usize) -> Result<Self> {
         Ok(Self {
-            layout: Layout::new(slots).context("Invalid spatial input layout")?,
+            layout: Layout::arranged(slots).context("Invalid spatial input layout")?,
             armed: false,
             hover: None,
             canvas: vec![0; pad::WIDTH * pad::HEIGHT],
             painted: None,
+            drag: None,
+            was_down: false,
+            last_cell: None,
+            effect: None,
         })
     }
 
@@ -240,24 +250,71 @@ impl Spatial {
         if !window.is_active() {
             self.armed = false;
             self.hover = None;
+            self.drag = None;
+            self.was_down = false;
+            self.last_cell = None;
+            self.effect = None;
             return Ok(());
         }
         let toggle = window.is_key_pressed(LocalKey::F9, KeyRepeat::No);
         let disarm = window.is_key_pressed(LocalKey::F12, KeyRepeat::No) || (toggle && self.armed);
         let zone = pad::pointer_zone(window, self.layout);
+        let point = pad::pointer(window);
+        let cell = point.and_then(|(x, y)| self.layout.cell_at(x, y, pad::WIDTH, pad::HEIGHT));
         if disarm || zone.is_none() {
             switch_focus(focus, None, slots, window).await?;
             *previous = Snapshot::default();
             self.armed = false;
             self.hover = None;
+            self.drag = None;
+            self.was_down = window.get_mouse_down(MouseButton::Left);
+            self.last_cell = None;
+            self.effect = None;
             return Ok(());
         }
         if toggle && local_keys(window).is_empty() && local_buttons(window).is_empty() {
             self.armed = true;
             self.hover = None;
+            self.drag = None;
+            self.last_cell = cell;
         }
         if !self.armed {
+            // Rearrange only while SAFE; remote input is never forwarded
+            // during a layout drag. Labels remain attached to the same peer.
+            let down = window.get_mouse_down(MouseButton::Left);
+            if down && !self.was_down {
+                self.drag = cell.filter(|c| self.layout.label(*c).is_some());
+            } else if !down
+                && self.was_down
+                && let (Some(from), Some(to)) = (self.drag.take(), cell)
+                && self.layout.relocate(from, to)
+            {
+                self.painted = None;
+            }
+            self.was_down = down;
             return Ok(());
+        }
+        let prior = self.last_cell;
+        self.last_cell = cell;
+        if let (Some(from), Some(to), Some(at)) = (prior, cell, point)
+            && from != to
+        {
+            // A fast pointer must not teleport through an empty cell or
+            // diagonal corner and unexpectedly activate another device.
+            if !self.layout.adjacent(from, to)
+                || self.layout.label(from).is_none()
+                || self.layout.label(to).is_none()
+            {
+                switch_focus(focus, None, slots, window).await?;
+                *previous = Snapshot::default();
+                self.armed = false;
+                self.hover = None;
+                self.effect = None;
+                self.drag = None;
+                self.was_down = window.get_mouse_down(MouseButton::Left);
+                return Ok(());
+            }
+            self.effect = Some((at, Instant::now(), false));
         }
         let zone = zone.context("Missing spatial pointer")?;
         let target = zone.target.filter(|index| slots[*index].connected());
@@ -280,11 +337,23 @@ impl Spatial {
             self.hover = None;
             if held {
                 self.armed = false;
+                self.effect = None;
+                self.drag = None;
+                self.was_down = window.get_mouse_down(MouseButton::Left);
                 return Ok(());
+            }
+            if target.is_none()
+                && cell.is_some_and(|c| self.layout.label(c) == Some(0))
+                && let Some(at) = point
+            {
+                self.effect = Some((at, Instant::now(), true));
             }
         }
         let Some(index) = target else {
             self.hover = None;
+            if cell.is_some_and(|c| self.layout.label(c) != Some(0)) {
+                self.effect = None;
+            }
             return Ok(());
         };
         if held {
@@ -295,9 +364,20 @@ impl Spatial {
             Some((candidate, since)) if candidate == index => {
                 if since.elapsed() >= Duration::from_millis(80) {
                     switch_focus(focus, Some(index), slots, window).await?;
+                    // Only mark a successful transition after the release and
+                    // activate ACKs. Do not forward a stale pointer sample.
                     *previous = Snapshot::default();
                     self.hover = None;
-                    // A fresh pointer zone is required on the next UI turn.
+                    if let Some(at) = pad::pointer(window) {
+                        if pad::pointer_zone(window, self.layout).and_then(|z| z.target)
+                            == Some(index)
+                        {
+                            self.effect = Some((at, Instant::now(), true));
+                        } else {
+                            switch_focus(focus, None, slots, window).await?;
+                            self.effect = None;
+                        }
+                    }
                 }
             }
             _ => self.hover = Some((index, Instant::now())),
@@ -314,7 +394,19 @@ impl Spatial {
             }
         });
         let state = (ready, focus.active(), self.armed);
-        if self.painted != Some(state) {
+        let animation = self.effect.and_then(|(at, start, confirmed)| {
+            let elapsed = start.elapsed().as_millis();
+            (elapsed < portal::DURATION_MS).then_some((
+                at,
+                elapsed as f32 / portal::DURATION_MS as f32,
+                confirmed,
+            ))
+        });
+        if self.effect.is_some() && animation.is_none() {
+            self.effect = None;
+            self.painted = None;
+        }
+        if self.painted != Some(state) || animation.is_some() {
             pad::render(
                 self.layout,
                 &mut self.canvas,
@@ -322,6 +414,9 @@ impl Spatial {
                 focus.active(),
                 self.armed,
             );
+            if let Some((at, p, confirmed)) = animation {
+                portal::draw(&mut self.canvas, pad::WIDTH, pad::HEIGHT, at, p, confirmed);
+            }
             window
                 .update_with_buffer(&self.canvas, pad::WIDTH, pad::HEIGHT)
                 .map_err(|error| anyhow::anyhow!("Spatial input pad: {error}"))?;
@@ -338,7 +433,7 @@ fn title(slots: &[Slot], focus: &Focus, spatial: Option<&Spatial>) -> String {
     let connected = slots.iter().filter(|slot| slot.connected()).count();
     let controls = match spatial {
         Some(pad) if pad.armed => "SPATIAL ARMED | 0 local, F12 disarm, ESC close",
-        Some(_) => "SPATIAL SAFE | F9 arm, ESC close",
+        Some(_) => "SAFE | Drag screens to arrange | F9 arm | ESC close",
         None => "F1-F8 select, F12 local, ESC close",
     };
     format!(
@@ -378,7 +473,7 @@ pub(super) async fn workspace(path: &Path, names: &[String], spatial: bool) -> R
     let mut spatial = spatial.then(|| Spatial::new(slots.len())).transpose()?;
     if spatial.is_some() {
         println!(
-            "Spatial pad: zone 0 is LOCAL; zones 1-8 follow the printed device order. Press F9 to arm; cross inside the pad with keys/buttons released. F12 disarms."
+            "Spatial pad: 0 is LOCAL; drag numbered screens while SAFE to arrange the layout. Press F9 to arm; cross inside the pad with keys/buttons released. F12 disarms."
         );
     }
     let local = async {

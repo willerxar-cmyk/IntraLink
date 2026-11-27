@@ -5,6 +5,15 @@ use minifb::{MouseMode, Window};
 pub const WIDTH: usize = 960;
 pub const HEIGHT: usize = 540;
 
+pub fn pointer(window: &Window) -> Option<(usize, usize)> {
+    let (x, y) = window.get_mouse_pos(MouseMode::Discard)?;
+    let (w, h) = window.get_size();
+    if !x.is_finite() || !y.is_finite() || x < 0.0 || y < 0.0 || x >= w as f32 || y >= h as f32 {
+        return None;
+    }
+    Some((x as usize, y as usize))
+}
+
 pub fn pointer_zone(window: &Window, layout: Layout) -> Option<Zone> {
     let (x, y) = window.get_mouse_pos(MouseMode::Discard)?;
     let (width, height) = window.get_size();
@@ -21,11 +30,15 @@ const DIGITS: [u8; 9] = [0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f];
 pub fn render(layout: Layout, buffer: &mut [u32], ready: u8, active: Option<usize>, armed: bool) {
     assert_eq!(buffer.len(), WIDTH * HEIGHT);
     buffer.fill(0x00141b25);
-    for (cell, pattern) in DIGITS.iter().copied().enumerate().take(layout.cells()) {
+    for cell in 0..layout.cells() {
+        let Some(label) = layout.label(cell) else {
+            continue;
+        };
+        let pattern = DIGITS[label];
         let (l, t, r, b) = layout
             .bounds(cell, WIDTH, HEIGHT)
             .expect("fixed valid pad size");
-        let target = cell.checked_sub(1);
+        let target = label.checked_sub(1);
         let color = match target {
             None => 0x00414b5a,
             Some(slot) if active == Some(slot) => 0x00216b50,

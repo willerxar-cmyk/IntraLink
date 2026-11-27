@@ -288,6 +288,85 @@ pub(crate) fn run(
     ))
 }
 
+/// Separate foreground-only app-input approval; no platform injection.
+#[cfg(target_os = "android")]
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct InputRequest {
+    pub name: String,
+    pub peer_id: String,
+    pub host: String,
+    pub port: u16,
+}
+
+#[cfg(target_os = "android")]
+pub(crate) fn run_input(
+    mut lease: Lease<'_>,
+    path: &Path,
+    password: zeroize::Zeroizing<Vec<u8>>,
+    request: InputRequest,
+    mut sink: impl FnMut(intralink_core::input::Record) -> Result<()>,
+) -> Result<u32> {
+    use intralink_transport::input::{Delivery, bind_input, serve_input};
+    use tokio::sync::mpsc;
+    ensure!(!*lease.stop.borrow(), "Input approval canceled");
+    let vault = Vault::lock(path)?;
+    let profile = vault.load(&password)?;
+    drop(password);
+    ensure!(profile.role().can_receive(), "CLIENT role required");
+    let peer = profile
+        .peer(&request.name, Direction::Inbound)?
+        .identity()?;
+    ensure!(
+        request.peer_id == peer.to_string(),
+        "Approved identity changed"
+    );
+    let local = private_address(&request.host, request.port)?;
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(2)
+        .enable_all()
+        .build()?;
+    runtime.block_on(async {
+        let endpoint = tokio::select! {
+            biased;
+            _ = canceled(&mut lease.stop) => bail!("Input approval canceled"),
+            result = timeout(Duration::from_secs(10), bind_input(profile.secret_key(), local)) =>
+                result.context("Input endpoint bind deadline")??,
+        };
+        let (tx, mut rx) = mpsc::channel::<Delivery>(1);
+        let mut stop = lease.stop.clone();
+        let consumer = async {
+            while let Some(delivery) = rx.recv().await {
+                ensure!(
+                    !*stop.borrow_and_update() && !delivery.accepted.is_closed(),
+                    "Input approval canceled or delivery expired"
+                );
+                let result = sink(delivery.record);
+                ensure!(!*stop.borrow_and_update(), "Input approval canceled");
+                let failed = result.is_err();
+                ensure!(
+                    delivery.accepted.send(result).is_ok(),
+                    "Input delivery expired"
+                );
+                if failed {
+                    bail!("Local app input rejected");
+                }
+            }
+            Ok::<(), anyhow::Error>(())
+        };
+        let result = tokio::select! {
+            biased;
+            _ = canceled(&mut lease.stop) => Err(anyhow::anyhow!("Input approval canceled")),
+            result = timeout(Duration::from_secs(200), async {
+                tokio::try_join!(serve_input(&endpoint, peer, 60, tx), consumer)
+                    .map(|(count, ())| count)
+            }) => result.context("Input session deadline").and_then(|result| result),
+        };
+        endpoint.close().await;
+        result
+    })
+}
+
 /// A separate, ephemeral screen-only approval. A saved diagnostic grant is
 /// necessary but not sufficient; the Activity reviews the exact identity and
 /// obtains fresh OS consent before the worker invokes this entry point.

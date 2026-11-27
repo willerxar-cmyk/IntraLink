@@ -281,6 +281,15 @@ class MainActivity : Activity() {
         page(profile.optString("name", getString(R.string.local_device)), getString(R.string.role_status, role))
         label(getString(R.string.public_identity), 16, bold = true)
         label(profile.getString("public_id"), 14, selectable = true)
+        if (role == "BASE" || role == "HYBRID") {
+            action(getString(R.string.copy_base_card)) {
+                ConnectionCard.copy(this, ConnectionCard(profile.getString("public_id"), null, null).encode())
+                status.setText(R.string.card_copied)
+            }
+        }
+        if (role == "CLIENT" || role == "HYBRID") {
+            action(getString(R.string.copy_client_card)) { showClientCard(profile.getString("public_id")) }
+        }
         label(getString(R.string.saved_grants, profile.optInt("peer_count")))
         if (profile.has("revoked_grants")) {
             label(getString(R.string.revoked_grants, profile.optInt("revoked_grants")))
@@ -301,6 +310,13 @@ class MainActivity : Activity() {
                     label(getString(R.string.saved_route, route.getString("host"), route.getInt("port")), 14)
                 }
                 action(getString(if (outbound) R.string.run_probe else R.string.listen_probe)) { showProbe(peer) }
+                if (!outbound) {
+                    action(getString(R.string.input_preview)) {
+                        startActivity(android.content.Intent(this, InputPreviewActivity::class.java)
+                            .putExtra(ScreenShareActivity.EXTRA_NAME, name)
+                            .putExtra(ScreenShareActivity.EXTRA_IDENTITY, peer.getString("identity")))
+                    }
+                }
                 if (!outbound && Build.VERSION.SDK_INT >= 32) {
                     action(getString(R.string.screen_share_title)) {
                         startActivity(android.content.Intent(this, ScreenShareActivity::class.java)
@@ -321,6 +337,24 @@ class MainActivity : Activity() {
         action(getString(R.string.change_role)) { showRoleChange(role) }
         action(getString(R.string.rename_device)) { showRename() }
         action(getString(R.string.lock)) { showUnlock() }
+    }
+
+    private fun showClientCard(identity: String) {
+        page(getString(R.string.copy_client_card), getString(R.string.card_description))
+        val address = field(getString(R.string.local_ip), limit = 15)
+        address.setText(ConnectionCard.localAddress(this).orEmpty())
+        val port = portField()
+        action(getString(R.string.copy_card)) {
+            val ip = address.text.toString().trim()
+            val selected = port.text.toString().toIntOrNull()
+            if (!ConnectionCard.privateIp(ip) || selected == null || selected !in 1..65535) {
+                status.setText(R.string.pair_invalid)
+            } else {
+                ConnectionCard.copy(this, ConnectionCard(identity, ip, selected).encode())
+                status.setText(R.string.card_copied)
+            }
+        }
+        action(getString(R.string.cancel)) { showUnlock() }
     }
 
     private fun portField(): EditText = field(getString(R.string.port), limit = 5).apply {
@@ -346,6 +380,17 @@ class MainActivity : Activity() {
         val identity = field(getString(R.string.peer_identity), limit = 128)
         val address = if (outbound) field(getString(R.string.peer_ip), limit = 15) else null
         val port = if (outbound) portField() else null
+        action(getString(R.string.paste_card)) {
+            val card = ConnectionCard.paste(this)
+            if (card == null || (card.address != null) != outbound) {
+                status.setText(R.string.card_invalid)
+            } else {
+                identity.setText(card.identity)
+                address?.setText(card.address)
+                port?.setText(card.port?.toString())
+                status.setText(R.string.card_review)
+            }
+        }
         val password = field(getString(R.string.vault_passphrase), true)
         action(getString(R.string.review_pair)) { button ->
             val peerName = name.text.toString().trim()
@@ -389,7 +434,9 @@ class MainActivity : Activity() {
         if (outbound && route != null) {
             label(getString(R.string.saved_route, route.getString("host"), route.getInt("port")))
         }
-        val address = if (!outbound) field(getString(R.string.local_ip), limit = 15) else null
+        val address = if (!outbound) field(getString(R.string.local_ip), limit = 15).apply {
+            setText(ConnectionCard.localAddress(this@MainActivity).orEmpty())
+        } else null
         val port = if (!outbound) portField() else null
         val password = field(getString(R.string.vault_passphrase), true)
         action(getString(R.string.start_probe)) { button ->
