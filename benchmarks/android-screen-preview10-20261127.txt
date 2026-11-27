@@ -1,0 +1,13 @@
+Preview.10 physical Android/Windows, 2026-11-27. Owner-selected TB373FU API36 ARM64. Addresses and ephemeral identities omitted. No personal screen capture or input.
+Core 120/120, strict Clippy. PID 30732 native both ABI strict Clippy/Release passed. PID 27432 feature example strict Clippy and release passed. PID 33540 exit 0 both final native ABI builds, Gradle APK/AAB/instrumentation and JVM policy. Initial independent Kotlin compile lacked ANDROID_HOME; corrected PID 31288 exit 0. Initial physical test launch rejected by PowerShell safety check before execution; no bypass. Corrected plural diagnostic and rebuilt PID 28488 exit 0, only prior Gradle advisory.
+PID 35072 exit 0:
+Performing Streamed Install: Success (app/test)
+IntraLink JNI onboarding: PASSED
+IntraLink AVC buffer boundary: PASSED
+IntraLink SPS metadata boundary: PASSED
+IntraLink Android software decoder fixture: PASSED; codec=c2.android.avc.decoder; frames=6+4; recovered YUV bytes=12441600; exact hashes match; sampled error <=12
+IntraLink Android Surface RGBA/JPEG: PASSED
+MEDIA PASS: 60 1920x1080 frames; 45276 encoded payload bytes; every RGB pixel verified
+PASS Android inbound: Android session 3331 ms, Windows session 3431 ms; fresh pinned identities, actual JNI/QUIC, revocation and lease cleanup
+IntraLink physical Surface AVC encoder: PASSED; codec=c2.mtk.avc.encoder; size=1920x1080; configured=60; submitted=120; pictures=119; bytes=36346; elapsed_ms=2016; idr=3; unparsed=0; pts_non_increasing=0; sps=100/42; sps_size=1920x1080; sync=OBSERVED; sync_ms=24
+PID 36452 exit 0: exact JVM artifact/POM hashes; unchanged Cargo.lock; native exports, permissions/components and 16 KiB package validation passed. Candidate dist/android-screen-preview10-20261127. Debug APK 1427c9143bada5c7ea066c9d476afcf2b7f41bd43efda95bb9d4c204e23cd9b2; test APK e9a0a163159409a7bc75f2bfdec157e1b77c88f9b647916a1a7b8dc7dd8917e7; unsigned APK dc40c450b9a6c3fa922b36650a8b9b154d6266b4b7a530327df2ddffca1f3b53; unsigned AAB afa37b747b27d86ff47474492eee1cc719cd88a0d3fd6aa67592b1a79928c483. Device version 220010, no active projection or app services. Physical actual MediaProjection consent and graphical presentation remain untested. Prior hosted checks both success, artifact verified.
