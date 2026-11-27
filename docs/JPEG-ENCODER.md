@@ -13,3 +13,8 @@ For Compact, a failed delta budget attempt proves that a complete lossless keyfr
 `desktop-profile-check --encoder` compares the old and new JPEG implementations using identical generated RGB canvases, quality 75, explicit 4:4:4, warm-up and 12 alternating timed encodes at 1080/720/540. The output records actual runtime AVX2 availability, payload bytes, p50, p95 and worst milliseconds; both results are decoded using the production receiver with geometry and marker checks. No screen capture, network, image recording or vault access. This is encoder-only timing, not transmission FPS. The separate `desktop-profile-check --host` measures the complete local generated-window capture/encode path and selects a bounded profile with the existing conservative 25% reserve.
 
 Build the portable WGC variant with `cargo build --locked --release -p intralink --no-default-features --features wgc-preview,jpeg-simd,resource-monitor`. Build the portable scalar variant with `cargo build --locked --release -p intralink --no-default-features --features desktop-preview,resource-monitor`. Both use the same wire protocols and approved settings. No protocol version changes. Actual physical devices, sustained network performance, non-Windows runtime and native hardware codec integration remain separate qualification gates.
+
+
+## Optional restart-strip encoding
+
+The `jpeg-parallel` feature uses independently encoded MCU-aligned strips and assembles a single bounded baseline JPEG with restart markers. It is independently selectable from `jpeg-simd`; serial remains the default. See [JPEG-PARALLEL.md](JPEG-PARALLEL.md) for resource bounds, decoded-pixel equivalence and local stage measurements.

@@ -6,6 +6,7 @@ mod codec;
 mod host_calibration;
 mod jpeg;
 mod jpeg_benchmark;
+mod jpeg_parallel;
 pub use calibration::ProfileCheckArgs;
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 pub mod decoder_ipc;

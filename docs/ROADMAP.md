@@ -142,3 +142,8 @@ Opt-in local measured capture/encode selection uses generated-window diagnostics
 ### Portable encoder optimization checkpoint
 
 The bounded Rust JPEG writer and optional SIMD dispatch are implemented; qualification includes the independent scalar configuration and actual local A/B performance. Subsequent work should use the measured Host bottlenecks to prioritize additional CPU parallelism/encoder optimization and optional native codec adapters; physical authorized sessions remain necessary for sustained 1080p60 qualification. See [JPEG-ENCODER.md](JPEG-ENCODER.md).
+
+
+### Bounded parallel software JPEG
+
+Optional MCU-row restart strips use two or four workers on suitable CPUs, with serial compatibility and no new wire format. Benchmark serial/parallel and profile individual encode stages before attempting multi-frame capture/convert/encode overlap. Physical authorized sessions and additional native codec adapters remain separate work. See [JPEG-PARALLEL.md](JPEG-PARALLEL.md).

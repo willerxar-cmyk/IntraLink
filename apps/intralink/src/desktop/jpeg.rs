@@ -10,9 +10,9 @@ use intralink_core::{
 };
 use jpeg_encoder::{ColorType, Encoder, SamplingFactor};
 
-struct FrameWriter<'a> {
-    bytes: &'a mut Vec<u8>,
-    limit: usize,
+pub(super) struct FrameWriter<'a> {
+    pub(super) bytes: &'a mut Vec<u8>,
+    pub(super) limit: usize,
 }
 
 impl Write for FrameWriter<'_> {
@@ -69,10 +69,22 @@ pub(super) fn encode_rgb(
         u16::try_from(config.width())?,
         u16::try_from(config.height())?,
     );
+    encode_dimensions(width, height, quality, rgb, output)
+}
+
+/// Used only for validated full frames or local MCU-aligned strips.
+pub(super) fn encode_dimensions(
+    width: u16,
+    height: u16,
+    quality: u8,
+    rgb: &[u8],
+    output: &mut Vec<u8>,
+) -> Result<()> {
     ensure!(
-        rgb.len() == usize::from(width) * usize::from(height) * 3,
+        width != 0 && height != 0 && rgb.len() == usize::from(width) * usize::from(height) * 3,
         "Invalid JPEG canvas length"
     );
+    ensure!((35..=90).contains(&quality), "Invalid JPEG quality");
     output.clear();
     output.push(JPEG_TAG);
     let result = {

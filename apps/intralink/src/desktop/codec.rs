@@ -1,5 +1,8 @@
 //! Reusable RGB canvases, JPEG or lossless keyframes and ordered Rust tile updates.
-use std::io::Cursor;
+use std::{
+    io::Cursor,
+    time::{Duration, Instant},
+};
 
 use anyhow::{Result, ensure};
 use image::{ImageFormat, ImageReader, Limits, RgbaImage};
@@ -29,11 +32,19 @@ pub struct Encoder {
     config: VideoConfig,
     jpeg_quality: u8,
     resizer: super::resize::CanvasResizer,
+    jpeg: super::jpeg_parallel::JpegWorkspace,
     scratch: Vec<u8>,
     previous: Vec<u8>,
     has_previous: bool,
     last_keyframe_size: usize,
     deltas_since_keyframe: u16,
+}
+
+#[derive(Debug, Default)]
+pub(super) struct EncodeStages {
+    pub(super) resize: Duration,
+    pub(super) tiles: Duration,
+    pub(super) jpeg: Duration,
 }
 
 impl Encoder {
@@ -43,6 +54,7 @@ impl Encoder {
             config,
             jpeg_quality: config.quality(),
             resizer: super::resize::CanvasResizer::default(),
+            jpeg: super::jpeg_parallel::JpegWorkspace::default(),
             scratch: vec![0; size],
             previous: vec![0; size],
             has_previous: false,
@@ -86,11 +98,40 @@ impl Encoder {
         Ok(())
     }
 
-    pub fn encode(&mut self, frame: &RgbaImage, mut jpeg: Vec<u8>) -> Result<Capture> {
+    pub fn encode(&mut self, frame: &RgbaImage, jpeg: Vec<u8>) -> Result<Capture> {
+        self.encode_inner(frame, jpeg, None)
+    }
+
+    /// Local diagnostic only. Production encoding does not sample the clock.
+    pub(super) fn encode_profiled(
+        &mut self,
+        frame: &RgbaImage,
+        jpeg: Vec<u8>,
+    ) -> Result<(Capture, EncodeStages)> {
+        let mut stages = EncodeStages::default();
+        let capture = self.encode_inner(frame, jpeg, Some(&mut stages))?;
+        Ok((capture, stages))
+    }
+
+    pub(super) fn jpeg_workers(&self) -> usize {
+        self.jpeg.count()
+    }
+
+    fn encode_inner(
+        &mut self,
+        frame: &RgbaImage,
+        mut jpeg: Vec<u8>,
+        mut stages: Option<&mut EncodeStages>,
+    ) -> Result<Capture> {
+        let resize_start = stages.as_ref().map(|_| Instant::now());
         validate_source_size(frame.width(), frame.height())?;
         let (width, height) = (self.config.width(), self.config.height());
         self.resizer
             .fill_rgb(frame, &mut self.scratch, (width, height))?;
+        if let (Some(stages), Some(start)) = (stages.as_deref_mut(), resize_start) {
+            stages.resize = start.elapsed();
+        }
+        let tile_start = stages.as_ref().map(|_| Instant::now());
         jpeg.clear();
         // Hybrid is explicitly selected by both peers. Refresh after a bounded
         // number of changed records; static screens still use repeat records.
@@ -122,8 +163,18 @@ impl Encoder {
             Delta::KeyframeRequired
         };
         match delta {
-            Delta::Unchanged => return Ok(Capture::Repeat(jpeg)),
-            Delta::Encoded => self.deltas_since_keyframe += 1,
+            Delta::Unchanged => {
+                if let (Some(stages), Some(start)) = (stages.as_deref_mut(), tile_start) {
+                    stages.tiles = start.elapsed();
+                }
+                return Ok(Capture::Repeat(jpeg));
+            }
+            Delta::Encoded => {
+                if let (Some(stages), Some(start)) = (stages.as_deref_mut(), tile_start) {
+                    stages.tiles = start.elapsed();
+                }
+                self.deltas_since_keyframe += 1;
+            }
             Delta::KeyframeRequired => {
                 let exact = exact_possible
                     && self.config.mode().supports_compact()
@@ -134,13 +185,16 @@ impl Encoder {
                         LOSSLESS_ATTEMPT_BUDGET,
                     )
                     .map_err(|err| anyhow::anyhow!("Lossless keyframe encoder failed: {err:?}"))?;
+                if let (Some(stages), Some(start)) = (stages.as_deref_mut(), tile_start) {
+                    stages.tiles = start.elapsed();
+                }
                 if !exact {
-                    super::jpeg::encode_rgb(
-                        self.config,
-                        self.jpeg_quality,
-                        &self.scratch,
-                        &mut jpeg,
-                    )?;
+                    let jpeg_start = stages.as_ref().map(|_| Instant::now());
+                    self.jpeg
+                        .encode(self.config, self.jpeg_quality, &self.scratch, &mut jpeg)?;
+                    if let (Some(stages), Some(start)) = (stages, jpeg_start) {
+                        stages.jpeg = start.elapsed();
+                    }
                 }
                 ensure!(
                     jpeg.len() > 1 && jpeg.len() <= MAX_FRAME_BYTES,

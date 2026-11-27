@@ -54,3 +54,8 @@ Qualify the pure selection policy (manual ceilings, duplicate/invalid measuremen
 ### JPEG optimization gate
 
 Run the standalone media harness, locked workspace CPU/NVENC tests, independent no-default-features scalar app tests, and strict CPU/WGC/NVENC/scalar Clippy. Verify identical baseline 4:4:4 sampling and quantization tables and bounded decoded error at qualities 35/75/90. Check partial-record rejection, buffer reuse, lossless budget subset and smallest-representation invariants. Build independent scalar and SIMD WGC Releases; run `desktop-profile-check --encoder` on each, then the SIMD Host calibration and native retarget diagnostic. Preserve existing artifacts and record separate encoder-only and local full-pipeline measurements. No sustained network claim.
+
+
+### Parallel JPEG gate
+
+Run the standalone harness, strict CPU/WGC/NVENC parallel and independent scalar Clippy, full parallel CPU and NVENC workspace tests, and scalar app tests. Verify exact serial/parallel decoded pixels at every supported tier and three qualities, bounded strip-buffer reuse, generated-header validation and atomic oversize rejection. Build locked WGC SIMD parallel Release; execute encoder comparison and stage profiling, Host calibration and native retarget diagnostics. No change to network ordering or claims of sustained physical FPS.

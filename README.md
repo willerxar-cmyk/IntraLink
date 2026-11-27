@@ -6,6 +6,8 @@ Version 0.22.0 — development preview. The complete locked Windows workspace ha
 
 ### v0.22 additions
 
+- Optional `jpeg-parallel` feature splits software JPEG keyframes into MCU-aligned strips and joins them using standard JPEG restart markers, without GPU or a new wire protocol. Local encoder diagnostics measure the serial, two-worker and four-worker paths and individual production encode stages. See [JPEG-PARALLEL.md](docs/JPEG-PARALLEL.md).
+
 - Optimized software JPEG using pinned Rust `jpeg-encoder` with optional AVX2 dispatch and independent scalar builds. Preserve explicit 4:4:4 chroma, quantization, bounded payloads and wire compatibility. `desktop-profile-check --encoder` compares local CPU encode times. See [JPEG-ENCODER.md](docs/JPEG-ENCODER.md).
 
 - Opt-in measured Host selection (`share-desktop --capture auto`): compare available native capture paths and actual software encoding on a disposable generated window, select a bounded height/FPS before local sharing approval, and keep the concrete backend fixed. `desktop-profile-check --host` runs the local diagnostic. See [HOST-CALIBRATION.md](docs/HOST-CALIBRATION.md).

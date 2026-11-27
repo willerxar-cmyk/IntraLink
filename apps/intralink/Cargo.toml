@@ -9,6 +9,8 @@ publish.workspace = true
 default = ["jpeg-simd"]
 # Weak feature: the non-desktop build does not pull in a JPEG encoder.
 jpeg-simd = ["jpeg-encoder?/simd"]
+# Optional local MCU-row worker path; no native or wire dependency.
+jpeg-parallel = []
 desktop-preview = ["dep:xcap", "dep:image", "dep:minifb", "dep:fast_image_resize", "dep:jpeg-encoder"]
 wgc-preview = ["desktop-preview", "dep:windows-capture", "dep:intralink-d3d11"]
 nvenc-preview = ["wgc-preview", "intralink-d3d11/nvenc-preview"]
