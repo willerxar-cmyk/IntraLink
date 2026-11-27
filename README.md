@@ -129,7 +129,7 @@ Approve keyboard/mouse access explicitly on the host. A red stop window remains 
 .\intralink.exe input workspace --device workstation --device notebook --spatial
 ```
 
-Press F9 to arm the numbered spatial pad; zone 0 is local, zones 1–8 map to the device order. Move the pointer between regions with keys/buttons released. F12 disarms and returns local; Escape closes. Omit `--spatial` for explicit F1–F8 selection. No screen transmission is required. This is a focused in-window KVM, not global desktop-edge switching. **Physical keyboard/mouse acceptance on two real devices is still pending**; use only on distinct, nonsensitive, owner-approved private-LAN desktops. See [INPUT-SHARING.md](docs/INPUT-SHARING.md).
+Press F9 to arm the numbered spatial pad; zone 0 is local, zones 1–8 map to the device order. Move the pointer between regions with keys/buttons released. F12 disarms and returns local; Escape closes. Omit `--spatial` for explicit F1–F8 selection. No screen transmission is required. This is a focused in-window KVM, not global desktop-edge switching. **Physical keyboard/mouse acceptance on two real devices is still pending**; use only on distinct, nonsensitive, owner-approved private-LAN desktops. See [INPUT-SHARING.md](docs/INPUT-SHARING.md) and [input queue and cancellation](docs/INPUT-QUEUE.md).
 
 See [desktop options](docs/DESKTOP.md), [workspace](docs/WORKSPACE.md), [signed invitations](docs/ENROLLMENT.md), [networking](docs/NETWORKING.md), and [protocol compatibility](docs/PROTOCOL.md). A reachable direct UDP route is required. DNS does not bypass NAT/CGNAT or restrictive firewalls; internet exposure is not qualified.
 

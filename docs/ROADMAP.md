@@ -171,3 +171,8 @@ Staged readback is implemented and locally validated at 507afc0, without a repro
 ## KVM / independent capabilities priority (2026-11-27)
 
 User prioritized public usable previews and independent multi-device keyboard/mouse control. First implement and qualify the foreground Windows input pad, including explicit and spatial focus transfer, with separate approval and transport. Then validate on two distinct owner-approved physical machines, expand to eight, measure event/ACK/application latency and recovery, qualify native local-input capture plus real physical monitor-edge topology and emergency return, and build a unified connection manager with separately authorized screen/input/resource channels and simultaneous Hybrid direction management. Clipboard, files and audio are separate future capabilities. Retain the portable CPU video path and prior timer/adaptive-media roadmap. See INPUT-SHARING.md.
+
+
+### Input motion and freshness checkpoint
+
+Local pointer consolidation and cancellation-safe bounded input acceptance are implemented. Next validate physical two-machine KVM with owner approval; do not introduce global hooks or physical edge switching before native-source/stop/release qualification. Then extend independently scoped capabilities and Hybrid sessions. Preserve the prior video timer and adaptive-pipeline work.

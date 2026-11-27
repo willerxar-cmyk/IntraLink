@@ -104,22 +104,26 @@ async fn receive(
         // One outstanding event only; no remote-controlled queue, resource
         // expansion, or acknowledgment before the local sink accepts it.
         let (accepted, result) = oneshot::channel();
-        timeout(
-            remaining(deadline)?,
-            sink.send(Delivery { record, accepted }),
-        )
-        .await?
-        .map_err(|_| anyhow::anyhow!("Local input sink closed"))?;
-        timeout(remaining(deadline)?, result)
-            .await
-            .context("Local input acceptance timed out")??
-            .context("Local input rejected")?;
-        state.commit(record)?;
-        timeout(
-            remaining(deadline)?,
-            tx.write_all(&record.sequence.to_be_bytes()),
-        )
-        .await??;
+        // A lost controller cancels the acceptance handle immediately rather
+        // than leaving the native sink with an apparently live stale event.
+        // Bound the complete delivery/acceptance/ACK phase, not each substep.
+        timeout(remaining(deadline)?, async {
+            tokio::select! {
+                biased;
+                _ = connection.closed() => bail!("Controller disconnected during input acceptance"),
+                result = async {
+                    sink.send(Delivery { record, accepted }).await
+                        .map_err(|_| anyhow::anyhow!("Local input sink closed"))?;
+                    result.await.context("Local input acceptance dropped")?
+                        .context("Local input rejected")?;
+                    state.commit(record)?;
+                    tx.write_all(&record.sequence.to_be_bytes()).await?;
+                    Ok::<(), anyhow::Error>(())
+                } => result,
+            }
+        })
+        .await
+        .context("Input delivery/acceptance deadline exceeded")??;
         count += 1;
         if record.event == Event::End {
             tx.finish()?;
@@ -199,10 +203,17 @@ impl InputConnection {
     /// A canceled future may leave bytes in flight. A caller must close the
     /// connection rather than retry a send whose acknowledgment was not read.
     pub async fn send(&mut self, event: Event) -> Result<()> {
+        self.send_with_budget(event, IO_LIMIT).await
+    }
+
+    /// Limit a caller's remaining local event budget without changing the
+    /// negotiated input/1 protocol. A failed acceptance is never retried.
+    pub async fn send_with_budget(&mut self, event: Event, budget: Duration) -> Result<()> {
         ensure!(!self.closed, "Input connection closed");
+        ensure!(!budget.is_zero(), "Input send budget expired");
         let record = self.state.next_record(event)?;
         let bytes = record.encode()?;
-        let limit = remaining(self.deadline)?;
+        let limit = remaining(self.deadline)?.min(budget);
         self.closed = true;
         let result = timeout(limit, async {
             self.tx.write_all(&bytes).await?;

@@ -142,3 +142,8 @@ Staged D3D11 copy completion is an explicit owned-window experiment. One retaine
 ## Independent input / KVM preview (2026-11-27)
 
 The Windows input-preview feature adds an independent intralink/input/1 QUIC ALPN. The portable core owns the canonical record, sequence, focus and spatial-layout state; transport owns peer pinning, deadlines, rate bounds and acceptance ACKs; intralink-input-win isolates the native SendInput sink; the app owns fresh consent and its visible foreground pad/host stop window. Eight connected slots share a controller endpoint but only one input focus. Transfer requires release confirmation from the old host before activation on the new one. Video remains a separate capability and unchanged wire protocol. The explicit spatial pad is not a global physical-monitor edge hook. Hybrid profiles can reverse roles in separate approved commands, not simultaneous multiplexed control. See INPUT-SHARING.md.
+
+
+### Bounded input mailbox
+
+The foreground input producer and per-host transport worker now share a bounded local mailbox (`intralink-transport/src/input_queue.rs`). It retains at most sixteen commands and one in-flight wire record. Only adjacent unsent absolute moves without held input or an acknowledgment may be replaced; no wire sequence is allocated until a retained command is sent. The local age/acceptance budget is 500 ms. See [INPUT-QUEUE.md](INPUT-QUEUE.md).

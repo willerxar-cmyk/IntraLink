@@ -261,3 +261,139 @@ async fn disconnected_controller_closes_consumer_with_owned_release_plan() -> Re
     listener.close().await;
     Ok(())
 }
+
+#[tokio::test]
+async fn coalesced_motion_preserves_exact_quic_click_drag_key_and_focus_order() -> Result<()> {
+    use crate::input_queue::{Enqueue, channel};
+    let controller = crate::bind_workspace_controller(SecretKey::generate()).await?;
+    let host = host(controller.id()).await?;
+    let mut session =
+        InputConnection::connect(&controller, host.endpoint.id(), &[host.address]).await?;
+    session.send(Event::Activate).await?;
+    let (sender, mut receiver) = channel();
+    let mut expected = vec![Event::Activate];
+    let mut replaced = 0;
+    let mut timings = Vec::new();
+    let key = Key::new(225).unwrap();
+    for round in 0..10u16 {
+        let mut count = 0;
+        for x in 0..32u16 {
+            let event = Event::Move {
+                x: round * 32 + x,
+                y: round,
+            };
+            match sender.push(event, None)? {
+                Enqueue::Added => count += 1,
+                Enqueue::ReplacedMotion => replaced += 1,
+            }
+        }
+        assert_eq!(count, 1);
+        expected.push(Event::Move {
+            x: round * 32 + 31,
+            y: round,
+        });
+        let transitions = [
+            Event::Button {
+                button: Button::Left,
+                down: true,
+            },
+            Event::Move { x: 500, y: round },
+            Event::Move { x: 501, y: round },
+            Event::Button {
+                button: Button::Left,
+                down: false,
+            },
+            Event::Key { key, down: true },
+            Event::Key { key, down: false },
+            Event::Wheel {
+                horizontal: false,
+                steps: -1,
+            },
+        ];
+        for event in transitions {
+            assert_eq!(sender.push(event, None)?, Enqueue::Added);
+            expected.push(event);
+        }
+        for _ in 0..(count + transitions.len()) {
+            let command = receiver.recv().await?.context("Missing queued input")?;
+            let started = Instant::now();
+            session
+                .send_with_budget(command.event, command.remaining()?)
+                .await?;
+            timings.push(started.elapsed());
+        }
+    }
+    let (ack, accepted) = oneshot::channel();
+    sender.push(Event::Deactivate, Some(ack))?;
+    let command = receiver.recv().await?.context("Missing release")?;
+    session
+        .send_with_budget(command.event, command.remaining()?)
+        .await?;
+    command
+        .acknowledgment
+        .context("Missing release reply")?
+        .send(())
+        .map_err(|_| anyhow::anyhow!("Release acknowledgment dropped"))?;
+    accepted.await?;
+    expected.push(Event::Deactivate);
+    session.send(Event::End).await?;
+    expected.push(Event::End);
+    drop(session);
+    let records = host.transport.await??;
+    let received = host.consumer.await??;
+    assert_eq!(received, expected);
+    assert_eq!(records as usize, expected.len());
+    assert_eq!(replaced, 310);
+    timings.sort_unstable();
+    let percentile =
+        |rank: usize| timings[(timings.len() * rank).div_ceil(100) - 1].as_secs_f64() * 1000.0;
+    println!(
+        "input_queue_loopback: generated_idle_moves=320, replaced={replaced}, sent_idle_moves=10, total_records={records}, ack_samples={}, ack_p50_ms={:.3}, ack_p95_ms={:.3}, ack_max_ms={:.3}",
+        timings.len(),
+        percentile(50),
+        percentile(95),
+        percentile(100)
+    );
+    host.endpoint.close().await;
+    controller.close().await;
+    Ok(())
+}
+
+#[tokio::test]
+async fn expired_client_budget_cancels_pending_host_acceptance() -> Result<()> {
+    let listener = bind_input(SecretKey::generate(), "127.0.0.1:0".parse()?).await?;
+    let controller = crate::bind_workspace_controller(SecretKey::generate()).await?;
+    let address = listener
+        .bound_sockets()
+        .into_iter()
+        .find(SocketAddr::is_ipv4)
+        .context("No loopback")?;
+    let (tx, mut rx) = mpsc::channel::<Delivery>(1);
+    let host = listener.clone();
+    let approved = controller.id();
+    let served = tokio::spawn(async move { serve_input(&host, approved, 20, tx).await });
+    let mut session = InputConnection::connect(&controller, listener.id(), &[address]).await?;
+    let (sent, canceled) = tokio::join!(
+        session.send_with_budget(Event::Activate, Duration::from_millis(100)),
+        async {
+            let mut delivery = rx.recv().await.context("No pending activation")?;
+            assert_eq!(delivery.record.event, Event::Activate);
+            // Intentionally withhold acceptance to exercise an actual QUIC
+            // deadline and verify that the local delivery becomes revoked.
+            timeout(Duration::from_secs(2), delivery.accepted.closed()).await?;
+            ensure!(
+                delivery.accepted.is_closed(),
+                "Stale delivery remained live"
+            );
+            Ok::<(), anyhow::Error>(())
+        }
+    );
+    assert!(sent.is_err());
+    canceled?;
+    assert!(session.send(Event::Heartbeat).await.is_err());
+    assert!(served.await?.is_err());
+    assert!(rx.recv().await.is_none());
+    controller.close().await;
+    listener.close().await;
+    Ok(())
+}

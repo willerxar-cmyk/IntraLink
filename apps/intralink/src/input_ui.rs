@@ -20,6 +20,7 @@ use intralink_input_win::NativeInput;
 use intralink_transport::{
     bind_workspace_controller,
     input::{Delivery, InputConnection, bind_input, serve_input},
+    input_queue::{self, INTERACTIVE_BUDGET},
 };
 use intralink_vault::{Direction, Route, Vault};
 use iroh::{Endpoint, EndpointId};
@@ -43,7 +44,6 @@ mod pad;
 const POLL: Duration = Duration::from_millis(8);
 const HEARTBEAT: Duration = Duration::from_millis(500);
 const UI_LEASE: Duration = Duration::from_secs(1);
-const QUEUE: usize = 16;
 
 #[derive(clap::Subcommand)]
 pub enum Action {
@@ -190,14 +190,9 @@ async fn host(path: &Path, address: SocketAddr, controller: &str, seconds: u16) 
     Ok(())
 }
 
-struct Command {
-    event: Event,
-    acknowledgment: Option<oneshot::Sender<()>>,
-}
-
 struct Slot {
     name: String,
-    sender: mpsc::Sender<Command>,
+    sender: input_queue::Sender,
     ready: Arc<AtomicBool>,
     last_ui: Arc<Mutex<Instant>>,
     task: JoinHandle<Result<()>>,
@@ -218,19 +213,14 @@ impl Slot {
 
     fn queue(&self, event: Event, acknowledgment: Option<oneshot::Sender<()>>) -> Result<()> {
         ensure!(self.connected(), "Selected input host is not connected");
-        self.sender
-            .try_send(Command {
-                event,
-                acknowledgment,
-            })
-            .map_err(|_| anyhow::anyhow!("Input queue full or closed; refusing stale events"))
+        self.sender.push(event, acknowledgment).map(|_| ())
     }
 
     async fn confirmed(&self, event: Event, window: &mut Window) -> Result<()> {
         let (acknowledgment, mut accepted) = oneshot::channel();
         self.pulse()?;
         self.queue(event, Some(acknowledgment))?;
-        let deadline = tokio::time::Instant::now() + Duration::from_secs(3);
+        let deadline = tokio::time::Instant::now() + INTERACTIVE_BUDGET;
         loop {
             window.update();
             ensure!(
@@ -248,7 +238,7 @@ impl Slot {
 }
 
 fn start_slot(endpoint: &Endpoint, name: String, identity: EndpointId, route: Route) -> Slot {
-    let (sender, mut receiver) = mpsc::channel::<Command>(QUEUE);
+    let (sender, mut receiver) = input_queue::channel();
     let ready = Arc::new(AtomicBool::new(false));
     let worker_ready = ready.clone();
     let last_ui = Arc::new(Mutex::new(Instant::now()));
@@ -266,11 +256,11 @@ fn start_slot(endpoint: &Endpoint, name: String, identity: EndpointId, route: Ro
                 tokio::select! {
                     biased;
                     command = receiver.recv() => {
-                        let Some(command) = command else { break; };
+                        let Some(command) = command? else { break; };
                         if connection.active() || command.event == Event::Activate {
                             verify_ui_lease(&worker_ui)?;
                         }
-                        connection.send(command.event).await?;
+                        connection.send_with_budget(command.event, command.remaining()?).await?;
                         if let Some(acknowledgment) = command.acknowledgment {
                             // A canceled switch must not leave an active host.
                             acknowledgment.send(()).map_err(|_| anyhow::anyhow!("Input switch canceled"))?;
@@ -278,8 +268,12 @@ fn start_slot(endpoint: &Endpoint, name: String, identity: EndpointId, route: Ro
                         if command.event == Event::End { break; }
                     }
                     _ = heartbeat.tick() => {
-                        if connection.active() { verify_ui_lease(&worker_ui)?; }
-                        connection.send(Event::Heartbeat).await?;
+                        if connection.active() {
+                            verify_ui_lease(&worker_ui)?;
+                            connection.send_with_budget(Event::Heartbeat, INTERACTIVE_BUDGET).await?;
+                        } else {
+                            connection.send(Event::Heartbeat).await?;
+                        }
                     }
                 }
             }

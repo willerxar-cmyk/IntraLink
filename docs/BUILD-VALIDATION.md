@@ -88,3 +88,8 @@ Run the full previous gate, including capture-lock, plus `desktop-profile-check 
 ## Input preview build gates
 
 The opt-in Windows input-preview crate must pass strict Clippy and actual workspace tests including input-preview,wgc-preview,jpeg-parallel,resource-monitor. Standalone core tests include input protocol/state/layout; actual QUIC tests cover independently authenticated three/eight hosts, release ordering, wrong peer, malformed sequence, rejection and disconnect release plan. Native scan mapping unit tests construct INPUT values without injecting into the developer desktop. Preserve CPU, NVIDIA, WGC and scalar gates; check that the portable input Release dependency graph contains neither mini-cuda nor mini-nvcodec. Run input --help, input host --help and input workspace --help on the exact Release binary. Physical input acceptance is not inferred from these tests. Preserve native video regressions and benchmark logs.
+
+
+### Input motion queue gate
+
+Run `cargo test --locked -p intralink-transport input -- --nocapture` in addition to affected workspace and strict Clippy gates. Require exact retained input order, no drag/chord coalescing, bounded saturation, expiry, canceled receive, actual QUIC acceptance cancellation and the three/eight-host regression. Local ACK timing is not physical input-to-display latency. Do not benchmark during concurrent builds. See INPUT-QUEUE.md.

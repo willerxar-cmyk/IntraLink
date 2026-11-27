@@ -112,3 +112,8 @@ The diagnostic-only staged readback path rejects pending staging replacement, re
 ## Separate foreground input authorization (2026-11-27)
 
 Pairing or screen-view consent never authorizes input. Input Host is a separate foreground command, explicit private IPv4 bind, pinned single peer, fresh local typed APPROVE, visible topmost stop window and bounded duration. The Controller captures inside its own focused pad only. No global hooks, background persistence, privilege escalation, secure-desktop bypass, shell, clipboard, files or arbitrary OS codes. Strict sequence/state validation, exact per-event acceptance ACK, bounded queues and rate, idle deadline and active foreground lease limit stale input. On ordinary release or stop/disconnect, release only successfully applied session-owned keys/buttons. OS rejection, forced process kill and simultaneous local physical input can defeat perfect release; physical acceptance and independent audit remain open. Do not expose this experimental mode to the internet. See INPUT-SHARING.md.
+
+
+### Input queue freshness and disconnect cancellation
+
+Interactive queue and acceptance deadlines now fail closed on age or nonreplaceable saturation. No transition or focus barrier is silently dropped. The host observes QUIC closure while local acceptance is outstanding, dropping the acceptance receiver so a waiting native consumer sees cancellation. This does not preempt an OS call already in progress. The existing consent, visible stop, local lease, pinning, private-LAN policy and native release ownership are unchanged. See [INPUT-QUEUE.md](INPUT-QUEUE.md).

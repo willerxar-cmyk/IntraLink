@@ -13,6 +13,7 @@ use tokio::time::timeout;
 
 pub mod desktop;
 pub mod input;
+pub mod input_queue;
 
 use intralink_core::network::{MAX_CANDIDATES, select_candidates};
 
