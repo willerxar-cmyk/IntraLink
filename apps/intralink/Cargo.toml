@@ -61,3 +61,7 @@ workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
+
+[[example]]
+name = "emulator_screen_acceptance"
+required-features = ["desktop-preview"]

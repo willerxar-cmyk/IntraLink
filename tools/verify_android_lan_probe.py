@@ -69,17 +69,19 @@ def private_ip(value):
     return str(ip)
 
 
-def run_direction(adb, serial, executable, windows, android, windows_port, android_port, direction, media, surface):
+def run_direction(adb, serial, executable, windows, android, windows_port, android_port, direction, media, surface, window):
     role = "host" if direction == "outbound" else "base"
     command = [str(executable), role, f"{windows}:{windows_port}", f"{android}:{android_port}"]
     if surface:
         command.append("surface")
     elif media:
         command.append("media")
+    if window:
+        command = [str(executable), f"{android}:{android_port}", "--surface-fixture"]
     wp = Process(command)
     ap = None
     try:
-        wid = wp.until(r"LAN_WINDOWS_ID ([a-zA-Z0-9]+)$", time.monotonic() + 15, "Windows")[1]
+        wid = wp.until(r"EMULATOR_BASE_ID ([a-zA-Z0-9]+)$" if window else r"LAN_WINDOWS_ID ([a-zA-Z0-9]+)$", time.monotonic() + 15, "Windows")[1]
         target = windows if direction == "outbound" else android
         port = windows_port if direction == "outbound" else android_port
         ap = Process([str(adb), "-s", serial, "shell", "am", "instrument", "-w", "-r",
@@ -93,6 +95,16 @@ def run_direction(adb, serial, executable, windows, android, windows_port, andro
         detail = r" frames=(\d+) bytes=(\d+)" if media else ""
         a = ap.until(r"LAN_ANDROID_PASSED (inbound|outbound) (\d+)ms" + detail + r"; revocation and lease cleanup passed",
                      deadline, "Android")
+        if window:
+            w = wp.until(r"EMULATOR_VIEW_PASSED (.+)$", deadline, "Windows")
+            values = dict(re.findall(r"(\w+)=(\d+)", w[1]))
+            if (a[1] != direction or values.get("frames") != a[3] or values.get("bytes") != a[4]
+                or values.get("presented") != "60" or values.get("fixture") != "60"):
+                raise RuntimeError("Window and Android media counters differ")
+            if ap.proc.wait(timeout=5) != 0 or wp.proc.wait(timeout=5) != 0:
+                raise RuntimeError("Nonzero process exit")
+            print("PHYSICAL WINDOW PASS: " + w[1] + f"; Android session {a[2]} ms", flush=True)
+            return
         w = wp.until(r"LAN_WINDOWS_PASSED (host|base) (\d+)ms" + detail, deadline, "Windows")
         if a[1] != direction or w[1] != role:
             raise RuntimeError("Direction mismatch")
@@ -121,7 +133,10 @@ def main():
     parser.add_argument("--direction", choices=("outbound", "inbound", "both"), default="both")
     parser.add_argument("--media", action="store_true", help="Requires explicit lan-fixture debug builds; generated pixels only")
     parser.add_argument("--surface", action="store_true", help="Normal Android native screen path with generated Surface; no projection")
+    parser.add_argument("--window", action="store_true", help="Use the generated-Surface acceptance viewer; requires --surface")
     args = parser.parse_args()
+    if args.window and not args.surface:
+        parser.error("--window requires --surface")
     if args.surface and (args.media or args.direction != "inbound"):
         parser.error("--surface requires --direction inbound, without --media")
     windows, android = private_ip(args.windows_ip), private_ip(args.android_ip)
@@ -140,7 +155,7 @@ def main():
         parser.error("Selected device and built example are required")
     for direction in (("outbound", "inbound") if args.direction == "both" else (args.direction,)):
         run_direction(adb, args.serial, args.executable.resolve(), windows, android,
-                      args.windows_port, args.android_port, direction, args.media or args.surface, args.surface)
+                      args.windows_port, args.android_port, direction, args.media or args.surface, args.surface, args.window)
 
 
 if __name__ == "__main__":

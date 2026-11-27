@@ -1,0 +1,9 @@
+2026-11-27, physical TB373FU API36 ARM64 and Windows; generated fixture only; dedicated AVD consent tests separately. No personal display capture or remote input.
+PID 31292 strict desktop Clippy and release example build exit 0.
+PID 28904 initial UI test failed (Apply vs APPLY button); corrected.
+PID 36396 exit 1: Real OS denial and no active projection: PASSED. Positive consent/foreground projection guard passed, then Viewer: Error: deadline has elapsed. No successful AVD end-to-end screen view. UDP listener diagnostic PID 25444 timed out; root cause inconclusive. Temporary forward removed; AVD projection null and services empty, AVD stopped.
+PID 34136 strict final example Clippy and Release exit 0.
+PID 9680 exit 0: PHYSICAL WINDOW PASS: frames=60 bytes=45276 repeats=0 no_updates=0 changed=60 fixture=60 first_ms=1264 total_ms=3368 decode_us=4607 presented=60 active_span_ms=2090 presentation_us=737321; Android session 3292 ms.
+PID 7572: PHYSICAL WINDOW PASS: frames=60 bytes=45276 repeats=0 no_updates=0 changed=60 fixture=60 first_ms=1233 total_ms=3341 decode_us=3800 presented=60 active_span_ms=2079 presentation_us=741615; Android session 3258 ms. Tablet projection null and services empty, AVD stopped. Prior CI 46046993576/46046978230 SUCCESS.
+Windows example SHA256 2eb7ee7ecd5c357135efa6a671a288603edc3e4da1948d41885e776294c7aa95.
+Exact pixels verified before minifb update, 124416000 per session. Window presentation success is API submission, not monitor photon/physical latency proof. First-to-last new-frame span excludes handshake. No production readiness, sustained 60fps or actual physical MediaProjection claim.

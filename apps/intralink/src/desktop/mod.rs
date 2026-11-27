@@ -3,6 +3,7 @@ mod calibration;
 mod capture_fixture;
 pub use capture_fixture::PatternArgs;
 mod codec;
+mod decoder;
 mod host_calibration;
 mod jpeg;
 mod jpeg_benchmark;
