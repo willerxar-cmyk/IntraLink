@@ -1,0 +1,17 @@
+# Bounded AVC producer packetization (v9 diagnostic)
+
+Status: implemented and host-tested Rust foundation. No change to the existing v9 ALPN, approval or loopback-only restriction; no Android screen transport enabled.
+
+## Encoder adapter
+
+`intralink_core::h264::{Framing, Packetizer, Profile}` normalizes a locally produced complete coded picture into the existing v9 access-unit envelope. Framing is explicit: Annex B (3/4-byte start codes) or four-byte big-endian NAL lengths. Never infer framing from payload bytes. The separate CSD API accepts exactly one framed SPS and one framed PPS; inline parameter sets must agree with the immutable cached pair. The adapter adds an AUD when missing and repeats the verified pair on each IDR. It rejects partial/multiple pictures, unknown NAL types, malformed or excessive lengths, unsupported parameter sets, missing initial IDR, changed configuration, incorrect picture flags, GOP expiry and session sequence overflow. A rejection does not advance accepted state and clears the output buffer.
+
+The restricted existing Profile and StreamState remain the final authority (High progressive 8-bit 4:2:0, exact 16:9 540/720/1080, strict VUI/POC/single-slice constraints). Many Android encoders, portrait displays and vendor-specific outputs will not satisfy that profile; do not change or rewrite real SPS/PPS to falsely satisfy it. No avcC record parsing or partial-buffer assembly is claimed. The adapter uses at most 32 stack-held borrowed NAL descriptors, one reusable caller-owned output record of at most 2 MiB, and bounded parameter-set caches. It copies coded data directly to the record buffer, not a second full-sized scratch frame. The existing v9 structural parser is not a complete bitstream validator or a decoder sandbox.
+
+## Transport and qualification
+
+Use one ordered producer per approved encoder epoch. The existing transport already reserves capture demand and bounded credit and validates receipts. The new authenticated loopback test integrates Packetizer with that demand path: 3 records (IDR/P/IDR), matching byte payloads and sender/receiver counters. No queue or wire-format duplication. On lost coded picture, incompatible format or unsatisfied demand, fail closed; recovery on a real encoder requires explicit safe epoch/IDR handling and separate qualification. Do not drop arbitrary P frames and continue.
+
+Host gates: core+transport strict Clippy exit 0; core 105/105, transport 61/61 and three multi-host integration tests passed. Additional test with six previously generated real 1080p NVENC AVC access units (12,126 source bytes, two IDRs) passed exact NAL-content comparisons and both independent structural states; final core lint passed. See benchmarks/avc-packetizer-validation-20261127.txt and crates/intralink-d3d11/examples/fixtures/README.md. This is not Android MediaCodec execution, native remote decode or a throughput benchmark.
+
+Next: use authorized Android device or isolated emulator to observe real format/CSD, partial-buffer and timestamp behavior after fresh native consent. Design a separately consented foreground media session, negotiated actual encoder and receiver capabilities (including portrait, software decoder and safe color/geometry handling), bounded JNI buffer lifetimes and cancellation. Do not route untrusted AVC into a native decoder before containment and negative testing. Leave the existing local metrics-only Android diagnostic and portable Compact/Tiles/JPEG path unchanged.

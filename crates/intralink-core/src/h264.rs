@@ -2,8 +2,11 @@
 //! a complete AVC syntax validator or a sandbox for a native decoder.
 use crate::desktop::{MAX_FPS, MAX_FRAME_BYTES, MAX_IN_FLIGHT_RECORDS, MAX_SECONDS};
 
+#[path = "h264_packetizer.rs"]
+mod packetizer;
 #[path = "h264_parameters.rs"]
 mod parameters;
+pub use packetizer::{Framing, Packetizer};
 
 pub const ALPN: &[u8] = b"intralink/view/9-h264";
 pub const REQUEST: &[u8; 17] = b"INTRALINK/9 VIEW\x03";
@@ -110,11 +113,15 @@ pub fn wrap(
     if sequence == 0 || annex_b.is_empty() || annex_b.len() > MAX_ACCESS_UNIT {
         return Err(Error::Size);
     }
+    begin_record(sequence, keyframe, output);
+    output.extend_from_slice(annex_b);
+    Ok(())
+}
+
+fn begin_record(sequence: u32, keyframe: bool, output: &mut Vec<u8>) {
     output.clear();
     output.extend_from_slice(&[0x48, 1, u8::from(keyframe), 0]);
     output.extend_from_slice(&sequence.to_be_bytes());
-    output.extend_from_slice(annex_b);
-    Ok(())
 }
 
 pub fn unwrap(bytes: &[u8]) -> Result<AccessUnit<'_>, Error> {

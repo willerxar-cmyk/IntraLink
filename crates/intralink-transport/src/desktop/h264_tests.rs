@@ -289,3 +289,61 @@ async fn early_local_timer_does_not_grant_next_capture() -> Result<()> {
     host.close().await;
     Ok(())
 }
+
+#[tokio::test]
+async fn encoder_packetizer_reuses_authenticated_demand_and_receipts() -> Result<()> {
+    use h264::{Framing, Packetizer};
+    let (host, viewer, addr) = endpoints().await?;
+    let (source, mut requests) = mpsc::channel::<CaptureRequest>(1);
+    let producer = async {
+        let mut packetizer = Packetizer::new(profile());
+        let inputs: [(Framing, bool, &[u8]); 3] = [
+            (Framing::AnnexB, true, &IDR[5..]),
+            (Framing::LengthPrefixed4, false, &[0, 0, 0, 2, 0x61, 0xe0]),
+            (Framing::AnnexB, true, &IDR[IDR.len() - 5..]),
+        ];
+        for (framing, key, data) in inputs {
+            let req = requests.recv().await.context("Missing capture demand")?;
+            let mut output = req.buffer;
+            packetizer
+                .packetize(framing, key, data, &mut output)
+                .map_err(|err| anyhow::anyhow!("Packetizer rejected fixture: {err:?}"))?;
+            ensure!(
+                req.reply.send(Ok(Capture::Frame(output))).is_ok(),
+                "Capture canceled"
+            );
+        }
+        let req = requests.recv().await.context("Missing end demand")?;
+        ensure!(req.reply.send(Ok(Capture::End)).is_ok(), "Capture canceled");
+        Ok::<(), anyhow::Error>(())
+    };
+    let mut observed = Vec::new();
+    let (served, viewed, produced) = tokio::join!(
+        serve_h264_diagnostic(&host, viewer.id(), profile(), source),
+        view_h264_diagnostic(
+            &viewer,
+            host.id(),
+            std::slice::from_ref(&addr),
+            profile(),
+            |f| {
+                let result = (|| {
+                    let au = h264::unwrap(&f.payload).map_err(|err| anyhow::anyhow!("{err:?}"))?;
+                    let expected = if au.keyframe { IDR } else { P };
+                    ensure!(au.annex_b == expected, "Normalized bytes changed");
+                    observed.push((f.record_sequence, au.sequence, au.keyframe));
+                    Ok(())
+                })();
+                ready(result)
+            }
+        ),
+        producer
+    );
+    produced?;
+    let served = served?;
+    assert_eq!(served, viewed?);
+    assert_eq!(served.frames, 3);
+    assert_eq!(observed, vec![(1, 1, true), (2, 2, false), (3, 3, true)]);
+    viewer.close().await;
+    host.close().await;
+    Ok(())
+}

@@ -147,3 +147,7 @@ The Windows input-preview feature adds an independent intralink/input/1 QUIC ALP
 ### Bounded input mailbox
 
 The foreground input producer and per-host transport worker now share a bounded local mailbox (`intralink-transport/src/input_queue.rs`). It retains at most sixteen commands and one in-flight wire record. Only adjacent unsent absolute moves without held input or an acknowledgment may be replaced; no wire sequence is allocated until a retained command is sent. The local age/acceptance budget is 500 ms. See [INPUT-QUEUE.md](INPUT-QUEUE.md).
+
+## Bounded local AVC producer adapter (2026-11-27)
+
+The shared Rust H.264 packetizer normalizes complete explicitly framed local encoder units into the existing restricted v9 diagnostic envelope, directly into the existing reusable record buffer. The loopback-only QUIC demand and credit pipeline remains unchanged. See [AVC-PACKETIZER.md](AVC-PACKETIZER.md). No new wire capability, JNI screen session or remote decoder is enabled.

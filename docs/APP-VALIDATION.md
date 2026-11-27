@@ -439,3 +439,7 @@ Candidate directory dist/android-capture-candidate-20261127; retain prior previe
 - intralink-android-capture-instrumentation.apk: 16729 bytes; SHA256 18ee543f02634f4b80467f8227303b65b756708c96c9aa7b9fb07cdc8fb1e332.
 - intralink-android-capture-release-unsigned.aab: 9656665 bytes; SHA256 935a899dcf324bf885f2555de02e6d03f33a4ca3fc7299e1239a07668a561b1a.
 - intralink-android-capture-release-unsigned.apk: 21415541 bytes; SHA256 a3defec86f03b7c6c516d433052db66d11b3b11a66b55b76a9c88595baf4d072.
+
+## AVC producer packetization (2026-11-27)
+
+Core+transport strict lint and 105 core / 61 transport / 3 multi-host integration tests passed (PID 30396, exit 0). Additional exact six-unit native generated 1080p AVC regression passed (PID 12056; final core strict lint). Packetizer normalization uses the existing v9 loopback-only transport and does not enable Android screen transmission or native remote decoding. See [AVC-PACKETIZER.md](AVC-PACKETIZER.md) and benchmarks/avc-packetizer-validation-20261127.txt.

@@ -57,3 +57,7 @@ The existing NVDEC parser and native decoder can execute under the same reduced 
 ## Portable software baseline (2026-11-26)
 
 Compact/Tiles/JPEG are the required native desktop preview baseline and do not use CUDA. `desktop-preview` independently builds the CPU codec path; `wgc-preview` can add D3D11 capture/scaling and `nvenc-preview` adds NVIDIA-specific diagnostics. Do not interpret NVIDIA hardware qualification as a universal decoder. Future H.264 hardware negotiation must verify actual encode/decode capability on both sides, not the GPU vendor alone. The optional headless NVIDIA worker remains limited to its trusted fixture; other hardware and software H.264 implementations are not qualified. Keep the software v8 path available and explicit, not a hidden downgrade from a selected hardware or security mode. Adaptive JPEG quality is a local bounded policy; it does not alter lossless tiles or enable a new codec.
+
+## Local AVC packetizer (2026-11-27)
+
+Shared Rust adapter implements complete Annex B/length-prefixed units, separate SPS/PPS and missing AUD normalization, directly to existing v9 envelopes. Host transport tests and exact native generated 1080p AVC NAL comparisons passed. Not general Android codec compatibility or a remotely reachable AVC decoder. See [AVC-PACKETIZER.md](AVC-PACKETIZER.md).

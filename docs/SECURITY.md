@@ -136,3 +136,7 @@ The optional X11 receiving host shares the existing pinned peer, private-LAN res
 ## Android local encoder diagnostic
 
 Preview.6 adds a non-exported generated-fixture Activity and non-exported mediaProjection foreground service. Fresh system consent and visible notification are required per run; token used once, no persistent grant or background source. Only local metrics are retained in memory; encoded output buffers are released without reading/writing/transmitting frame content. Separate vault Activity stays FLAG_SECURE. Activity focus/pause and local/system stop cancel; geometry/visibility changes terminate rather than reusing a token. 15 s capture deadline and bounded profile attempts between native calls. Native resource release remains best effort on process/OS/codec failure. No microphone, accessibility, remote screen or remote input permissions/authority. API 26+ compatibility uses scoped Kotlin deprecation annotations for legacy platform result/Parcelable APIs, not Lint suppressions. See ANDROID.md.
+
+## AVC producer packetizer (2026-11-27)
+
+The v9 diagnostic adapter adds no permissions or listeners and preserves loopback-only restrictions. Explicit framing and exact parameter-set, sequence, size and GOP validation fail closed; invalid output is cleared. Structural validation is not native decoder containment. Android MediaProjection remains local metrics-only; paired diagnostic or input grants never imply screen authority. See [AVC-PACKETIZER.md](AVC-PACKETIZER.md).

@@ -56,3 +56,7 @@ Require the PASSED marker and successful result. Separately exercise first-run U
 ## Next implementation
 
 Qualify the manual pairing and one-shot authenticated transport on Android. Then qualify the local MediaProjection/MediaCodec encoder diagnostic on real devices; implement signed offline invitation UI, independently authorized capability session management, bounded AVC packetization/receiver compatibility and decoding, foreground input sharing only through supported authorized APIs, and a dashboard of independently granted capabilities. Linux X11/Wayland input remains a separate native adapter project. No unattended control, permission bypass, or physical KVM qualification claim.
+
+## Shared Rust AVC packetizer foundation (2026-11-27)
+
+The core now has a bounded Annex B/four-byte NAL length adapter with CSD/IDR handling, exact existing v9 validation and authenticated loopback integration. See [AVC-PACKETIZER.md](AVC-PACKETIZER.md). The preview.6 app is unchanged; the existing diagnostic still counts/release-only and does not read or send screen bytes. Real device format negotiation, JNI integration, independently consented session, native decoder containment and runtime tests are required before Android streaming.
