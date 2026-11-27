@@ -221,9 +221,16 @@ class CaptureActivity : Activity() {
         metrics.text = getString(R.string.capture_metrics_combined,
             getString(R.string.capture_metrics, result.codec, result.width, result.height,
                 result.fps, result.buffers, result.bytes, result.elapsedMs),
-            getString(R.string.capture_avc_metrics, avc.pictureBuffers, observedRate, avc.idrBuffers,
-                avc.configBuffers, avc.partialBuffers, avc.unparsedBuffers,
-                avc.keyFlagMismatches, avc.nonIncreasingPts))
+            getString(R.string.capture_metrics_combined,
+                getString(R.string.capture_avc_metrics, avc.pictureBuffers, observedRate, avc.idrBuffers,
+                    avc.configBuffers, avc.partialBuffers, avc.unparsedBuffers,
+                    avc.keyFlagMismatches, avc.nonIncreasingPts),
+                getString(R.string.capture_format_metrics,
+                    avc.format.sps?.profileIdc ?: -1, avc.format.sps?.levelIdc ?: -1,
+                    avc.format.sps?.width ?: -1, avc.format.sps?.height ?: -1,
+                    avc.format.csdMask, avc.format.changes, avc.format.colorStandard,
+                    avc.format.colorRange, avc.format.colorTransfer,
+                    avc.minDeltaUs, avc.maxDeltaUs, avc.ptsSpanUs)))
     }
 
     private class Fixture(activity: Activity) : View(activity) {

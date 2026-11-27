@@ -52,6 +52,13 @@ class AndroidCaptureHostCheck {
         check(stats.getConfigBuffers() == 1 && stats.getParameterMask() == 384, "parameter observations");
         check(stats.getPartialBuffers() == 2 && stats.getUnparsedBuffers() == 1, "partial/invalid distinction");
         check(stats.getKeyFlagMismatches() == 1 && stats.getNonIncreasingPts() == 1, "key and timing observations");
+        check(stats.getPtsSpanUs() == 10 && stats.getMinDeltaUs() == 10 && stats.getMaxDeltaUs() == 10,
+              "PTS interval statistics exclude non-increasing timestamps");
+        avc.record(1 << 1, false, false, false, 15);
+        avc.record(1 << 1, false, false, false, 45);
+        stats = avc.snapshot();
+        check(stats.getNonIncreasingPts() == 2 && stats.getPtsSpanUs() == 35
+              && stats.getMinDeltaUs() == 10 && stats.getMaxDeltaUs() == 25, "PTS high-water mark");
         System.out.println("Capture policy: geometry, lifecycle and AVC observation checks PASSED (host JVM, no Android runtime).");
     }
 }

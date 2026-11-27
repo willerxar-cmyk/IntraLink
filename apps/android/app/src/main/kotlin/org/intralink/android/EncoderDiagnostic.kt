@@ -130,7 +130,11 @@ internal class EncoderDiagnostic(
                 for (attempt in 0 until 32) {
                     val index = encoder.dequeueOutputBuffer(info, 0)
                     if (index == MediaCodec.INFO_TRY_AGAIN_LATER) break
-                    if (index == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) continue
+                    if (index == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                        observation.recordFormat(AvcOutputFormat.read(encoder.outputFormat,
+                            observation.snapshot().format.changes + 1))
+                        continue
+                    }
                     if (index >= 0) {
                         try {
                             if (info.size > 0) {

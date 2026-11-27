@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - bounded AVC producer and preview.8 format observations
+
+- Add two-picture bounded Rust AVC producer with loss/age/GOP recovery, fresh validated IDR, real PTS ordering and bounded keyframe requests. Reuse existing strict diagnostic packetizer and QUIC demand/receipt path; no wire change.
+- Add local exact operating-point selection with independent endpoint ceilings and bounded SPS prefix observation. Verify original and recovered generated AVC with a CPU-only external development decoder, including exact decoded bytes and color samples.
+- Observe actual Android MediaFormat/CSD SPS geometry/profile and PTS intervals through bounded JNI. No screen recording, remote transmission or decoder authority. Add native and emulator checks for these observations.
+
 ## Unreleased - Android preview.7 direct AVC observation
 
 - Borrow bounded direct MediaCodec output buffers synchronously through JNI to the shared Rust NAL framing parser; retain numeric metadata only, no captured bytes or network transmission.

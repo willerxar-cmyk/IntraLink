@@ -10,12 +10,21 @@ internal class AvcObservation {
         val unparsedBuffers: Long = 0,
         val keyFlagMismatches: Long = 0,
         val nonIncreasingPts: Long = 0,
-        val parameterMask: Int = 0
+        val parameterMask: Int = 0,
+        val ptsSpanUs: Long = 0,
+        val minDeltaUs: Long = 0,
+        val maxDeltaUs: Long = 0,
+        val format: AvcFormatObservation = AvcFormatObservation()
     )
 
     private var stats = Stats()
     private var continuation = false
+    private var firstPts: Long? = null
     private var lastPts: Long? = null
+
+    fun recordFormat(format: AvcFormatObservation) {
+        stats = stats.copy(format = format)
+    }
 
     fun snapshot(): Stats = stats
 
@@ -43,12 +52,26 @@ internal class AvcObservation {
         if (!picture) return
         val idr = mask and IDR != 0
         val previous = lastPts
-        lastPts = ptsUs
+        val valid = ptsUs >= 0 && (previous == null || ptsUs > previous)
+        var span = stats.ptsSpanUs
+        var minDelta = stats.minDeltaUs
+        var maxDelta = stats.maxDeltaUs
+        if (valid) {
+            if (firstPts == null) firstPts = ptsUs
+            span = ptsUs - requireNotNull(firstPts)
+            if (previous != null) {
+                val delta = ptsUs - previous
+                minDelta = if (minDelta == 0L) delta else minOf(minDelta, delta)
+                maxDelta = maxOf(maxDelta, delta)
+            }
+            lastPts = ptsUs
+        }
         stats = stats.copy(
             pictureBuffers = stats.pictureBuffers + 1,
             idrBuffers = stats.idrBuffers + if (idr) 1 else 0,
             keyFlagMismatches = stats.keyFlagMismatches + if (idr != key) 1 else 0,
-            nonIncreasingPts = stats.nonIncreasingPts + if (previous != null && ptsUs <= previous) 1 else 0
+            nonIncreasingPts = stats.nonIncreasingPts + if (!valid) 1 else 0,
+            ptsSpanUs = span, minDeltaUs = minDelta, maxDeltaUs = maxDelta
         )
     }
 

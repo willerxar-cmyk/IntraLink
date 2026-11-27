@@ -134,7 +134,18 @@ class OnboardingInstrumentation : Instrumentation() {
             check(AvcBuffers.inspect(java.nio.ByteBuffer.wrap(avc), avc.size) == -1)
             check(NativeBridge.inspectAvc(direct.slice(), avc.size, 99) == -1)
             check(NativeBridge.inspectAvc(direct.slice(), avc.size + 1, 0) == -1)
-            results.putString("stream", "\nIntraLink JNI onboarding: PASSED\nIntraLink AVC buffer boundary: PASSED\n")
+            // Exact native 1080p SPS from the preserved generated fixture.
+            val sps = byteArrayOf(0, 0, 1, 0x67, 0x64, 0, 0x2a, 0xac.toByte(), 0x2b, 0x20,
+                0x0f, 0, 0x44, 0xfc.toByte(), 0xb8.toByte(), 0x0b, 0x50, 0x10, 0x10, 0x1f,
+                0, 0, 3, 3, 0xe8.toByte(), 0, 1, 0xd4.toByte(), 0xc0.toByte(), 0x84.toByte())
+            val format = android.media.MediaFormat.createVideoFormat("video/avc", 1920, 1080)
+            format.setByteBuffer("csd-0", java.nio.ByteBuffer.wrap(sps))
+            format.setByteBuffer("csd-1", java.nio.ByteBuffer.wrap(byteArrayOf(0, 0, 1, 0x68, 0xeb.toByte(), 0x8f.toByte(), 0x2c)))
+            val observed = AvcOutputFormat.read(format, 1)
+            check(observed.width == 1920 && observed.height == 1080 && observed.csdMask == 384)
+            check(observed.sps == SpsMetadata(1920, 1080, 100, 42, 0, 3, 2))
+            check(NativeBridge.inspectAvcSps(direct.slice(), avc.size, 0) == -1L)
+            results.putString("stream", "\nIntraLink JNI onboarding: PASSED\nIntraLink AVC buffer boundary: PASSED\nIntraLink SPS metadata boundary: PASSED\n")
             resultCode = Activity.RESULT_OK
         } catch (error: Exception) {
             results.putString("stream", "\nIntraLink JNI onboarding: FAILED: " + error.javaClass.simpleName + "\n")

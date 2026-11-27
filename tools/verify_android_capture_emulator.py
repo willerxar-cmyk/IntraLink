@@ -150,8 +150,18 @@ def main():
         if not (pictures and idrs and unparsed and int(pictures[1]) > 0 and
                 int(idrs[1]) > 0 and int(unparsed[1]) == 0):
             raise RuntimeError("No fully observed AVC picture buffers or unsupported framing")
+        geometry = re.search(r"Size: (\d+)\D+(\d+)", result)
+        sps = re.search(r"SPS profile/level: (\d+)/(\d+)\D+(\d+)\D+(\d+)", result)
+        csd = re.search(r"CSD mask: (\d+)\D+Format changes: (\d+)", result)
+        pts = re.search(r"PTS delta min/max: (\d+)/(\d+)\D+Span: (\d+)", result)
+        if not (geometry and sps and csd and pts
+                and sps.group(3, 4) == geometry.group(1, 2)
+                and int(sps[1]) in (66, 77, 100) and int(sps[2]) > 0
+                and int(csd[1]) & 384 == 384 and int(csd[2]) >= 1
+                and 0 < int(pts[1]) <= int(pts[2]) <= int(pts[3])):
+            raise RuntimeError("Actual SPS/CSD or observed PTS geometry was not established")
         emu.no_active_capture()
-        print("Actual MediaProjection / MediaCodec / Rust AVC inspection: PASSED")
+        print("Actual MediaProjection / MediaCodec / Rust AVC/SPS and PTS inspection: PASSED")
         # The running fixture and 250 ms metric refresh may prevent
         # UiAutomator from reaching idle. Read the anchored bottom Stop button
         # bounds from the completed screen, then verify actual active OS

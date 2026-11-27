@@ -16,6 +16,7 @@ internal object NativeBridge {
     external fun revokeDevice(path: String, name: String, password: ByteArray): String
     external fun initializeNetwork(context: Context): Boolean
     external fun inspectAvc(buffer: java.nio.ByteBuffer, size: Int, framing: Int): Int
+    external fun inspectAvcSps(buffer: java.nio.ByteBuffer, size: Int, framing: Int): Long
     external fun reserveProbe(): Long
     external fun cancelProbe(id: Long)
     external fun runProbe(path: String, request: String, id: Long, password: ByteArray): String

@@ -17,7 +17,7 @@ from build_android_native import ndk_bin
 
 ABIS = {"arm64-v8a": 183, "x86_64": 62}
 EXPORTS = {"createProfile", "openProfile", "changeRole", "renameDevice", "pairDevice", "revokeDevice",
-           "initializeNetwork", "reserveProbe", "cancelProbe", "runProbe", "inspectAvc"}
+           "initializeNetwork", "reserveProbe", "cancelProbe", "runProbe", "inspectAvc", "inspectAvcSps"}
 PERMISSIONS = {
     "android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE",
     "android.permission.FOREGROUND_SERVICE",
