@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - bounded AVC producer and candidate verification
+
+- Add shared Rust AVC Annex B/length-prefixed NAL packetization with immutable parameter sets, AUD/IDR normalization and existing v9 structural checks; use one reusable record buffer and the authenticated diagnostic demand/receipt path. No remote Android video capability or new wire protocol.
+- Verify six preserved native generated AVC access units for exact NAL payload fidelity. Add independent desktop candidate archive, source documentation, SHA-256 and feature inventory verification to candidate CI.
+- Linux X11 corrected native Xvfb and combined candidate CI passed; Android preview.6 build/package CI passed. Both candidates downloaded and verified; physical and signing gates remain open.
+
 ## Unreleased - Android local capture diagnostic
 
 - Add non-exported local moving-fixture Activity and non-sticky mediaProjection foreground service, with explicit OS consent, visible notification/Stop and bounded worker cleanup.

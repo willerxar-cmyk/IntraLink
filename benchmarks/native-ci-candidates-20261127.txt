@@ -1,0 +1,66 @@
+Exact CI source checkpoints: Android 46034096588 SUCCESS at 26369881090f14d79c3e53638771bc8c1b869b02; Linux 46033717616 SUCCESS at 3f01ac060c85c61acb91af78470e9a7eea5a6ec4. Artifact hashes are distinct from GitHub Actions wrapper ZIP digests. No physical acceptance.
+
+=== PID 31232 ===
+[Reading last 28 lines (total: 28 lines)]
+
+
+{"conclusion":"success","status":"completed"}
+Name                                             Length
+----                                             ------
+android-arm64-notices.zip                        970048
+android-jvm-notices.zip                           13327
+android-x86_64-notices.zip                       974945
+ANDROID.md                                        11332
+CANDIDATE.json                                      721
+intralink-android-capture-debug.apk            21615903
+intralink-android-capture-instrumentation.apk     12578
+intralink-android-capture-release-unsigned.aab 18636067
+intralink-android-capture-release-unsigned.apk 21414981
+LICENSE                                           16726
+SHA256SUMS.txt                                      947
+e106c018d73146bd7c02957bb99452a20f5f1a495dbe613ea48de80113500b1b  ANDROID.md
+235244147782853337a6c065d5d5d612091156831f2406254d516ed6eda8760c  CANDIDATE.json
+fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85  LICENSE
+67714336838585c30c4ccb5f0b86bd73e2af3c4cbaf75c01e5b388acec61111a  android-arm64-notices.zip
+ea60be373bcf5c98f00f885bdb5c00cc7e1dd9346e430a1fad5a56b4581d3652  android-jvm-notices.zip
+90fea9fd231e7bd73c4763634507e2ab1f37e05b9d101612763bcd9417b1ab3e  android-x86_64-notices.zip
+0881f961c723578110f51c13d3ca5816cf20f51570a639630b87cd1936268f6a  intralink-android-capture-debug.apk
+f11bdd445e9207f338f528ca139ce9657e85cb6f1ae464e8f7b8a5432f5f9ac5  intralink-android-capture-instrumentation.apk
+42ad10c72dc5db7cc10fb4ee24b365b0b6889adb3f78ca8c11da99d61df07917  intralink-android-capture-release-unsigned.aab
+3c2dab438606195f431fb498d9e952642a67523009d9bf4917a67f8610c9f3b6  intralink-android-capture-release-unsigned.apk
+VERIFIED 10 exact candidate hashes
+
+
+✅ Process completed with exit code 0 (runtime: 54.94s)
+
+[executed on device: DESKTOP-54A9GFC (af27c91c-6f94-4f61-a934-0c3dc3c2c0a6)]
+
+=== PID 17096 ===
+[Reading last 15 lines (total: 15 lines)]
+
+{
+  "source_revision": "3f01ac060c85c61acb91af78470e9a7eea5a6ec4",
+  "target": "x86_64-unknown-linux-gnu",
+  "verified_entries": 687,
+  "archive_entries": 688,
+  "binary_bytes": 19264720,
+  "binary_sha256": "153c0f877948310b98047e0f5c6fd08c535e8a0ce5c8de2dbc9dfe443cde0073",
+  "dependency_packages": 374,
+  "review_required": [
+    "drm-fourcc 2.2.0",
+    "enum-assoc 1.4.2"
+  ],
+  "archive_sha256": "d267c259fef56a8b043a245ea051171b486241b36c6e6319311a6a9bc24d3edf",
+  "archive_bytes": 8030928
+}
+✅ Process completed with exit code 0 (runtime: 4.66s)
+
+[executed on device: DESKTOP-54A9GFC (af27c91c-6f94-4f61-a934-0c3dc3c2c0a6)]
+
+=== PID 27084 ===
+[Reading last 1 lines (total: 1 lines)]
+
+Android source documentation and license match exact CI source; CRC verified for 7 archives; unsigned candidate scope confirmed
+✅ Process completed with exit code 0 (runtime: 0.49s)
+
+[executed on device: DESKTOP-54A9GFC (af27c91c-6f94-4f61-a934-0c3dc3c2c0a6)]

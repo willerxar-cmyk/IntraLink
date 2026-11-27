@@ -90,3 +90,7 @@ Hosted run 46032192257 passed native lint and ordinary tests, but the two isolat
 ### X11 receiving runtime passed; source branch correction
 
 Hosted run 46033111814: native receiving Xvfb test passed (movement, key and button state, deactivation release, unmapped stop). Native source failed before F1 selection, closed=true. Inspection revealed that the previous automated source edit did not match the formatted match branch; its MappingNotify/Xkb handler still unconditionally closed the pad. Replace that exact branch, batch mapping notifications and compare the complete snapshot before returning events. Add specific generic stop reasons, recognize only WM_PROTOCOLS/WM_DELETE_WINDOW close messages, verify reverse F1 mapping and retain all existing Xvfb assertions. Final target Clippy PID 27544 passed. New hosted validation is still required; no claim of source native success yet.
+
+### Corrected native X11 regression status (2026-11-27)
+
+Run 46033717616 at exact commit 3f01ac0 passed strict adapter lint/tests, both native Xvfb source/sink tests and CPU-only X11 host/workspace lint/tests. Combined desktop build and package status must be checked separately. This resolves the previously observed F1-selection regression within the isolated X server only. No physical KVM, Wayland or global-edge qualification.

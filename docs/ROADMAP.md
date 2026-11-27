@@ -266,3 +266,7 @@ Candidate directory dist/android-capture-candidate-20261127; retain prior previe
 - intralink-android-capture-instrumentation.apk: 16729 bytes; SHA256 18ee543f02634f4b80467f8227303b65b756708c96c9aa7b9fb07cdc8fb1e332.
 - intralink-android-capture-release-unsigned.aab: 9656665 bytes; SHA256 935a899dcf324bf885f2555de02e6d03f33a4ca3fc7299e1239a07668a561b1a.
 - intralink-android-capture-release-unsigned.apk: 21415541 bytes; SHA256 a3defec86f03b7c6c516d433052db66d11b3b11a66b55b76a9c88595baf4d072.
+
+## Current AVC producer and packaging work (2026-11-27)
+
+Shared Rust AVC normalization and authenticated diagnostic loopback are implemented and tested; Android capture/receiver integration and independent screen consent remain open. Independent desktop candidate hash/source-doc verification is implemented and tested. Next gates remain real Android format/capture/probe, safe decoder isolation, explicit capabilities, two physical KVM machines, Wayland, distribution signing and independent provenance/security review.

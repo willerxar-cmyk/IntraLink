@@ -37,7 +37,7 @@ Preview.4 adds a graphical first-run BASE/CLIENT selector, named encrypted ident
 | Linux x86_64 | Preview 4 TAR.GZ; native Ubuntu 24.04 CI build/tests passed; optional X11 input host and BASE source under qualification |
 | Android | Preview.6 local AVC diagnostic candidate built and package-verified; physical acceptance and signing pending |
 
-Android source and candidate build/validation instructions: [ANDROID.md](docs/ANDROID.md). The next Android candidate extends local identity setup with manual pairing and a foreground authenticated diagnostic. Local consented encoder diagnostics are being added; remote screen sharing and remote input are not enabled.
+Android source and candidate build/validation instructions: [ANDROID.md](docs/ANDROID.md). Preview.6 CI passed local identity, manual pairing, foreground authenticated diagnostics and local consented AVC encoder build/package gates. The shared Rust [AVC packetizer](docs/AVC-PACKETIZER.md) has passed host and authenticated diagnostic loopback tests; remote Android screen sharing and input are not enabled.
 
 ## Install on Linux (experimental)
 
@@ -49,7 +49,7 @@ From the extracted directory:
     ./intralink --help
     ./intralink setup
 
-The public Linux preview.4 does not include input KVM. Later opt-in X11 receiving host and focused BASE adapters are under qualification in source (see [INPUT-SHARING.md](docs/INPUT-SHARING.md)); Wayland and physical desktop-edge input remain pending. The native CI gate tests the actual binary and transport; it is not a physical desktop acceptance test. Read the license provenance notes included in the package.
+The public Linux preview.4 does not include input KVM. Later opt-in X11 receiving host and focused BASE adapters passed isolated Xvfb and native Linux candidate CI (see [INPUT-SHARING.md](docs/INPUT-SHARING.md)); they are not included in the public preview.4. Physical KVM, Wayland and physical desktop-edge input remain pending. The native CI gate tests the actual binary and transport; it is not a physical desktop acceptance test. Read the license provenance notes included in the package.
 
 ## Install
 
