@@ -27,6 +27,8 @@ use host_capture::{HostCapture, HostDisplay};
 #[cfg(target_os = "windows")]
 pub mod media_check;
 mod overview;
+mod setup;
+pub(crate) use setup::choose_setup_role;
 mod receive_limits;
 mod resize;
 pub use receive_limits::ReceiveProfileArgs;

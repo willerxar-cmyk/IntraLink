@@ -134,6 +134,15 @@ struct UsedInvite {
     expires: u64,
 }
 
+/// Summary of an explicit, local role transition. No new grants are created.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RoleChange {
+    pub previous: Role,
+    pub next: Role,
+    pub revoked_grants: usize,
+    pub canceled_invite: bool,
+}
+
 /// All private material remains local; only `public_id` is intended for exchange.
 /// Do not derive Debug or Clone for the profile.
 #[derive(Serialize, Deserialize)]
@@ -142,6 +151,8 @@ pub struct Profile {
     schema: u16,
     role: Role,
     private_key: [u8; 32],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    device_name: Option<String>,
     peers: Vec<Peer>,
     // Additive fields allow loading an original v0.2 vault without resetting identity.
     #[serde(default)]
@@ -162,10 +173,55 @@ impl Profile {
             schema: SCHEMA_VERSION,
             role,
             private_key: SecretKey::generate().to_bytes(),
+            device_name: None,
             peers: Vec::new(),
             pending_invite: None,
             used_invites: Vec::new(),
         }
+    }
+
+    /// Create a named local identity. Names are metadata, never credentials.
+    pub fn new_named(role: Role, name: &str) -> Result<Self> {
+        let mut profile = Self::new(role);
+        profile.rename_device(name)?;
+        Ok(profile)
+    }
+
+    pub fn device_name(&self) -> Option<&str> {
+        self.device_name.as_deref()
+    }
+
+    pub(crate) fn rename_device(&mut self, name: &str) -> Result<()> {
+        let name = name.trim();
+        validate_device_name(name)?;
+        self.device_name = Some(name.to_owned());
+        Ok(())
+    }
+
+    pub fn role_change_impact(&self, next: Role) -> RoleChange {
+        RoleChange {
+            previous: self.role,
+            next,
+            revoked_grants: self
+                .peers
+                .iter()
+                .filter(|peer| !direction_allowed(next, peer.direction))
+                .count(),
+            canceled_invite: self.role != next && self.pending_invite.is_some(),
+        }
+    }
+
+    /// Only the authenticated Vault migration path may modify role.
+    /// Retain replay receipts even when a controller becomes a client.
+    pub(crate) fn apply_role_change(&mut self, next: Role) -> RoleChange {
+        let impact = self.role_change_impact(next);
+        if self.role != next {
+            self.peers
+                .retain(|peer| direction_allowed(next, peer.direction));
+            self.pending_invite = None;
+            self.role = next;
+        }
+        impact
     }
 
     pub fn role(&self) -> Role {
@@ -321,10 +377,7 @@ impl Profile {
             "Self-pairing is forbidden"
         );
         ensure!(
-            match peer.direction {
-                Direction::Inbound => self.role.can_receive(),
-                Direction::Outbound => self.role.can_initiate(),
-            },
+            direction_allowed(self.role, peer.direction),
             "Grant is forbidden for this profile role"
         );
         Ok(())
@@ -344,10 +397,11 @@ impl Profile {
             self.used_invites.len() <= MAX_USED_INVITES,
             "Too many invitation receipts"
         );
-        ensure!(
-            self.role.can_initiate() || self.used_invites.is_empty(),
-            "Receipts forbidden for host-only role"
-        );
+        // Historical receipts are inert in host-only mode. Never remove them
+        // during role changes: returning to controller must not permit replay.
+        if let Some(name) = &self.device_name {
+            validate_device_name(name)?;
+        }
         for (index, used) in self.used_invites.iter().enumerate() {
             ensure!(
                 !self.used_invites[..index]
@@ -369,6 +423,25 @@ impl Profile {
         }
         Ok(())
     }
+}
+
+fn direction_allowed(role: Role, direction: Direction) -> bool {
+    match direction {
+        Direction::Inbound => role.can_receive(),
+        Direction::Outbound => role.can_initiate(),
+    }
+}
+
+fn validate_device_name(name: &str) -> Result<()> {
+    ensure!(
+        !name.is_empty()
+            && name.len() <= 64
+            && name == name.trim()
+            && !name.chars().any(|c| c.is_control()
+                || matches!(c, '\u{202a}'..='\u{202e}' | '\u{2066}'..='\u{2069}')),
+        "Device name must contain 1-64 UTF-8 bytes without control characters"
+    );
+    Ok(())
 }
 
 #[cfg(test)]

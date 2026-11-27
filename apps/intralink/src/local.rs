@@ -62,13 +62,127 @@ pub fn initialize(path: &Path, role: Role) -> Result<()> {
     Ok(())
 }
 
+fn role_label(role: Role) -> &'static str {
+    match role {
+        Role::Controller => "BASE",
+        Role::Host => "CLIENT",
+        Role::Hybrid => "HYBRID (advanced)",
+    }
+}
+
+fn prompt_line(label: &str) -> Result<String> {
+    print!("{label}");
+    io::stdout().flush()?;
+    let mut answer = String::new();
+    ensure!(io::stdin().read_line(&mut answer)? != 0, "Setup canceled");
+    Ok(answer.trim().to_owned())
+}
+
+fn select_role() -> Result<Role> {
+    #[cfg(all(
+        feature = "desktop-preview",
+        any(target_os = "windows", target_os = "linux")
+    ))]
+    {
+        crate::desktop::choose_setup_role()
+    }
+    #[cfg(not(all(
+        feature = "desktop-preview",
+        any(target_os = "windows", target_os = "linux")
+    )))]
+    {
+        println!("How will you use this device?");
+        println!("1. BASE - Control other devices");
+        println!("2. CLIENT - Receive control");
+        match prompt_line("Select 1 or 2: ")?.as_str() {
+            "1" => Ok(Role::Controller),
+            "2" => Ok(Role::Host),
+            _ => anyhow::bail!("Setup canceled; choose BASE or CLIENT"),
+        }
+    }
+}
+
+/// Onboarding creates no listener or grants. Credentials are entered only
+/// after the local chooser closes, through the existing no-echo terminal.
+pub fn setup(path: &Path, role: Option<Role>, name: Option<&str>) -> Result<()> {
+    ensure!(
+        io::stdin().is_terminal() && io::stdout().is_terminal(),
+        "Setup requires a local interactive terminal"
+    );
+    ensure!(
+        !path.try_exists()?,
+        "A local identity already exists; use identity, set-role or rename-device"
+    );
+    let role = match role {
+        Some(role) => role,
+        None => select_role()?,
+    };
+    ensure!(
+        role != Role::Hybrid,
+        "First-run setup requires BASE or CLIENT"
+    );
+    let name = match name {
+        Some(name) => name.to_owned(),
+        None => prompt_line("Device name: ")?,
+    };
+    let profile = Profile::new_named(role, &name)?;
+    println!(
+        "Role: {} | Device: {}",
+        role_label(role),
+        profile.device_name().unwrap_or_default()
+    );
+    let password = prompt_password()?;
+    let confirmation = Zeroizing::new(rpassword::prompt_password("Repeat vault passphrase: ")?);
+    ensure!(*password == *confirmation, "Passphrases do not match");
+    approve("Create this local identity? No peer or remote capability will be authorized.")?;
+    let vault = Vault::lock(path)?;
+    vault.initialize(&profile, password.as_bytes())?;
+    println!("Public identity: {}", profile.public_id());
+    println!("Next: use pair to approve devices independently. Run --help for available commands.");
+    Ok(())
+}
+
+pub fn set_role(path: &Path, next: Role) -> Result<()> {
+    let vault = Vault::lock(path)?;
+    let password = prompt_password()?;
+    let profile = vault.load(password.as_bytes())?;
+    let impact = profile.role_change_impact(next);
+    if impact.previous == impact.next {
+        println!("Role is already {}. No change made.", role_label(next));
+        return Ok(());
+    }
+    println!("{} -> {}", role_label(impact.previous), role_label(next));
+    println!("Incompatible grants to revoke: {}", impact.revoked_grants);
+    println!(
+        "Outstanding invitation to cancel: {}",
+        impact.canceled_invite
+    );
+    println!("Identity and compatible grants will be retained; no new grants will be created.");
+    println!("Removed grants require new pairing. Do not downgrade the vault after migration.");
+    approve("Apply this local role change?")?;
+    vault.change_role(password.as_bytes(), impact)?;
+    println!("Role updated. Public identity: {}", profile.public_id());
+    Ok(())
+}
+
+pub fn rename_device(path: &Path, name: &str) -> Result<()> {
+    let vault = Vault::lock(path)?;
+    let password = prompt_password()?;
+    approve("Update this local device name? Identity and grants will not change.")?;
+    vault.rename_device(password.as_bytes(), name)?;
+    println!("Device name updated.");
+    Ok(())
+}
+
 pub fn identity(path: &Path) -> Result<()> {
     let vault = Vault::lock(path)?;
     let password = prompt_password()?;
     let profile = vault.load(password.as_bytes())?;
     println!(
-        "Role: {:?}\nPublic identity: {}",
+        "Role: {} ({:?})\nDevice: {}\nPublic identity: {}",
+        role_label(profile.role()),
         profile.role(),
+        profile.device_name().unwrap_or("(unnamed)"),
         profile.public_id()
     );
     Ok(())

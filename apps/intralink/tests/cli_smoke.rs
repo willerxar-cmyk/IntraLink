@@ -23,6 +23,25 @@ fn cli_help_and_version_exit_successfully() {
     assert!(stdout(&["--version"]).contains(env!("CARGO_PKG_VERSION")));
 }
 
+#[test]
+fn setup_cli_exposes_base_client_and_rejects_unattended_creation() {
+    let help = stdout(&["setup", "--help"]);
+    assert!(help.contains("base") && help.contains("client") && !help.contains("hybrid"));
+    assert!(stdout(&["set-role", "--help"]).contains("--role"));
+    assert!(stdout(&["rename-device", "--help"]).contains("--name"));
+    let temp = tempfile::tempdir().expect("Temporary local profile");
+    let path = temp.path().join("profile.vault");
+    let output = Command::new(env!("CARGO_BIN_EXE_intralink"))
+        .arg("--vault")
+        .arg(&path)
+        .args(["setup", "--role", "base", "--name", "Local test"])
+        .output()
+        .expect("Run noninteractive setup");
+    assert!(!output.status.success());
+    assert!(!path.exists());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("interactive terminal"));
+}
+
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 #[test]
 fn h264_diagnostic_help_does_not_initialize_driver_or_network() {

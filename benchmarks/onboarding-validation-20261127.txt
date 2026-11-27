@@ -1,0 +1,119 @@
+START vault-tests
+   Compiling tokio v1.54.1
+   Compiling intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+   Compiling tokio-util v0.7.20
+   Compiling hyper v1.13.0
+   Compiling tokio-rustls v0.26.6
+   Compiling tower v0.5.3
+   Compiling backon v1.6.0
+   Compiling tower-http v0.6.11
+   Compiling n0-future v0.3.2
+   Compiling tokio-stream v0.1.19
+   Compiling tokio-websockets v0.13.3
+   Compiling n0-watcher v1.0.1
+   Compiling hyper-util v0.1.21
+   Compiling netwatch v0.20.2
+   Compiling noq v1.5.0
+   Compiling hyper-rustls v0.27.10
+   Compiling reqwest v0.13.5
+   Compiling n0-dns-resolver v0.1.1
+   Compiling iroh-dns v1.5.0
+   Compiling iroh-relay v1.5.0
+   Compiling iroh v1.5.0
+   Compiling intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 25.88s
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_vault-e4ae69662a57e602.exe)
+
+running 13 tests
+test profile::tests::legacy_profile_fields_are_accepted ... ok
+test profile::tests::rejects_invalid_routes_and_self_pairing ... ok
+test profile::tests::role_isolation_and_revocation ... ok
+test invitation::tests::signed_codes_reject_tampering_and_wrong_kind ... ok
+test profile::tests::canceled_or_replaced_offers_cannot_activate ... ok
+test profile::tests::invitation_needs_both_approvals_and_cannot_be_reused ... ok
+test store::tests::normal_save_still_rejects_role_changes ... ok
+test store::tests::save_rejects_corrupted_existing_ciphertext ... ok
+test store::tests::save_rejects_wrong_password_and_identity_without_overwriting ... ok
+test envelope::tests::roundtrip_and_reject_tampering ... ok
+test store::tests::persistent_identity_and_revocation ... ok
+test store::tests::pending_offer_and_replay_state_survive_vault_reopen ... ok
+test store::tests::authenticated_role_changes_preserve_identity_and_replay_state ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 34.05s
+
+   Doc-tests intralink_vault
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT vault-tests 0
+START portable-clippy
+    Checking intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+    Checking intralink-d3d11 v0.22.0 (D:\IntraLink\crates\intralink-d3d11)
+    Checking intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+    Checking intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+    Checking intralink-input-win v0.22.0 (D:\IntraLink\crates\intralink-input-win)
+    Checking intralink v0.22.0 (D:\IntraLink\apps\intralink)
+error: this `if` statement can be collapsed
+   --> apps\intralink\src\desktop\setup.rs:137:13
+    |
+137 | /             if !down && previous_down {
+138 | |                 if let Some(role) = pressed.take() {
+139 | |                     if hover == Some(role) {
+140 | |                         return Ok(role);
+...   |
+143 | |             }
+    | |_____________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#collapsible_if
+    = note: `-D clippy::collapsible-if` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::collapsible_if)]`
+help: collapse nested if block
+    |
+137 ~             if !down && previous_down
+138 ~                 && let Some(role) = pressed.take() {
+139 |                     if hover == Some(role) {
+140 |                         return Ok(role);
+141 |                     }
+142 ~                 }
+    |
+System.Management.Automation.RemoteException
+error: this `if` statement can be collapsed
+   --> apps\intralink\src\desktop\setup.rs:138:17
+    |
+138 | /                 if let Some(role) = pressed.take() {
+139 | |                     if hover == Some(role) {
+140 | |                         return Ok(role);
+141 | |                     }
+142 | |                 }
+    | |_________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+138 ~                 if let Some(role) = pressed.take()
+139 ~                     && hover == Some(role) {
+140 |                         return Ok(role);
+141 ~                     }
+    |
+System.Management.Automation.RemoteException
+error: unneeded `return` statement
+  --> apps\intralink\src\local.rs:87:9
+   |
+87 |         return crate::desktop::choose_setup_role();
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.96.0/index.html#needless_return
+   = note: `-D clippy::needless-return` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(clippy::needless_return)]`
+help: remove `return`
+   |
+87 -         return crate::desktop::choose_setup_role();
+87 +         crate::desktop::choose_setup_role()
+   |
+System.Management.Automation.RemoteException
+error: could not compile `intralink` (bin "intralink") due to 3 previous errors
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `intralink` (bin "intralink" test) due to 3 previous errors
+EXIT portable-clippy 101

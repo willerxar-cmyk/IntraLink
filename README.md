@@ -29,12 +29,12 @@ The Windows portable build uses optional WGC/D3D11 capture and scaling; the soft
 - **BASE - Control other devices:** use the central computer with your keyboard and mouse. The current CLI calls this role `controller`.
 - **CLIENT - Receive control:** use the device that shares its screen or receives approved input. The current CLI calls this role `host`.
 
-The present preview requires explicit CLI setup; the graphical first-run role selector is not implemented yet. Screen and input permissions are independent. Existing paired identities are preserved; changing an existing vault role is not supported by this preview.
+The public preview.3 still uses CLI setup. The next source candidate adds a graphical first-run BASE/CLIENT selector, named encrypted identities, and authenticated role changes (see [ONBOARDING.md](docs/ONBOARDING.md)). The desktop selector hands off name/passphrase entry to the local terminal; this is not yet a complete GUI dashboard. Screen and input permissions remain independent.
 
 | Platform | Available distribution |
 |---|---|
 | Windows x64 | Preview 3 portable ZIP; local native diagnostics passed, physical KVM pending |
-| Linux x86_64 | Desktop source present; no qualified native release yet |
+| Linux x86_64 | Native CI build/tests passed; public packaging and physical qualification pending |
 | Android | Application and signed APK/AAB not available yet |
 
 ## Install

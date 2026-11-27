@@ -117,3 +117,7 @@ Pairing or screen-view consent never authorizes input. Input Host is a separate 
 ### Input queue freshness and disconnect cancellation
 
 Interactive queue and acceptance deadlines now fail closed on age or nonreplaceable saturation. No transition or focus barrier is silently dropped. The host observes QUIC closure while local acceptance is outstanding, dropping the acceptance receiver so a waiting native consumer sees cancellation. This does not preempt an OS call already in progress. The existing consent, visible stop, local lease, pinning, private-LAN policy and native release ownership are unchanged. See [INPUT-QUEUE.md](INPUT-QUEUE.md).
+
+## First-run and role settings
+
+The graphical chooser is local and focused, starts no listener and creates no grants. Setup requires interactive name/passphrase entry and explicit approval; initialization cannot overwrite an existing vault. Role changes require authenticated vault access, the exclusive lock and explicit local approval of the impact. Incompatible grants and pending invitations are revoked, not converted or resurrected. The private key, compatible grants and replay receipts persist. Never use role selection as a substitute for per-capability session consent.

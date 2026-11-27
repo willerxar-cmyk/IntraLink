@@ -7,5 +7,5 @@ mod profile;
 mod store;
 
 pub use invitation::{Invitation, MAX_CODE_BYTES, MAX_TTL_SECONDS};
-pub use profile::{Direction, Peer, Profile, Route};
+pub use profile::{Direction, Peer, Profile, RoleChange, Route};
 pub use store::Vault;

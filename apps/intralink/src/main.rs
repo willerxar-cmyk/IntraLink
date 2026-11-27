@@ -25,7 +25,7 @@ use std::{
 };
 
 use anyhow::{Result, bail};
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use intralink_core::{
     Role,
     journal::{Operation, Outcome},
@@ -51,9 +51,26 @@ struct Cli {
 
 #[derive(Clone, Copy, ValueEnum)]
 enum ProfileRole {
+    #[value(alias = "base")]
     Controller,
+    #[value(alias = "client")]
     Host,
     Hybrid,
+}
+
+#[derive(Clone, Copy, ValueEnum)]
+enum SetupRole {
+    Base,
+    Client,
+}
+
+impl From<SetupRole> for Role {
+    fn from(value: SetupRole) -> Self {
+        match value {
+            SetupRole::Base => Self::Controller,
+            SetupRole::Client => Self::Host,
+        }
+    }
 }
 
 impl From<ProfileRole> for Role {
@@ -119,6 +136,23 @@ enum Command {
     /// Query local Linux VA-API video capabilities; no network or screen capture.
     #[cfg(all(feature = "vaapi-probe", target_os = "linux"))]
     MediaCapabilities,
+    /// First-run setup: choose BASE or CLIENT and create a named encrypted identity.
+    Setup {
+        #[arg(long)]
+        role: Option<SetupRole>,
+        #[arg(long)]
+        name: Option<String>,
+    },
+    /// Change local role, preserving identity and revoking incompatible grants.
+    SetRole {
+        #[arg(long)]
+        role: ProfileRole,
+    },
+    /// Change the encrypted local device name.
+    RenameDevice {
+        #[arg(long)]
+        name: String,
+    },
     /// Create a password-encrypted local identity without overwriting an existing profile.
     Init {
         #[arg(long)]
@@ -458,6 +492,17 @@ enum Command {
 use local::run_async;
 
 fn main() -> Result<()> {
+    if std::env::args_os().len() == 1 {
+        use std::io::IsTerminal;
+        let path = local::vault_path(None)?;
+        if !path.try_exists()? && std::io::stdin().is_terminal() && std::io::stdout().is_terminal()
+        {
+            return local::setup(&path, None, None);
+        }
+        Cli::command().print_help()?;
+        println!();
+        return Ok(());
+    }
     let cli = Cli::parse();
     #[cfg(all(feature = "nvenc-preview", target_os = "windows"))]
     if matches!(
@@ -540,6 +585,9 @@ fn main() -> Result<()> {
             any(target_os = "windows", target_os = "linux")
         ))]
         Command::DesktopProfileCheck(args) => args.run(),
+        Command::Setup { role, name } => local::setup(&path, role.map(Into::into), name.as_deref()),
+        Command::SetRole { role } => local::set_role(&path, role.into()),
+        Command::RenameDevice { name } => local::rename_device(&path, &name),
         Command::Init { role } => local::initialize(&path, role.into()),
         Command::Identity => local::identity(&path),
         Command::Pair {

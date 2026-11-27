@@ -251,3 +251,9 @@
 - Enforce 2 GiB committed-memory limit and unhandled-exception policy in the decoder job; verify image-load, extension-point and child-creation mitigations before native GPU initialization.
 - Add explicit experimental low-integrity primary-token launcher with exact handle allowlist, minimal environment, job before resume and real token-only validation. Restricted graphical startup remains unqualified (0xC0000142); no fallback.
 - Preserve child native exit diagnostics, verify mandatory no-write-up, exact restricted SID membership and unchanged parent token. Add CLI guard coverage and native evidence.
+
+## Unreleased ? onboarding and role migration
+
+- Add a local BASE/CLIENT graphical first-run selector for Windows/Linux desktop builds, terminal-only fallback, encrypted device names and authenticated role changes.
+- Preserve identity, compatible directional grants and historical invitation replay receipts; explicitly revoke incompatible grants and cancel outstanding offers during migration. Existing ordinary vault save guards remain.
+- Repair exact dependency notice discovery for Linux, including nested LICENSES and REUSE metadata, repository subdirectory URLs, build-host metadata and documented notice provenance exceptions.

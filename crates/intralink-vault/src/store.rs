@@ -8,7 +8,7 @@ use std::{
 use anyhow::{Context, Result, ensure};
 use tempfile::NamedTempFile;
 
-use crate::{Profile, envelope};
+use crate::{Profile, RoleChange, envelope};
 
 pub struct Vault {
     path: PathBuf,
@@ -77,6 +77,29 @@ impl Vault {
         );
         drop(current);
         self.write(profile, password, true)
+    }
+
+    /// Explicit authenticated role transition, independent of ordinary save.
+    /// The caller reviews the expected impact while holding the same vault lock.
+    pub fn change_role(&self, password: &[u8], expected: RoleChange) -> Result<RoleChange> {
+        let mut current = self.load(password)?;
+        let impact = current.role_change_impact(expected.next);
+        ensure!(
+            impact == expected,
+            "Role change impact changed; review it again"
+        );
+        if impact.previous != impact.next {
+            current.apply_role_change(impact.next);
+            self.write(&current, password, true)?;
+        }
+        Ok(impact)
+    }
+
+    /// Rename without accepting a replacement identity or role from the caller.
+    pub fn rename_device(&self, password: &[u8], name: &str) -> Result<()> {
+        let mut current = self.load(password)?;
+        current.rename_device(name)?;
+        self.write(&current, password, true)
     }
 
     fn write(&self, profile: &Profile, password: &[u8], replace: bool) -> Result<()> {
@@ -209,6 +232,82 @@ mod tests {
         let profile = vault.load(password)?;
         assert_eq!(profile.public_id(), host_id);
         assert!(profile.peer("owner", Direction::Inbound).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn authenticated_role_changes_preserve_identity_and_replay_state() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let path = directory.path().join("profile.vault");
+        let password = b"local test passphrase";
+        let vault = Vault::lock(&path)?;
+        let mut local = Profile::new_named(Role::Hybrid, "Workstation")?;
+        let mut remote = Profile::new(Role::Hybrid);
+        let another = Profile::new(Role::Controller);
+        let route = Route::new("localhost", 45100)?;
+        let offer = remote.create_invite(local.public_id(), route.clone(), 1000, 300)?;
+        local.accept_invite("remote", &offer, 1010)?;
+        local.add_peer(Peer::new(
+            "owner",
+            another.public_id(),
+            Direction::Inbound,
+            None,
+        )?)?;
+        let pending = local.create_invite(remote.public_id(), route, 1011, 300)?;
+        let acceptance = remote.accept_invite("local", &pending, 1012)?;
+        let identity = local.public_id();
+        vault.initialize(&local, password)?;
+        let impact = local.role_change_impact(Role::Host);
+        assert_eq!(impact.revoked_grants, 1);
+        assert!(impact.canceled_invite);
+        let original = fs::read(&path)?;
+        assert!(vault.change_role(b"wrong test passphrase", impact).is_err());
+        assert_eq!(fs::read(&path)?, original);
+        let stale = RoleChange {
+            revoked_grants: 0,
+            ..impact
+        };
+        assert!(vault.change_role(password, stale).is_err());
+        assert_eq!(fs::read(&path)?, original);
+        assert_eq!(vault.change_role(password, impact)?, impact);
+        let mut client = vault.load(password)?;
+        assert_eq!(client.public_id(), identity);
+        assert_eq!(client.device_name(), Some("Workstation"));
+        assert_eq!(client.role(), Role::Host);
+        assert!(client.peer("owner", Direction::Inbound).is_ok());
+        assert!(client.peer("remote", Direction::Outbound).is_err());
+        assert!(client.confirm_invite("late", &acceptance, 1013).is_err());
+        let next = client.role_change_impact(Role::Controller);
+        assert_eq!(next.revoked_grants, 1);
+        vault.change_role(password, next)?;
+        let mut base = vault.load(password)?;
+        assert_eq!(base.public_id(), identity);
+        assert!(base.peers().is_empty());
+        assert!(base.accept_invite("replay", &offer, 1014).is_err());
+        let unchanged = fs::read(&path)?;
+        vault.change_role(password, base.role_change_impact(Role::Controller))?;
+        assert_eq!(fs::read(&path)?, unchanged);
+        vault.rename_device(password, "Desk 2")?;
+        assert_eq!(vault.load(password)?.device_name(), Some("Desk 2"));
+        assert_eq!(vault.load(password)?.public_id(), identity);
+        let renamed = fs::read(&path)?;
+        assert!(vault.rename_device(password, "bad\nname").is_err());
+        assert_eq!(fs::read(&path)?, renamed);
+        Ok(())
+    }
+
+    #[test]
+    fn normal_save_still_rejects_role_changes() -> Result<()> {
+        let directory = tempfile::tempdir()?;
+        let path = directory.path().join("profile.vault");
+        let password = b"local test passphrase";
+        let vault = Vault::lock(&path)?;
+        let mut profile = Profile::new(Role::Host);
+        vault.initialize(&profile, password)?;
+        let original = fs::read(&path)?;
+        profile.apply_role_change(Role::Hybrid);
+        assert!(vault.save(&profile, password).is_err());
+        assert_eq!(fs::read(&path)?, original);
         Ok(())
     }
 
