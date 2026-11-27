@@ -16,7 +16,7 @@ use tokio::{
     time::{Instant, sleep_until, timeout},
 };
 
-use super::{Capture, CaptureRequest, IO_LIMIT, Stats};
+use super::{Capture, CapturePermit, CaptureRequest, IO_LIMIT, Stats};
 
 const LOCAL_WINDOW: usize = 2;
 const BACKGROUND_INTERVAL: Duration = Duration::from_millis(200);
@@ -24,6 +24,14 @@ const BACKGROUND_INTERVAL: Duration = Duration::from_millis(200);
 struct Pending {
     response: oneshot::Receiver<Result<Capture>>,
     expires: Instant,
+    started: bool,
+}
+
+struct AwaitStart {
+    sequence: usize,
+    not_before: Instant,
+    expires: Instant,
+    reply: oneshot::Receiver<std::time::Instant>,
 }
 
 fn may_issue(
@@ -56,7 +64,8 @@ pub(super) async fn stream(
     let mut credit = CreditWindow::default();
     let mut pacer = CapturePacer::new(config);
     let mut interval = pacer.observe(false);
-    let mut last_issued = None::<Instant>;
+    let mut last_started = None::<Instant>;
+    let mut awaiting_start = None::<AwaitStart>;
     let mut last_changed = false;
     let mut pending = VecDeque::<Pending>::with_capacity(LOCAL_WINDOW);
     let mut buffers = Vec::<Vec<u8>>::with_capacity(LOCAL_WINDOW);
@@ -71,13 +80,18 @@ pub(super) async fn stream(
         } else {
             interval
         };
-        let due = last_issued.map_or(now, |last| last + cadence);
-        let allowed = may_issue(config, &stats, &credit, pending.len(), last_changed);
+        // Reserve early, but the source cannot start until this exact
+        // monotonic deadline. Base future deadlines on actual starts, not
+        // the timing of the transport request or the preceding response.
+        let due = last_started.map_or(now, |last| (last + cadence).max(now));
+        let allowed = awaiting_start.is_none()
+            && due < deadline
+            && may_issue(config, &stats, &credit, pending.len(), last_changed);
         let has_pending = !pending.is_empty();
         let expires = pending
             .front()
             .map_or(now + IO_LIMIT, |request| request.expires);
-        let wait_due = due.min(deadline);
+        let has_start = awaiting_start.is_some();
         tokio::select! {
             biased;
             _ = sleep_until(deadline) => break,
@@ -86,11 +100,25 @@ pub(super) async fn stream(
                 let bytes = received.context("Desktop receipt stream closed")?;
                 ensure!(credit.acknowledge(bytes), "Invalid frame acknowledgment");
             }
+            reported = async {
+                (&mut awaiting_start.as_mut().expect("start branch enabled").reply).await
+            }, if has_start => {
+                let grant = awaiting_start.take().context("Missing capture start grant")?;
+                let actual = Instant::from_std(reported.context("Local capture never started")?);
+                ensure!(actual >= grant.not_before && actual < grant.expires && actual <= Instant::now(),
+                    "Invalid reported capture start");
+                ensure!(stats.records() + pending.len() == grant.sequence, "Capture start sequence mismatch");
+                let request = pending.back_mut().context("Missing started capture demand")?;
+                ensure!(!request.started, "Capture demand started twice");
+                request.started = true;
+                last_started = Some(actual);
+            }
             response = async {
                 (&mut pending.front_mut().expect("pending branch enabled").response).await
             }, if has_pending => {
                 let frame = response.context("Local pipelined capture response dropped")??;
-                pending.pop_front().context("Missing ordered demand")?;
+                let request = pending.pop_front().context("Missing ordered demand")?;
+                ensure!(request.started, "Capture replied without starting its reserved grant");
                 if Instant::now() >= deadline { break; }
                 let (header, mut data, changed, no_update) = match frame {
                     Capture::End => break,
@@ -133,28 +161,42 @@ pub(super) async fn stream(
                     buffers.push(data);
                 }
             }
-            permit = source.reserve(), if allowed && now >= due => {
+            permit = source.reserve(), if allowed => {
                 let permit = permit.context("Local capture source stopped")?;
                 let issued = Instant::now();
-                if issued >= deadline { break; }
+                let not_before = due.max(issued);
+                let expires = (issued + IO_LIMIT).min(deadline);
+                if not_before >= expires { break; }
                 let (reply, response) = oneshot::channel();
+                let (started, start_reply) = oneshot::channel();
                 permit.send(CaptureRequest {
                     buffer: buffers.pop().unwrap_or_default(),
                     reply,
                     receipt_pressure: ReceiptPressure::from_backlog(
                         credit.outstanding() + pending.len(), credit.priority()),
                     desktop_config: Some(config),
+                    issued_at: issued.into_std(),
+                    permit: Some(CapturePermit {
+                        not_before: not_before.into_std(),
+                        expires: expires.into_std(),
+                        started: Some(started),
+                    }),
                 });
-                pending.push_back(Pending { response, expires: issued + IO_LIMIT });
-                last_issued = Some(issued);
+                pending.push_back(Pending { response, expires, started: false });
+                awaiting_start = Some(AwaitStart {
+                    sequence: stats.records() + pending.len(),
+                    not_before,
+                    expires,
+                    reply: start_reply,
+                });
             }
-            _ = sleep_until(wait_due), if allowed && now < due => {}
             // No in-flight demand and no possible new demand: wait for
             // credit, but never extend a stalled connection indefinitely.
             _ = sleep_until(expires), if !has_pending => bail!("Desktop receipt window stalled"),
         }
     }
     // Cancel all reserved but unsent demands before final receipt drain.
+    drop(awaiting_start);
     drop(pending);
     Ok((stats, credit))
 }

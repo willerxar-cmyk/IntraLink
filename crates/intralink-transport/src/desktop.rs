@@ -29,6 +29,44 @@ pub struct CaptureRequest {
     pub receipt_pressure: ReceiptPressure,
     /// Immutable authenticated desktop selection; absent for isolated H.264 diagnostics.
     pub desktop_config: Option<VideoConfig>,
+    /// Local monotonic timestamp for diagnostics; never serialized.
+    pub issued_at: std::time::Instant,
+    /// A scheduled pipeline demand must be started exactly once by its owner.
+    pub permit: Option<CapturePermit>,
+}
+
+/// An opaque, session-local grant to begin one previously reserved capture.
+/// It cannot be constructed by the viewer and does not grant wire credit.
+pub struct CapturePermit {
+    not_before: std::time::Instant,
+    expires: std::time::Instant,
+    started: Option<oneshot::Sender<std::time::Instant>>,
+}
+
+impl CaptureRequest {
+    pub fn not_before(&self) -> Option<std::time::Instant> {
+        self.permit.as_ref().map(|permit| permit.not_before)
+    }
+
+    /// Call immediately before the authorized native capture attempt (or a
+    /// local End response). The transport verifies the reported monotonic start.
+    pub fn begin_capture(&mut self) -> Result<std::time::Instant> {
+        ensure!(!self.reply.is_closed(), "Local capture demand canceled");
+        let now = std::time::Instant::now();
+        if let Some(permit) = &mut self.permit {
+            ensure!(
+                now >= permit.not_before && now < permit.expires,
+                "Capture start outside reserved time window"
+            );
+            permit
+                .started
+                .take()
+                .context("Capture grant already started")?
+                .send(now)
+                .map_err(|_| anyhow::anyhow!("Local capture start grant canceled"))?;
+        }
+        Ok(now)
+    }
 }
 
 pub enum Capture {
@@ -289,6 +327,8 @@ async fn serve_media<W: PacerWait>(
                                 reply,
                                 receipt_pressure,
                                 desktop_config: config.desktop_config(),
+                                issued_at: started.into_std(),
+                                permit: None,
                             })
                             .await
                             .map_err(|_| anyhow::anyhow!("Local capture source stopped"))?;

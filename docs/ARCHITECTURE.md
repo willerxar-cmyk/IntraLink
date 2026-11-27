@@ -123,3 +123,8 @@ CPU JPEG writes directly into the recycled bounded transport buffer through a ch
 ### Local fixed-v8 capture/encode overlap
 
 Explicit two-demand scheduling reserves existing receipt credit before capture. Foreground owns approved native capture and publication, one stateful encoder runs on a blocking worker, at most one raw frame waits, and the transport writes replies FIFO. Stop cancels transport before joining. No wire change, no adaptive geometry in this version. See [ORDERED-PIPELINE.md](ORDERED-PIPELINE.md).
+
+
+### Start-clock ownership
+
+In fixed-v8 pipeline mode, the transport reserves at most two FIFO demands against existing credit; a single-use local capture-start grant supplies a monotonic earliest start and expiry. The foreground gate waits until due, independently enforces maximum FPS and reports the actual start. Future grants use that actual timestamp. An unstarted response fails closed. No wire change. See [CAPTURE-GRANTS.md](CAPTURE-GRANTS.md).

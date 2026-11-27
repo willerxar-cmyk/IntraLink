@@ -18,7 +18,7 @@ use tokio::{sync::mpsc, task::JoinHandle};
 use super::{
     capture_fixture::{Fixture, TITLE, find_fixture},
     codec::Decoder,
-    host_pipeline::EncodeLane,
+    host_pipeline::{DemandGate, EncodeLane},
     resize::CanvasResizer,
     visual_fidelity::{Fidelity, Reference},
     visual_fixture,
@@ -37,6 +37,40 @@ struct Observations {
     capture: Duration,
     encode: Duration,
     elapsed: Duration,
+    planned: Vec<Duration>,
+    late: Vec<Duration>,
+    cadence: Vec<Duration>,
+    native_times: Vec<Duration>,
+    queue: Vec<Duration>,
+    encode_times: Vec<Duration>,
+    publication: Vec<Duration>,
+}
+
+struct DeliveryTrace {
+    sequence: usize,
+    published_at: Instant,
+}
+
+#[derive(Default)]
+struct ViewerTiming {
+    delivery: Vec<Duration>,
+    decode: Vec<Duration>,
+}
+
+fn timing(label: &str, values: &[Duration]) {
+    if values.is_empty() {
+        return;
+    }
+    let mut sorted = values.to_vec();
+    sorted.sort_unstable();
+    let ms = |rank: usize| sorted[(sorted.len() * rank).div_ceil(100) - 1].as_secs_f64() * 1000.0;
+    println!(
+        "stage={label}, samples={}, p50_ms={:.3}, p95_ms={:.3}, worst_ms={:.3}",
+        sorted.len(),
+        ms(50),
+        ms(95),
+        ms(100)
+    );
 }
 
 fn check_source(child: &mut Fixture, target: &xcap::Window, started: Instant) -> Result<()> {
@@ -61,6 +95,7 @@ async fn produce(
     mut requests: mpsc::Receiver<CaptureRequest>,
     server: &JoinHandle<Result<Stats>>,
     references: Option<mpsc::Sender<Reference>>,
+    traces: mpsc::Sender<DeliveryTrace>,
 ) -> Result<Observations> {
     let started = Instant::now();
     let pid = child.0.id();
@@ -69,16 +104,15 @@ async fn produce(
     let mut reference_resize = CanvasResizer::default();
     let mut stats = Observations::default();
     let mut first_demand = None::<Instant>;
-    let mut next_capture = Instant::now();
-    let interval = Duration::from_secs_f64(1.0 / f64::from(config.fps()));
+    let mut gate = DemandGate::new(config);
+    let mut last_capture = None::<Instant>;
     let result = async {
         loop {
             check_source(child, target, started)?;
             if server.is_finished() { break; }
             let busy = lane.busy();
             let available = lane.can_accept() && (stats.submitted < SAMPLES || !busy);
-            let remaining = next_capture.saturating_duration_since(Instant::now());
-            let poll = if available && !remaining.is_zero() { remaining.min(Duration::from_millis(8)) } else { Duration::from_millis(8) };
+            let due = gate.due();
             tokio::select! {
                 biased;
                 done = lane.complete(), if busy => {
@@ -102,16 +136,30 @@ async fn produce(
                         }).context("Visual reference window exceeded")?;
                     }
                     if let Some(frame) = done.frame { source.recycle(frame); }
+                    let published_at = Instant::now();
+                    if matches!(record, Capture::Frame(_)) {
+                        traces.try_send(DeliveryTrace {
+                            sequence: stats.completed+1, published_at,
+                        }).context("Local delivery trace window exceeded")?;
+                    }
                     ensure!(done.reply.send(Ok(record)).is_ok(), "Diagnostic response dropped");
                     stats.completed += 1;
                     stats.encode += done.elapsed;
+                    stats.queue.push(done.queued_for);
+                    stats.encode_times.push(done.elapsed);
+                    stats.publication.push(published_at.duration_since(done.finished_at));
                     lane.advance()?;
                 }
-                request = requests.recv(), if available && remaining.is_zero() => {
+                request = requests.recv(), if available && gate.empty() => {
                     let Some(request) = request else { break; };
+                    gate.offer(request)?;
+                }
+                _ = super::host_pipeline::wait_due(due), if available && due.is_some() => {
+                    let mut request = gate.take()?;
                     ensure!(!request.reply.is_closed() && request.desktop_config == Some(config), "Invalid local diagnostic demand");
                     if stats.submitted == SAMPLES {
                         ensure!(stats.completed == SAMPLES && !lane.busy(), "Unfinished diagnostic encoder");
+                        gate.begin(&mut request)?;
                         ensure!(request.reply.send(Ok(Capture::End)).is_ok(), "Diagnostic end dropped");
                         stats.elapsed = first_demand.context("No diagnostic demand")?.elapsed();
                         break;
@@ -122,14 +170,20 @@ async fn produce(
                     }
                     let source = session.as_mut().context("Missing owned capture session")?;
                     let overlapping = lane.encoding();
-                    let began = Instant::now();
-                    next_capture = began + interval;
+                    let due = due.context("Missing diagnostic capture deadline")?;
+                    let began = gate.begin(&mut request)?;
+                    stats.planned.push(due.saturating_duration_since(request.issued_at));
+                    stats.late.push(began.saturating_duration_since(due.max(request.issued_at)));
+                    if let Some(previous) = last_capture { stats.cadence.push(began.duration_since(previous)); }
+                    last_capture = Some(began);
                     let frame = source.capture(|| {
                         check_source(child,target,started)?;
                         ensure!(!request.reply.is_closed() && !server.is_finished(), "Diagnostic demand canceled");
                         Ok(())
                     })?;
-                    stats.capture += began.elapsed();
+                    let elapsed = began.elapsed();
+                    stats.capture += elapsed;
+                    stats.native_times.push(elapsed);
                     check_source(child,target,started)?;
                     source.check_health()?;
                     if let Some((ref image, _)) = frame {
@@ -140,13 +194,14 @@ async fn produce(
                     lane.submit(frame.map(|(image,_)|image),request)?;
                     stats.submitted += 1;
                 }
-                _ = tokio::time::sleep(poll) => {}
+                _ = tokio::time::sleep(Duration::from_millis(8)) => {}
             }
         }
         ensure!(stats.submitted == SAMPLES && stats.completed == SAMPLES && !stats.elapsed.is_zero(), "Incomplete local diagnostic run");
         Ok::<(),anyhow::Error>(())
     }.await;
     // Drop all pending demand handles and join CPU/native work on every exit.
+    gate.cancel();
     let native = session.as_mut().map_or(Ok(()), CaptureSession::stop);
     let joined = lane.stop().await;
     result?;
@@ -187,6 +242,8 @@ async fn run_one(overlap: bool, verify: bool) -> Result<()> {
     let (source, requests) = mpsc::channel(1);
     let (reference_tx, mut reference_rx) =
         mpsc::channel::<Reference>(intralink_core::desktop::MAX_IN_FLIGHT_RECORDS);
+    let (trace_tx, mut trace_rx) =
+        mpsc::channel::<DeliveryTrace>(intralink_core::desktop::MAX_IN_FLIGHT_RECORDS);
     let host_endpoint = host.clone();
     let server = tokio::spawn(async move {
         if overlap {
@@ -201,6 +258,7 @@ async fn run_one(overlap: bool, verify: bool) -> Result<()> {
         let mut pixels = Vec::new();
         let mut previous = 0;
         let mut fidelity = Fidelity::default();
+        let mut timing = ViewerTiming::default();
         let received = view(
             &viewer_endpoint,
             host_id,
@@ -213,7 +271,19 @@ async fn run_one(overlap: bool, verify: bool) -> Result<()> {
                         "Diagnostic media sequence/geometry mismatch"
                     );
                     previous = frame.sequence;
+                    let trace = trace_rx
+                        .try_recv()
+                        .context("Missing local publication trace")?;
+                    ensure!(
+                        trace.sequence == frame.sequence,
+                        "Publication trace sequence mismatch"
+                    );
+                    let arrived = Instant::now();
+                    timing
+                        .delivery
+                        .push(arrived.duration_since(trace.published_at));
                     decoder.decode_into(config, &frame.payload, &mut pixels)?;
+                    timing.decode.push(arrived.elapsed());
                     visual_fixture::verify_decoded(config, &pixels)?;
                     if verify {
                         let reference = reference_rx
@@ -232,7 +302,8 @@ async fn run_one(overlap: bool, verify: bool) -> Result<()> {
         )
         .await?;
         ensure!(reference_rx.try_recv().is_err(), "Unused visual reference");
-        Ok::<_, anyhow::Error>((received, fidelity))
+        ensure!(trace_rx.try_recv().is_err(), "Unused publication trace");
+        Ok::<_, anyhow::Error>((received, fidelity, timing))
     });
     let observations = produce(
         config,
@@ -241,6 +312,7 @@ async fn run_one(overlap: bool, verify: bool) -> Result<()> {
         requests,
         &server,
         verify.then_some(reference_tx),
+        trace_tx,
     )
     .await;
     if observations.is_err() {
@@ -252,7 +324,7 @@ async fn run_one(overlap: bool, verify: bool) -> Result<()> {
     controller.close().await;
     let local = observations?;
     let served = served??;
-    let (viewed, fidelity) = viewed??;
+    let (viewed, fidelity, viewer_timing) = viewed??;
     ensure!(
         served == viewed && served.frames + served.repeats + served.no_updates == SAMPLES,
         "Local pipeline transfer/receipt counts differ"
@@ -295,6 +367,24 @@ async fn run_one(overlap: bool, verify: bool) -> Result<()> {
         local.encode.as_secs_f64() * 1000.0,
         served.media_bytes
     );
+    ensure!(
+        viewer_timing.delivery.len() == served.frames
+            && viewer_timing.decode.len() == served.frames,
+        "Missing changed-frame timing"
+    );
+    for (label, values) in [
+        ("planned_wait", &local.planned),
+        ("start_lateness", &local.late),
+        ("actual_capture_cadence", &local.cadence),
+        ("native_capture", &local.native_times),
+        ("encoder_queue", &local.queue),
+        ("encode", &local.encode_times),
+        ("publication_delay", &local.publication),
+        ("local_delivery", &viewer_timing.delivery),
+        ("viewer_decode", &viewer_timing.decode),
+    ] {
+        timing(label, values);
+    }
     Ok(())
 }
 
@@ -305,6 +395,11 @@ pub(super) async fn run(verify: bool) -> Result<()> {
     );
     run_one(false, verify).await?;
     run_one(true, verify).await?;
+    if !verify {
+        // Alternate order to expose warm-up and load variation.
+        run_one(true, false).await?;
+        run_one(false, false).await?;
+    }
     println!(
         "{}=passed; generated owned window and authenticated QUIC loopback only.",
         if verify {

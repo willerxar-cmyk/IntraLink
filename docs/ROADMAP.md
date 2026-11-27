@@ -152,3 +152,8 @@ Optional MCU-row restart strips use two or four workers on suitable CPUs, with s
 ### Ordered local overlap checkpoint
 
 Explicit fixed-v8/fixed-quality pipeline implemented, using two reserved local demands and one stateful CPU encoder. Adaptive transition barriers, physical authorized multi-device sessions, and optional native platform/codec qualification remain separate work. See [ORDERED-PIPELINE.md](ORDERED-PIPELINE.md).
+
+
+### Capture-start scheduling checkpoint
+
+Fixed-v8 pipeline now reserves local demands with one actual-start-clock deadline; retain opt-in fixed-quality and geometry. Measure native readiness/readback separately, receiver acceptance vs true ACK and presentation, and precise local timers only where supported without global changes. Adaptive pipeline transition barriers and physical authorized multi-device qualification remain separate gates. See [CAPTURE-GRANTS.md](CAPTURE-GRANTS.md).

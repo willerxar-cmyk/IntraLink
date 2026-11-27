@@ -22,3 +22,8 @@ Test credit reservation and first-frame rules, actual QUIC out-of-order completi
 
 
 The diagnostic now uses a calm labeled scene instead of the previous dense visible animation. Its performance observations are a different workload. Run `desktop-profile-check --visual` for full-canvas reference comparison without interpreting the instrumented run as a throughput benchmark. See [VISUAL-FIDELITY.md](VISUAL-FIDELITY.md).
+
+
+### Capture-start scheduling
+
+The fixed pipeline now reserves the next demand early, with a local single-use monotonic start grant. Future deadlines follow verified actual capture-call starts, and a shared foreground gate awaits one absolute deadline. Existing authorization and credit bounds remain intact. See [CAPTURE-GRANTS.md](CAPTURE-GRANTS.md).

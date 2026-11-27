@@ -69,3 +69,8 @@ Validate FIFO pending requests, shared credit reservation and record budget, ini
 ### Visual fidelity gate
 
 Run generated visual scene/marker, deliberate RGB swap/local block corruption/lossless mismatch, real software codec and CLI conflict tests. Qualify strict CPU/WGC/NVENC/scalar builds and locked portable WGC Release. Run `desktop-profile-check --visual` (full-canvas reference comparison) and separately `--pipeline` (calm scene performance), with no high-entropy visible pattern. Regress native retarget/geometry checks. Record actual decoded pixel counts and errors; do not compare old dense and new calm FPS directly. See [VISUAL-FIDELITY.md](VISUAL-FIDELITY.md).
+
+
+### Capture-start grant gate
+
+Test early, duplicate, canceled and missing capture-start reports, actual delayed start driving the next absolute deadline, one pending local grant, independent FPS cap, FIFO ordering and saturated credit. Qualify locked CPU/NVENC workspaces, independent scalar application, strict four Clippy configurations, portable WGC Release. Compare preserved baseline and new calm-scene runs, new ABBA stage traces and separate full-pixel visual/retarget/geometry diagnostics. See [CAPTURE-GRANTS.md](CAPTURE-GRANTS.md).

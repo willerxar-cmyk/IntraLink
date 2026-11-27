@@ -16,9 +16,79 @@ use super::{
     host_capture::{CaptureBackend, HostCapture, HostDisplay},
 };
 
+/// Single foreground start gate. Transport grants carry an absolute earliest
+/// start; the local fixed-rate check uses the same actual start clock.
+pub(super) struct DemandGate {
+    pending: Option<CaptureRequest>,
+    next: Instant,
+    interval: Duration,
+}
+
+impl DemandGate {
+    pub(super) fn new(config: VideoConfig) -> Self {
+        Self {
+            pending: None,
+            next: Instant::now(),
+            interval: Duration::from_secs_f64(1.0 / f64::from(config.fps())),
+        }
+    }
+
+    pub(super) fn empty(&self) -> bool {
+        self.pending.is_none()
+    }
+
+    pub(super) fn offer(&mut self, request: CaptureRequest) -> Result<()> {
+        ensure!(self.empty(), "Local capture grant slot occupied");
+        ensure!(!request.reply.is_closed(), "Local capture demand canceled");
+        self.pending = Some(request);
+        Ok(())
+    }
+
+    pub(super) fn due(&self) -> Option<Instant> {
+        self.pending.as_ref().map(|request| {
+            request
+                .not_before()
+                .map_or(self.next, |due| due.max(self.next))
+        })
+    }
+
+    pub(super) fn take(&mut self) -> Result<CaptureRequest> {
+        ensure!(
+            self.due().is_some_and(|due| Instant::now() >= due),
+            "Capture grant not due"
+        );
+        self.pending.take().context("Missing capture grant")
+    }
+
+    pub(super) fn begin(&mut self, request: &mut CaptureRequest) -> Result<Instant> {
+        ensure!(
+            Instant::now() >= self.next,
+            "Capture started before local FPS interval"
+        );
+        let started = request.begin_capture()?;
+        self.next = started + self.interval;
+        Ok(started)
+    }
+
+    pub(super) fn cancel(&mut self) {
+        self.pending.take();
+    }
+}
+
+/// Await one absolute deadline, without a second relative timer or
+/// waiting for a timer tick when the grant is already due.
+pub(super) async fn wait_due(due: Option<Instant>) {
+    if let Some(due) = due
+        && due > Instant::now()
+    {
+        tokio::time::sleep_until(tokio::time::Instant::from_std(due)).await;
+    }
+}
+
 struct Job {
     frame: Option<RgbaImage>,
     request: CaptureRequest,
+    submitted: Instant,
 }
 
 pub(super) struct Completed {
@@ -26,6 +96,8 @@ pub(super) struct Completed {
     pub(super) reply: oneshot::Sender<Result<Capture>>,
     pub(super) record: Result<Capture>,
     pub(super) elapsed: Duration,
+    pub(super) queued_for: Duration,
+    pub(super) finished_at: Instant,
 }
 
 pub(super) struct EncodeLane {
@@ -59,7 +131,11 @@ impl EncodeLane {
         ensure!(self.worker.is_none(), "Encoder lane already running");
         let mut encoder = self.encoder.take().context("Missing ordered encoder")?;
         self.worker = Some(tokio::task::spawn_blocking(move || {
-            let Job { frame, request } = job;
+            let Job {
+                frame,
+                request,
+                submitted,
+            } = job;
             let CaptureRequest { buffer, reply, .. } = request;
             let began = Instant::now();
             let record = if reply.is_closed() {
@@ -70,11 +146,14 @@ impl EncodeLane {
                     None => Ok(Capture::NoUpdate(buffer)),
                 }
             };
+            let finished_at = Instant::now();
             let completed = Completed {
                 frame,
                 reply,
                 record,
-                elapsed: began.elapsed(),
+                elapsed: finished_at.duration_since(began),
+                queued_for: began.duration_since(submitted),
+                finished_at,
             };
             (encoder, completed)
         }));
@@ -88,7 +167,11 @@ impl EncodeLane {
     ) -> Result<()> {
         ensure!(!request.reply.is_closed(), "Local capture demand canceled");
         ensure!(self.can_accept(), "Ordered capture lane is full");
-        let job = Job { frame, request };
+        let job = Job {
+            frame,
+            request,
+            submitted: Instant::now(),
+        };
         if self.busy() {
             self.queued = Some(job);
             Ok(())
@@ -140,13 +223,14 @@ pub(super) async fn run(
     let mut lane = None::<EncodeLane>;
     let mut last_paint = Instant::now();
     let mut last_health = Instant::now();
-    let mut next_capture = Instant::now();
-    let interval = Duration::from_secs_f64(1.0 / f64::from(config.fps()));
+    let mut gate = DemandGate::new(config);
     let mut overlaps = 0u64;
     let mut captures = 0u64;
     let mut completed = 0u64;
     let mut encode_time = Duration::ZERO;
     let mut capture_time = Duration::ZERO;
+    let mut encode_queue = Duration::ZERO;
+    let mut publish_delay = Duration::ZERO;
     let sharing = vec![0x00c52d3b; 320 * 64];
     let local = async {
         loop {
@@ -168,10 +252,8 @@ pub(super) async fn run(
             }
             let busy = lane.as_ref().is_some_and(EncodeLane::busy);
             let available = lane.as_ref().is_none_or(EncodeLane::can_accept);
-            let remaining = next_capture.saturating_duration_since(Instant::now());
-            let poll = if available && !remaining.is_zero() {
-                remaining.min(Duration::from_millis(8))
-            } else { Duration::from_millis(8) };
+            let due = gate.due();
+
             tokio::select! {
                 biased;
                 done = async { lane.as_mut().context("Missing encoder lane")?.complete().await }, if busy => {
@@ -193,13 +275,19 @@ pub(super) async fn run(
                         || task.is_finished() || result.reply.is_closed() {
                         break;
                     }
+                    publish_delay += result.finished_at.elapsed();
                     if result.reply.send(Ok(record)).is_err() { break; }
                     completed += 1;
                     encode_time += result.elapsed;
+                    encode_queue += result.queued_for;
                     lane.as_mut().context("Missing encoder lane")?.advance()?;
                 }
-                request = requests.recv(), if available && remaining.is_zero() => {
+                request = requests.recv(), if available && gate.empty() => {
                     let Some(request) = request else { break; };
+                    gate.offer(request)?;
+                }
+                _ = wait_due(due), if available && due.is_some() => {
+                    let mut request = gate.take()?;
                     indicator.update();
                     if !indicator.is_open() || indicator.is_key_down(Key::Escape)
                         || task.is_finished() || request.reply.is_closed() {
@@ -218,8 +306,7 @@ pub(super) async fn run(
                     }
                     let active = source.as_mut().context("Missing capture source")?;
                     let overlapping = lane.as_ref().is_some_and(EncodeLane::encoding);
-                    let began = Instant::now();
-                    next_capture = began + interval;
+                    let began = gate.begin(&mut request)?;
                     // Capture occurs only after a reserved authenticated
                     // demand, and never more rapidly than the approved FPS.
                     let frame = active.capture(display, || {
@@ -236,7 +323,7 @@ pub(super) async fn run(
                     overlaps += u64::from(overlapping && frame.is_some());
                     lane.as_mut().context("Missing encoder lane")?.submit(frame, request)?;
                 }
-                _ = tokio::time::sleep(poll) => {}
+                _ = tokio::time::sleep(Duration::from_millis(8)) => {}
             }
         }
         Ok::<(), anyhow::Error>(())
@@ -245,15 +332,18 @@ pub(super) async fn run(
     if !task.is_finished() {
         let _ = stop.send(());
     }
+    gate.cancel();
     let native = source.as_mut().map_or(Ok(()), HostCapture::stop);
     let joined = match &mut lane {
         Some(lane) => lane.stop().await,
         None => Ok(()),
     };
     println!(
-        "Local ordered pipeline: captures={captures}, completed={completed}, overlapping_captures={overlaps}, capture_ms={:.3}, encode_ms={:.3}",
+        "Local ordered pipeline: captures={captures}, completed={completed}, overlapping_captures={overlaps}, capture_ms={:.3}, encode_ms={:.3}, encode_queue_ms={:.3}, publish_delay_ms={:.3}",
         capture_time.as_secs_f64() * 1000.0,
-        encode_time.as_secs_f64() * 1000.0
+        encode_time.as_secs_f64() * 1000.0,
+        encode_queue.as_secs_f64() * 1000.0,
+        publish_delay.as_secs_f64() * 1000.0
     );
     local?;
     native?;
@@ -276,9 +366,38 @@ mod tests {
                 reply,
                 receipt_pressure: ReceiptPressure::Neutral,
                 desktop_config: Some(config),
+                issued_at: Instant::now(),
+                permit: None,
             },
             response,
         )
+    }
+
+    #[test]
+    fn demand_gate_keeps_one_slot_and_never_starts_early() -> Result<()> {
+        let config = VideoConfig::new(540, 60, 75, 30).unwrap();
+        let mut gate = DemandGate::new(config);
+        let (first, first_response) = request(config);
+        let (second, second_response) = request(config);
+        gate.offer(first)?;
+        assert!(gate.offer(second).is_err());
+        assert!(second_response.blocking_recv().is_err());
+        gate.next = Instant::now() + Duration::from_secs(5);
+        assert!(gate.take().is_err());
+        gate.next = Instant::now();
+        let mut first = gate.take()?;
+        let actual = gate.begin(&mut first)?;
+        assert_eq!(gate.next, actual + Duration::from_secs_f64(1.0 / 60.0));
+        gate.next = Instant::now() + Duration::from_secs(5);
+        assert!(gate.begin(&mut first).is_err());
+        drop(first);
+        assert!(first_response.blocking_recv().is_err());
+        let (third, third_response) = request(config);
+        gate.offer(third)?;
+        gate.cancel();
+        assert!(gate.empty());
+        assert!(third_response.blocking_recv().is_err());
+        Ok(())
     }
 
     #[tokio::test]

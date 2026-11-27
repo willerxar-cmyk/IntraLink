@@ -1,0 +1,20 @@
+# Capture-start grants and single-deadline scheduling
+
+## Scope
+
+The existing explicit fixed-v8 `--pipeline --fixed-quality` path now reserves capture demands before their absolute earliest-start time. The source, not a second independently sleeping transport loop, waits for the granted monotonic deadline. A local `CapturePermit` is not sent on the wire and cannot be supplied by the viewer. The ordinary serial v8/v10/v11/v12 path and isolated v9 diagnostic remain unchanged. No new dependency, GPU requirement, system timer resolution change or remote permission is introduced.
+
+## Invariants
+
+- Identity/ALPN/handshake and visible consent precede source construction and any capture. At most two FIFO demands share the existing eight-record credit and approved record/time budgets; no overlap before the first changed record. The receiver's priority and idle feedback only reduce cadence.
+- At most one reserved demand lacks a start report. The transport supplies an absolute `not_before` and expiry bounded by the session deadline and five-second IO limit. Only after the reported actual previous capture-call start does it calculate the next grant's deadline. The source independently enforces the fixed maximum FPS from its last actual start, using the same foreground gate. One already issued grant can precede subsequently observed background/idle feedback, as before.
+- The foreground `DemandGate` holds at most one pending request. It waits on one absolute deadline, with independent GUI/health events and completion of the ordered encoder lane. If already due, it does not await another timer tick. The blocking encoder owns no native handles or publication authority. Only the foreground may consume the grant immediately before native capture (or local End), with renewed consent/cancellation and source checks. A capture attempt must not start before its grant or after expiry; a grant is single-use. A response without a valid start report fails closed. No speculative monitor readback, no extra credit or catch-up bursts.
+- Grant start time is the local beginning of the capture call, including source checks/native wait, not physical scan-out time. Native capture and an already-running encode remain non-preemptible in the worst case. Cancel drops reserved requests and joins the existing bounded lane. No adaptive geometry or quality overlap until transition barriers have been designed and qualified.
+
+## Local diagnostics
+
+`desktop-profile-check --pipeline` runs serial/pipeline/pipeline/serial (ABBA), each with exactly 60 ordered records of the same labeled calm 1080p scene through the production software encoder, WGC GPU scale and authenticated QUIC loopback. It records p50/p95/worst of planned wait (grant issue to due), start lateness (actual minus later of grant issue or due), capture-call cadence, native capture elapsed time, encoder queue, encode, publication delay, local publication-to-receiver delivery and viewer decode. The delivery trace is bounded by eight existing credit positions, associated with changed-record sequence and local monotonic clock, not serialized or persisted. This is not RTT/receipt-arrival or capture-to-photon measurement. Report counts, changed FPS and all repeats. Separate `--visual` validates every changed pixel against captured reference and is not a throughput benchmark. Keep the previous executable as a baseline and compare the same scene, recording variability; no claim of sustained remote 60 FPS.
+
+## Validation
+
+Tests exercise early, duplicate, canceled and missing start reports; actual delayed start drives next grant, queue slot rejection, fixed local pacing, FIFO responses, saturated existing credit, exact delta base, stop/join, wrong identity and prior protocol regressions. Run standalone harness, strict CPU/WGC/NVENC and scalar Clippy, locked CPU/NVENC workspace tests, scalar app tests, portable WGC release dependency graph, baseline/new calm-scene comparisons, native visual/retarget/geometry. Preserve logs and previous executables. See `ORDERED-PIPELINE.md`, `VISUAL-FIDELITY.md` and `HANDOFF.md`.

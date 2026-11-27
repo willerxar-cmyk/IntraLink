@@ -16,9 +16,15 @@ async fn endpoints() -> Result<(Endpoint, Endpoint, SocketAddr)> {
 }
 
 async fn next(requests: &mut mpsc::Receiver<CaptureRequest>) -> Result<CaptureRequest> {
-    timeout(IO_LIMIT, requests.recv())
+    let mut request = timeout(IO_LIMIT, requests.recv())
         .await?
-        .context("Missing local demand")
+        .context("Missing local demand")?;
+    let due = request
+        .not_before()
+        .context("Missing scheduled start grant")?;
+    tokio::time::sleep_until(Instant::from_std(due)).await;
+    request.begin_capture()?;
+    Ok(request)
 }
 
 fn reply(request: CaptureRequest, value: u8) -> Result<()> {
@@ -185,6 +191,122 @@ async fn wrong_identity_never_reserves_pipeline_capture() -> Result<()> {
     assert!(served.is_err());
     assert!(viewed.is_err());
     assert!(requests.try_recv().is_err());
+    controller.close().await;
+    host.close().await;
+    Ok(())
+}
+
+#[tokio::test]
+async fn capture_grant_rejects_early_duplicate_and_canceled_starts() -> Result<()> {
+    let config = VideoConfig::new(540, 60, 75, 3).unwrap();
+    let now = std::time::Instant::now();
+    let (reply, response) = oneshot::channel();
+    let (started, reported) = oneshot::channel();
+    let due = now + Duration::from_secs(5);
+    let mut request = CaptureRequest {
+        buffer: Vec::new(),
+        reply,
+        receipt_pressure: ReceiptPressure::Neutral,
+        desktop_config: Some(config),
+        issued_at: now,
+        permit: Some(CapturePermit {
+            not_before: due,
+            expires: due + Duration::from_secs(1),
+            started: Some(started),
+        }),
+    };
+    assert!(request.begin_capture().is_err());
+    // Move this test-owned grant into its allowed window without relying on
+    // a wall-clock duration or scheduler-specific timing threshold.
+    let due = std::time::Instant::now();
+    request.permit.as_mut().unwrap().not_before = due;
+    let actual = request.begin_capture()?;
+    assert_eq!(reported.await?, actual);
+    assert!(actual >= due);
+    assert!(request.begin_capture().is_err());
+    drop(response);
+    assert!(request.begin_capture().is_err());
+    Ok(())
+}
+
+#[tokio::test]
+async fn reply_without_start_is_rejected() -> Result<()> {
+    let (host, controller, addr) = endpoints().await?;
+    let config = VideoConfig::new(540, 60, 75, 3).unwrap();
+    let (source, mut requests) = mpsc::channel(1);
+    let producer = async {
+        let request = timeout(IO_LIMIT, requests.recv())
+            .await?
+            .context("Missing request")?;
+        // Send an otherwise valid response while dropping the unstarted grant.
+        reply(request, 17)?;
+        Ok::<(), anyhow::Error>(())
+    };
+    let (served, viewed, produced) = tokio::join!(
+        serve_view_pipelined(&host, controller.id(), config, source),
+        view(
+            &controller,
+            host.id(),
+            std::slice::from_ref(&addr),
+            CodecMode::Jpeg,
+            |_| ready(Err(anyhow::anyhow!("Unstarted capture was transmitted")))
+        ),
+        producer
+    );
+    produced?;
+    assert!(served.is_err());
+    assert!(viewed.is_err());
+    controller.close().await;
+    host.close().await;
+    Ok(())
+}
+
+#[tokio::test]
+async fn reserved_start_is_based_on_actual_previous_start() -> Result<()> {
+    let (host, controller, addr) = endpoints().await?;
+    let config = VideoConfig::new(540, 10, 75, 5).unwrap();
+    let (source, mut requests) = mpsc::channel(1);
+    let producer = async {
+        let first = next(&mut requests).await?;
+        reply(first, 1)?;
+        let mut second = timeout(IO_LIMIT, requests.recv())
+            .await?
+            .context("Missing second request")?;
+        let due = second.not_before().context("Missing second grant")?;
+        // Deliberately start late. The next grant must follow this actual
+        // start, not the original scheduled time.
+        tokio::time::sleep_until(Instant::from_std(due + Duration::from_millis(40))).await;
+        let actual = second.begin_capture()?;
+        let mut third = timeout(IO_LIMIT, requests.recv())
+            .await?
+            .context("Missing third reservation")?;
+        let third_due = third.not_before().context("Missing third grant")?;
+        assert!(third_due >= actual + Duration::from_millis(100));
+        tokio::time::sleep_until(Instant::from_std(third_due)).await;
+        third.begin_capture()?;
+        reply(second, 2)?;
+        reply(third, 3)?;
+        let end = next(&mut requests).await?;
+        ensure!(end.reply.send(Ok(Capture::End)).is_ok(), "Missing end");
+        while let Some(mut extra) = requests.recv().await {
+            extra.reply.closed().await;
+        }
+        Ok::<(), anyhow::Error>(())
+    };
+    let (served, viewed, produced) = tokio::join!(
+        serve_view_pipelined(&host, controller.id(), config, source),
+        view(
+            &controller,
+            host.id(),
+            std::slice::from_ref(&addr),
+            CodecMode::Jpeg,
+            |_| ready(Ok(()))
+        ),
+        producer
+    );
+    produced?;
+    assert_eq!(served?.frames, 3);
+    assert_eq!(viewed?.frames, 3);
     controller.close().await;
     host.close().await;
     Ok(())
