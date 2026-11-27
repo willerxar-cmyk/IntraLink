@@ -74,6 +74,8 @@ def check_exports(path):
     actual = set(re.findall(r"Java_org_intralink_android_NativeBridge_([A-Za-z0-9_]+)\b", symbols))
     if actual != EXPORTS:
         raise ValueError(f"Unexpected JNI export set: {path.name}: {actual}")
+    if "Java_org_intralink_android_NativeFixtureBridge_" in symbols:
+        raise ValueError(f"Instrumentation-only LAN fixture leaked into candidate: {path.name}")
 
 
 def verify_archive(path, prefix):

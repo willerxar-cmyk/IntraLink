@@ -15,6 +15,8 @@ pub mod avc_negotiation;
 pub mod desktop;
 pub mod input;
 pub mod input_queue;
+#[cfg(feature = "lan-fixture")]
+pub mod media_fixture;
 
 use intralink_core::network::{MAX_CANDIDATES, select_candidates};
 

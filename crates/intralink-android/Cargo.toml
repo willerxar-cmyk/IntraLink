@@ -8,6 +8,9 @@ publish.workspace = true
 [lib]
 crate-type = ["cdylib"]
 
+[features]
+lan-fixture = ["intralink-transport/lan-fixture"]
+
 [dependencies]
 anyhow.workspace = true
 intralink-core.workspace = true

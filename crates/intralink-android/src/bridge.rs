@@ -251,3 +251,40 @@ pub extern "system" fn Java_org_intralink_android_NativeBridge_runProbe(
         Ok(result)
     })
 }
+
+/// Explicit opt-in instrumentation build only. This symbol is forbidden in
+/// normal distribution candidates. No real screen or input is accessed.
+#[cfg(feature = "lan-fixture")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_org_intralink_android_NativeFixtureBridge_runMediaFixture(
+    mut env: JNIEnv,
+    _receiver: JObject,
+    path: JString,
+    request: JString,
+    id: jlong,
+    password: JByteArray,
+) -> jstring {
+    reply(&mut env, |env| {
+        let lease = SESSIONS.claim(id)?;
+        ensure!(
+            APPLICATION_CONTEXT
+                .lock()
+                .map_err(|_| anyhow::anyhow!("Network context unavailable"))?
+                .is_some(),
+            "Android network context was not initialized"
+        );
+        let (path, password) = inputs(env, &path, &password)?;
+        let request: String = env.get_string(&request)?.into();
+        let (profile, elapsed_ms, stats) = session::run_media_fixture(
+            lease,
+            Path::new(&path),
+            password,
+            session::decode(&request)?,
+        )?;
+        let mut result = summary(&profile);
+        result["probe_elapsed_ms"] = json!(elapsed_ms);
+        result["frames"] = json!(stats.frames);
+        result["media_bytes"] = json!(stats.media_bytes);
+        Ok(result)
+    })
+}

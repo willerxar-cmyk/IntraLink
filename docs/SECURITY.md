@@ -152,3 +152,7 @@ Queue ownership, age, IDR deadline and exact packetizer validation prevent publi
 ## AVC negotiation and native decoder test boundary
 
 The independent negotiation protocol is loopback-only and has no media or command parser. Canonical offers, local limits, role direction, pinned endpoint identity and exact response echo/FIN are mandatory. It never authorizes a capture or decoder session. The Android software-decoder harness accepts only the hash-pinned fixture from its instrumentation asset; the asset and harness are not shipped in runtime packages. Local sync-frame requests happen on the authorized foreground codec worker only. Native decoder isolation for arbitrary network input, independent media grant, runtime presentation and cross-device tests remain required.
+
+## Physical LAN acceptance fixture isolation
+
+The explicit owner-selected ADB instrumentation operates only on temporary app-private encrypted test profiles, never a user vault. The generated Compact media test is compiled only with the opt-in lan-fixture feature; Gradle disables Release variants and uses a separate JNI output directory, and distribution validation rejects its symbol. It transmits deterministic generated pixels and reconstructs them with safe Rust, not user display content or an arbitrary native decoder. Existing normal app permissions, capture consent and remote screen/input restrictions remain unchanged. See ANDROID-LAN-ACCEPTANCE.md. No ADB address or private credentials are committed.

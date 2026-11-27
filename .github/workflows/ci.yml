@@ -57,6 +57,9 @@ jobs:
       - run: cargo clippy --locked --workspace --all-targets -- -D warnings
       - run: cargo test --locked --workspace
         if: ${{ !cancelled() && hashFiles('Cargo.lock') != '' }}
+      - name: Check opt-in physical LAN fixture feature
+        if: runner.os == 'Linux'
+        run: cargo clippy --locked -p intralink-transport --features lan-fixture --all-targets -- -D warnings
       - name: Verify recovered generated AVC with a CPU decoder
         if: runner.os == 'Linux'
         shell: bash

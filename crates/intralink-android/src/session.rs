@@ -288,6 +288,56 @@ pub(crate) fn run(
     ))
 }
 
+#[cfg(all(target_os = "android", feature = "lan-fixture"))]
+pub(crate) fn run_media_fixture(
+    mut lease: Lease<'_>,
+    path: &Path,
+    password: zeroize::Zeroizing<Vec<u8>>,
+    request: ProbeRequest,
+) -> Result<(Profile, u64, intralink_transport::desktop::Stats)> {
+    use intralink_transport::{desktop::bind_view_with_protocol, media_fixture};
+    ensure!(!*lease.stop.borrow(), "Diagnostic canceled");
+    let vault = Vault::lock(path)?;
+    let profile = vault.load(&password)?;
+    drop(password);
+    let operation = operation(&profile, &request)?;
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(2)
+        .enable_all()
+        .build()?;
+    let started = Instant::now();
+    let stats = runtime.block_on(async {
+        let endpoint = tokio::select! {
+            biased;
+            _ = canceled(&mut lease.stop) => bail!("Fixture canceled"),
+            result = timeout(Duration::from_secs(15), async {
+                match operation {
+                    Operation::Send { target, .. } => bind_controller(profile.secret_key(), &[target]).await,
+                    Operation::Receive { local, .. } =>
+                        bind_view_with_protocol(profile.secret_key(), local, media_fixture::PROTOCOL).await,
+                }
+            }) => result.context("Fixture bind deadline")??,
+        };
+        let result = tokio::select! {
+            biased;
+            _ = canceled(&mut lease.stop) => Err(anyhow::anyhow!("Fixture canceled")),
+            result = timeout(Duration::from_secs(35), async {
+                match operation {
+                    Operation::Send { peer, target } => media_fixture::view(&endpoint, peer, target).await,
+                    Operation::Receive { peer, .. } => media_fixture::serve(&endpoint, peer).await,
+                }
+            }) => result.context("Fixture session deadline").and_then(|result| result),
+        };
+        endpoint.close().await;
+        result
+    })?;
+    Ok((
+        profile,
+        started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64,
+        stats,
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

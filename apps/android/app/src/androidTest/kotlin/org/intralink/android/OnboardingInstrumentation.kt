@@ -9,16 +9,24 @@ import java.nio.file.Files
 import java.security.SecureRandom
 
 /**
- * Executes the actual Rust JNI vault operations in a disposable app-private
- * directory. Never opens the user's profile or starts a remote connection.
+ * Executes actual Rust JNI operations in a disposable app-private directory.
+ * Default tests never network; an explicit lanProbe argument selects the
+ * separately authorized, generated-data LAN acceptance harness.
  */
 class OnboardingInstrumentation : Instrumentation() {
+    private var testArguments = Bundle()
+
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
+        testArguments = arguments ?: Bundle()
         start()
     }
 
     override fun onStart() {
+        if (testArguments.containsKey("lanProbe")) {
+            LanProbeFixture.run(this, testArguments)
+            return
+        }
         val results = Bundle()
         var directory: File? = null
         var resultCode = Activity.RESULT_CANCELED

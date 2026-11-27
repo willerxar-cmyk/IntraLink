@@ -36,7 +36,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path)
     parser.add_argument("--clippy", action="store_true", help="Run target-specific strict Clippy before the Release build")
+    parser.add_argument("--lan-fixture", action="store_true", help="Opt-in local acceptance build; never distribute")
     args = parser.parse_args()
+    features = ["--features", "lan-fixture"] if args.lan_fixture else []
     root = Path(__file__).resolve().parent.parent
     target_dir = Path(os.environ.get("CARGO_TARGET_DIR", root / "target")).resolve()
     bin_dir = ndk_bin()
@@ -56,11 +58,11 @@ def main():
         env[f"AR_{cc_target}"] = str(bin_dir / f"llvm-ar{suffix}")
         if args.clippy:
             subprocess.run(
-                ["cargo", "clippy", "--locked", "--release", "-p", "intralink-android", "--target", target, "--", "-D", "warnings"],
+                ["cargo", "clippy", "--locked", "--release", "-p", "intralink-android", "--target", target, *features, "--", "-D", "warnings"],
                 cwd=root, env=env, check=True,
             )
         subprocess.run(
-            ["cargo", "build", "--locked", "--release", "-p", "intralink-android", "--target", target],
+            ["cargo", "build", "--locked", "--release", "-p", "intralink-android", "--target", target, *features],
             cwd=root, env=env, check=True,
         )
         source = target_dir / target / "release" / "libintralink_android.so"
