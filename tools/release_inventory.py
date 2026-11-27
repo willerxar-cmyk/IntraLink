@@ -1,4 +1,4 @@
-"""Generate the Windows portable release dependency inventory and notices.
+"""Generate the portable desktop release dependency inventory and notices.
 
 Requires the locked, already-resolved Cargo registry and GitHub CLI for exact
 upstream notices absent from certain published crate archives. No package code
@@ -13,7 +13,10 @@ import subprocess
 import zipfile
 
 FEATURES = "intralink/wgc-preview,intralink/jpeg-simd,intralink/jpeg-parallel,intralink/resource-monitor"
-TARGET = "x86_64-pc-windows-msvc"
+PLATFORMS = {
+    "windows": ("x86_64-pc-windows-msvc", FEATURES),
+    "linux": ("x86_64-unknown-linux-gnu", FEATURES.replace("wgc-preview", "desktop-preview")),
+}
 NOTICE = re.compile(r"^(licen[cs]es?|copying|copyright|notice|authors)([_.-]|$)", re.I)
 
 
@@ -41,15 +44,20 @@ def upstream_notices(package, root):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=pathlib.Path)
+    parser.add_argument("--platform", choices=PLATFORMS, default="windows")
     parser.add_argument("--input-preview", action="store_true", help="Inventory the explicit Windows input build")
     args = parser.parse_args()
-    features = FEATURES + (",intralink/input-preview" if args.input_preview else "")
+    target, features = PLATFORMS[args.platform]
+    if args.input_preview:
+        if args.platform != "windows":
+            parser.error("--input-preview requires Windows")
+        features += ",intralink/input-preview"
     if args.output.exists():
         raise FileExistsError(args.output)
     flags = ["--locked", "--offline", "--no-default-features", "--features", features]
     metadata = json.loads(capture("cargo", "metadata", "--format-version", "1",
-                                  "--filter-platform", TARGET, *flags))
-    tree = capture("cargo", "tree", "-p", "intralink", "--target", TARGET, "-e",
+                                  "--filter-platform", target, *flags))
+    tree = capture("cargo", "tree", "-p", "intralink", "--target", target, "-e",
                    "normal,build", "--prefix", "none", "--format", "{p}",
                    "--charset", "ascii", *flags)
     selected = {tuple(m.groups()) for line in tree.splitlines()
@@ -63,6 +71,7 @@ def main():
     notices = {}
     rows = []
     apache = None
+    needs_apache_fallback = False
     for package in packages:
         root = pathlib.Path(package["manifest_path"]).parent
         prefix = f"{package['name']}-{package['version']}"
@@ -88,6 +97,7 @@ def main():
             # Preserve original attribution and use the declared Apache option.
             if prefix != "enum-assoc-1.4.2" or package["license"] != "MIT OR Apache-2.0":
                 raise ValueError(f"No notice material for {prefix}")
+            needs_apache_fallback = True
             files["Cargo.toml.orig"] = (root / "Cargo.toml.orig").read_bytes()
             files["README.md"] = (root / "README.md").read_bytes()
             files["NOTICE.txt"] = (
@@ -106,17 +116,17 @@ def main():
             "source": package["source"], "repository": package.get("repository"),
             "notice_source": source, "notice_files": sorted(files),
         })
-    if apache is None:
-        raise ValueError("Apache-2.0 text unavailable")
-    notices["licenses/enum-assoc-1.4.2/APACHE-2.0.txt"] = apache
     for row in rows:
-        if row["name"] == "enum-assoc" and row["version"] == "1.4.2":
+        if row["name"] == "enum-assoc" and row["version"] == "1.4.2" and needs_apache_fallback:
+            if apache is None:
+                raise ValueError("Apache-2.0 text unavailable")
+            notices["licenses/enum-assoc-1.4.2/APACHE-2.0.txt"] = apache
             row["notice_files"].append("APACHE-2.0.txt")
     if any(not row["license"] and not row["license_file"] for row in rows):
         raise ValueError("Undeclared license in resolved dependency graph")
     text = [
-        "IntraLink Windows x64 portable preview — third-party inventory",
-        f"Target: {TARGET}", f"Cargo features: {features}",
+        f"IntraLink {args.platform} x64 portable preview - third-party inventory",
+        f"Target: {target}", f"Cargo features: {features}",
         "Includes the resolved normal/build dependency graph; build-only packages "
         "may not be linked into the executable.",
         "License declarations and original notices are preserved; this is not a "
@@ -130,7 +140,7 @@ def main():
     with zipfile.ZipFile(args.output, "x", zipfile.ZIP_DEFLATED) as output:
         output.writestr("THIRD-PARTY-NOTICES.txt", "\n".join(text) + "\n")
         output.writestr("dependency-inventory.json", json.dumps({
-            "target": TARGET, "features": features, "scope": "normal and build dependencies",
+            "target": target, "features": features, "scope": "normal and build dependencies",
             "packages": rows,
         }, indent=2) + "\n")
         for name, content in sorted(notices.items()):

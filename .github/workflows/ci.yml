@@ -1,5 +1,9 @@
 name: Rust checks
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -7,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.96.0
         with:
           components: rustfmt
       - run: cargo fmt --all -- --check
@@ -19,7 +23,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.96.0
       - run: rustc --version --verbose
       - name: Test actual media, protocol and color conversion without registry dependencies
         run: |
@@ -33,7 +37,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.96.0
         with:
           components: clippy
       - run: rustc --version --verbose
@@ -66,14 +70,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.96.0
         with:
           components: clippy
       - name: Install Linux desktop build dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config libclang-dev libxcb1-dev libxrandr-dev libdbus-1-dev libpipewire-0.3-dev libwayland-dev libegl-dev libx11-dev libxcursor-dev libxkbcommon-dev libxkbcommon-x11-dev
+          sudo apt-get install -y pkg-config libclang-dev libxcb1-dev libxrandr-dev libdbus-1-dev libpipewire-0.3-dev libwayland-dev libegl-dev libgbm-dev libx11-dev libxcursor-dev libxkbcommon-dev libxkbcommon-x11-dev
       - name: Resolve dependencies when no lockfile exists
         shell: bash
         run: if [ ! -f Cargo.lock ]; then cargo generate-lockfile; fi
@@ -95,7 +99,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.96.0
         with:
           components: clippy
       - name: Install native VA-API development dependencies
@@ -122,7 +126,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.96.0
         with:
           components: clippy
       - name: Resolve dependencies when no lockfile exists
@@ -148,14 +152,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.96.0
         with:
           components: clippy
       - name: Install Linux native development dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config libclang-dev libxcb1-dev libxrandr-dev libdbus-1-dev libpipewire-0.3-dev libwayland-dev libegl-dev libx11-dev libxcursor-dev libxkbcommon-dev libxkbcommon-x11-dev libva-dev
+          sudo apt-get install -y pkg-config libclang-dev libxcb1-dev libxrandr-dev libdbus-1-dev libpipewire-0.3-dev libwayland-dev libegl-dev libgbm-dev libx11-dev libxcursor-dev libxkbcommon-dev libxkbcommon-x11-dev libva-dev
           pkg-config --atleast-version=1.20.0 libva
       - name: Resolve dependencies when no lockfile exists
         shell: bash
@@ -173,11 +177,11 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.96.0
         with:
           components: clippy
-      - run: cargo clippy --locked --workspace --all-targets --features intralink/wgc-preview,intralink/resource-monitor -- -D warnings
-      - run: cargo test --locked --workspace --features intralink/wgc-preview,intralink/resource-monitor
-      - run: cargo build --locked --release -p intralink --features wgc-preview,resource-monitor
+      - run: cargo clippy --locked --workspace --all-targets --features intralink/wgc-preview,intralink/jpeg-parallel,intralink/resource-monitor,intralink/input-preview -- -D warnings
+      - run: cargo test --locked --workspace --features intralink/wgc-preview,intralink/jpeg-parallel,intralink/resource-monitor,intralink/input-preview
+      - run: cargo build --locked --release -p intralink --no-default-features --features wgc-preview,jpeg-simd,jpeg-parallel,resource-monitor,input-preview
       # Native WGC capture requires a real interactive desktop. Do not claim
       # hardware or graphical validation from the hosted CI build alone.

@@ -1,6 +1,6 @@
-# Target matrix (planned, not tested)
+# Target matrix and release status
 
-The optional v0.16 desktop-preview and workspace source is gated to Windows and Linux X11. Native capture and viewer integration have not been run. All other host/UI capabilities and architectures below remain targets, not supported release claims. See [DESKTOP.md](DESKTOP.md).
+Windows x64 preview.3 is public and its generated-window native video diagnostics passed; physical multi-device KVM is unqualified. Linux X11 desktop source exists, but the native build and physical acceptance are pending. Android has no app yet. The manual Portable desktop candidates workflow builds and packages Windows/Linux independently; hosted artifacts are not automatically released. The table below remains a target matrix, not a list of supported release claims. See [DESKTOP.md](DESKTOP.md) and [RELEASE-PREVIEW.md](RELEASE-PREVIEW.md).
 
 | Platform | Controller | Host approach | Targets |
 |---|---|---|---|

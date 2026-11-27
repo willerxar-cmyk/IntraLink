@@ -1,0 +1,82 @@
+name: Portable desktop candidates
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+            target: x86_64-pc-windows-msvc
+            features: wgc-preview,jpeg-simd,jpeg-parallel,resource-monitor,input-preview
+            binary: intralink.exe
+            inventory_args: --input-preview
+          - os: ubuntu-24.04
+            platform: linux
+            target: x86_64-unknown-linux-gnu
+            features: desktop-preview,jpeg-simd,jpeg-parallel,resource-monitor
+            binary: intralink
+            inventory_args: ""
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.96.0
+        with:
+          components: clippy,rustfmt
+      - name: Install native Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libclang-dev libxcb1-dev libxrandr-dev libdbus-1-dev libpipewire-0.3-dev libwayland-dev libegl-dev libgbm-dev libx11-dev libxcursor-dev libxkbcommon-dev libxkbcommon-x11-dev
+      - name: Verify exact toolchain and formatting
+        shell: bash
+        run: |
+          rustc --version --verbose
+          cargo fmt --all -- --check
+      - name: Check portable dependency boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          graph="$(cargo tree --locked -p intralink --target "${{ matrix.target }}" --no-default-features --features "${{ matrix.features }}" -e normal --prefix none)"
+          if grep -Eq '^mini-(cuda|nvcodec) ' <<< "$graph"; then
+            echo "NVIDIA codec dependency leaked into portable build" >&2
+            exit 1
+          fi
+      - name: Strict lint, tests and locked release
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo clippy --locked -p intralink --target "${{ matrix.target }}" --no-default-features --features "${{ matrix.features }}" --all-targets -- -D warnings
+          cargo test --locked -p intralink --target "${{ matrix.target }}" --no-default-features --features "${{ matrix.features }}"
+          cargo build --locked --release -p intralink --target "${{ matrix.target }}" --no-default-features --features "${{ matrix.features }}"
+          "target/${{ matrix.target }}/release/${{ matrix.binary }}" --version
+      - name: Preserve Linux dynamic library evidence
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          ldd "target/${{ matrix.target }}/release/${{ matrix.binary }}" | tee linux-runtime-libraries.txt
+          if grep -q 'not found' linux-runtime-libraries.txt; then exit 1; fi
+      - name: Inventory locked dependencies and original notices
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cargo fetch --locked --target "${{ matrix.target }}"
+          python tools/release_inventory.py candidate-notices.zip --platform "${{ matrix.platform }}" ${{ matrix.inventory_args }}
+      - name: Package and verify candidate
+        shell: bash
+        run: |
+          python tools/package_desktop_candidate.py --platform "${{ matrix.platform }}" --binary "target/${{ matrix.target }}/release/${{ matrix.binary }}" --notices candidate-notices.zip --output candidate
+      - name: Retain candidate and checksum
+        uses: actions/upload-artifact@v4
+        with:
+          name: intralink-${{ matrix.platform }}-x64-${{ github.sha }}
+          path: candidate/
+          if-no-files-found: error
+      # Native capture, input and physical KVM need real consented devices.
+      # Candidate artifacts are not automatically public releases.
