@@ -31,7 +31,7 @@
     <string name="local_device">Local device</string>
     <string name="role_status">Role: %1$s</string>
     <string name="public_identity">Public identity</string>
-    <string name="saved_grants">Saved directional grants: %1$d</string>
+    <string name="saved_grants">Paired devices: %1$d</string>
     <string name="revoked_grants">Role updated. Revoked incompatible grants: %1$d</string>
     <string name="preview_scope">Manual pairing and foreground authenticated diagnostics are enabled. CLIENT can explicitly approve a bounded screen-only preview on Android 12L or later. Mouse and keyboard preview is limited to the IntraLink test canvas; control of other apps is not enabled.</string>
     <string name="screen_share_title">Share screen preview</string>
@@ -58,8 +58,6 @@
     <string name="new_device_name">New device name</string>
     <string name="save_name">Save name</string>
     <string name="probe_result">Authenticated diagnostic completed in %1$d ms (session duration, not input latency).</string>
-    <string name="peer_label">%1$s (%2$s)</string>
-    <string name="outbound">Outbound</string>
     <string name="inbound">Inbound</string>
     <string name="saved_route">Private route: %1$s:%2$d</string>
     <string name="input_preview">Mouse and keyboard preview</string>
@@ -82,7 +80,7 @@
     <string name="card_review">Connection details filled. Review the full identity before saving.</string>
     <string name="pair_client">Pair a CLIENT</string>
     <string name="pair_base">Pair a BASE</string>
-    <string name="pair_description">Exchange full public identities independently with the other device owner. This saves only a diagnostic pairing; it grants no remote control.</string>
+    <string name="pair_description">Use a connection card or enter the details yourself. Verify the full identity with the other owner before approving. Pairing alone does not grant remote control.</string>
     <string name="peer_name">Peer label (letters, digits, underscore or hyphen)</string>
     <string name="peer_identity">Complete peer public identity</string>
     <string name="peer_ip">Peer private IPv4 address</string>
@@ -124,4 +122,28 @@
     <string name="capture_no_output">No encoded output received during this diagnostic.</string>
     <string name="capture_error">Capture could not start or finish safely.</string>
     <string name="capture_metrics">Encoder: %1$s\nSize: %2$d × %3$d\nConfigured FPS: %4$d\nOutput buffers: %5$d\nEncoded bytes counted: %6$d\nElapsed ms: %7$d</string>
+    <string name="connect_device">Connect a device</string>
+    <string name="connect_device_description">Open IntraLink on the other device. Exchange connection cards, then review the identity on both devices.</string>
+    <string name="connection_options">Connection details</string>
+    <string name="hide_connection_options">Hide connection details</string>
+    <string name="custom_connection_card">Choose a different address or port</string>
+    <string name="show_identity">Show my public identity</string>
+    <string name="hide_identity">Hide my public identity</string>
+    <string name="your_devices">Your devices</string>
+    <string name="no_devices">No paired devices yet</string>
+    <string name="no_devices_description">Use Connect a device above to add your first device. Pairing does not start a session.</string>
+    <string name="paired_base">Paired BASE ? Not connected</string>
+    <string name="paired_client">Paired CLIENT ? Not connected</string>
+    <string name="choose_access">Choose what to share</string>
+    <string name="scope_separate">Each session needs your approval. Screen and input are separate in this preview.</string>
+    <string name="base_preview_scope">Test the connection here. Use a desktop BASE for screen viewing or mouse and keyboard control.</string>
+    <string name="screen_version_required">Screen sharing requires Android 12L or later.</string>
+    <string name="settings_title">Device settings</string>
+    <string name="advanced_tools">Advanced tools</string>
+    <string name="hide_advanced_tools">Hide advanced tools</string>
+    <string name="pair_step_card">1. Add the connection card</string>
+    <string name="pair_card_empty">Copy the card from the other device, then paste it here.</string>
+    <string name="enter_manual">Enter details manually</string>
+    <string name="hide_manual">Hide manual details</string>
+    <string name="pair_step_review">2. Name and review the device</string>
 </resources>

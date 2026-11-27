@@ -23,6 +23,10 @@ class OnboardingInstrumentation : Instrumentation() {
     }
 
     override fun onStart() {
+        if (testArguments.getString("dashboardUx") == "true") {
+            DashboardFixture.run(this)
+            return
+        }
         if (testArguments.getString("lanInput") == "true") {
             InputLanFixture.run(this,testArguments)
             return

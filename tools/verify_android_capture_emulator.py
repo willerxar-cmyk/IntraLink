@@ -98,6 +98,7 @@ class Emulator:
         del secret
         self.shell("input", "keyevent", "111")
         self.click("Create local identity")
+        self.click("Advanced tools")
         self.click("Local screen encoder diagnostic")
         self.find("Ready for a new local consent request.", {PACKAGE})
 

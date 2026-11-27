@@ -2,18 +2,20 @@ package org.intralink.android
 
 import android.app.Activity
 import android.app.AlertDialog
-import android.graphics.Color
+import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.text.InputFilter
 import android.text.InputType
 import android.view.InputDevice
+import android.view.Gravity
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
@@ -34,6 +36,8 @@ class MainActivity : Activity() {
     private var foreground = false
     private var lockOnResume = false
     private var activeProbe = 0L
+    // Public profile fields only; never keep an unlocked vault or password.
+    private var dashboard: JSONObject? = null
     private val secretFields = mutableListOf<EditText>()
     private val vaultPath: String get() = File(filesDir, "profile.vault").absolutePath
 
@@ -52,6 +56,7 @@ class MainActivity : Activity() {
     override fun onPause() {
         foreground = false
         lockOnResume = true
+        dashboard = null
         stopDiagnostic()
         secretFields.forEach { it.text.clear() }
         super.onPause()
@@ -80,20 +85,61 @@ class MainActivity : Activity() {
         secretFields.clear()
     }
 
-    private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
+    private fun dp(value: Int) = InterfaceStyle.dp(this, value)
+
+    private fun home() {
+        val profile = dashboard
+        if (foreground && !busy && profile != null) showProfile(profile) else showUnlock()
+    }
+
+    private fun section(content: () -> Unit) {
+        val parent = body
+        val card = InterfaceStyle.card(this)
+        parent.addView(card)
+        body = card
+        try { content() } finally { body = parent }
+    }
+
+    private fun disclosure(title: String, close: String, content: () -> Unit) {
+        val parent = body
+        val details = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
+        val toggle = action(title) { button ->
+            val expand = details.visibility != View.VISIBLE
+            details.visibility = if (expand) View.VISIBLE else View.GONE
+            button.text = if (expand) close else title
+        }
+        toggle.accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+        parent.addView(details)
+        body = details
+        try { content() } finally { body = parent }
+    }
 
     private fun page(title: String, description: String) {
         clearSecretFields()
         val scroll = ScrollView(this).apply {
             isFillViewport = true
-            setBackgroundColor(Color.WHITE)
+            setBackgroundColor(InterfaceStyle.background)
+            clipToPadding = false
         }
         body = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(24), dp(24), dp(24), dp(32))
+            setPadding(dp(18), dp(24), dp(18), dp(32))
+            isFocusableInTouchMode = true
         }
-        scroll.addView(body)
+        val wrapper = FrameLayout(this)
+        val pageBody = body
+        wrapper.addView(pageBody, FrameLayout.LayoutParams(-1, -2, Gravity.TOP or Gravity.CENTER_HORIZONTAL))
+        wrapper.addOnLayoutChangeListener { view, left, _, right, _, oldLeft, _, oldRight, _ ->
+            if (right - left != oldRight - oldLeft) {
+                val max = minOf(view.width, dp(720))
+                if (max > 0 && pageBody.layoutParams.width != max) {
+                    pageBody.layoutParams = pageBody.layoutParams.apply { width = max }
+                }
+            }
+        }
+        scroll.addView(wrapper)
         setContentView(scroll)
+        pageBody.requestFocus()
         if (Build.VERSION.SDK_INT >= 30) {
             scroll.setOnApplyWindowInsetsListener { view, insets ->
                 val safe = insets.getInsets(
@@ -104,23 +150,27 @@ class MainActivity : Activity() {
             }
             scroll.requestApplyInsets()
         }
-        label(getString(R.string.brand_label), 14, 0xff087f72.toInt(), true)
-        label(title, 27, Color.rgb(20, 36, 54), true)
+        label(getString(R.string.brand_label), 13, InterfaceStyle.accent, true)
+        label(title, 28, InterfaceStyle.ink, true)
         label(description, 16)
         status = TextView(this).apply {
-            setTextColor(Color.rgb(158, 41, 45))
+            setTextColor(InterfaceStyle.muted)
+            setPadding(0, dp(4), 0, dp(4))
             textSize = 14f
             accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
         }
         body.addView(status)
     }
 
-    private fun label(text: String, size: Int = 15, color: Int = Color.DKGRAY, bold: Boolean = false, selectable: Boolean = false) {
+    private fun label(text: String, size: Int = 15, color: Int = InterfaceStyle.muted, bold: Boolean = false, selectable: Boolean = false) {
         body.addView(TextView(this).apply {
             this.text = text
             textSize = size.toFloat()
             setTextColor(color)
-            if (bold) setTypeface(typeface, Typeface.BOLD)
+            if (bold) {
+                setTypeface(typeface, Typeface.BOLD)
+                if (android.os.Build.VERSION.SDK_INT >= 28) isAccessibilityHeading = true
+            }
             setTextIsSelectable(selectable)
             setPadding(0, dp(6), 0, dp(10))
         })
@@ -136,16 +186,17 @@ class MainActivity : Activity() {
             isSaveEnabled = false
             filters = arrayOf(InputFilter.LengthFilter(limit))
             if (secret) importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
+            InterfaceStyle.field(this)
         }
         if (secret) secretFields.add(view)
         body.addView(view)
         return view
     }
 
-    private fun action(text: String, callback: (Button) -> Unit): Button {
+    private fun action(text: String, kind: InterfaceStyle.Action = InterfaceStyle.Action.SECONDARY, callback: (Button) -> Unit): Button {
         val button = Button(this).apply {
             this.text = text
-            isAllCaps = false
+            InterfaceStyle.button(this, kind)
             setOnClickListener { if (!busy) callback(this) }
         }
         body.addView(button)
@@ -157,10 +208,16 @@ class MainActivity : Activity() {
         group.addView(RadioButton(this).apply {
             id = BASE
             setText(R.string.role_base)
+            setTextColor(InterfaceStyle.ink)
+            buttonTintList = ColorStateList.valueOf(InterfaceStyle.accent)
+            minHeight = dp(56)
         })
         group.addView(RadioButton(this).apply {
             id = CLIENT
             setText(R.string.role_client)
+            setTextColor(InterfaceStyle.ink)
+            buttonTintList = ColorStateList.valueOf(InterfaceStyle.accent)
+            minHeight = dp(56)
         })
         body.addView(group)
         return group
@@ -246,7 +303,7 @@ class MainActivity : Activity() {
         val name = field(getString(R.string.device_name))
         val password = field(getString(R.string.vault_passphrase), true)
         val confirmation = field(getString(R.string.repeat_passphrase), true)
-        action(getString(R.string.create_identity)) { button ->
+        action(getString(R.string.create_identity), InterfaceStyle.Action.PRIMARY) { button ->
             val selected = roles.checkedRadioButtonId
             if (selected != BASE && selected != CLIENT) {
                 status.setText(R.string.choose_role)
@@ -271,72 +328,115 @@ class MainActivity : Activity() {
     }
 
     private fun showUnlock() {
+        dashboard = null
         page(getString(R.string.unlock_title), getString(R.string.unlock_description))
         val password = field(getString(R.string.vault_passphrase), true)
-        action(getString(R.string.unlock)) { button -> run(button, secret(password)) { NativeBridge.openProfile(vaultPath, it) } }
+        action(getString(R.string.unlock), InterfaceStyle.Action.PRIMARY) { button -> run(button, secret(password)) { NativeBridge.openProfile(vaultPath, it) } }
     }
 
     private fun showProfile(profile: JSONObject) {
+        dashboard = profile
         val role = profile.optString("role")
+        val canControl = role == "BASE" || role == "HYBRID"
+        val canReceive = role == "CLIENT" || role == "HYBRID"
+        val localIdentity = profile.getString("public_id")
         page(profile.optString("name", getString(R.string.local_device)), getString(R.string.role_status, role))
-        label(getString(R.string.public_identity), 16, bold = true)
-        label(profile.getString("public_id"), 14, selectable = true)
-        if (role == "BASE" || role == "HYBRID") {
-            action(getString(R.string.copy_base_card)) {
-                ConnectionCard.copy(this, ConnectionCard(profile.getString("public_id"), null, null).encode())
-                status.setText(R.string.card_copied)
-            }
-        }
-        if (role == "CLIENT" || role == "HYBRID") {
-            action(getString(R.string.copy_client_card)) { showClientCard(profile.getString("public_id")) }
-        }
-        label(getString(R.string.saved_grants, profile.optInt("peer_count")))
         if (profile.has("revoked_grants")) {
             label(getString(R.string.revoked_grants, profile.optInt("revoked_grants")))
         }
         if (profile.has("probe_elapsed_ms")) {
-            label(getString(R.string.probe_result, profile.getLong("probe_elapsed_ms")), 14)
+            label(getString(R.string.probe_result, profile.getLong("probe_elapsed_ms")), 14, InterfaceStyle.accent)
         }
-        label(getString(R.string.preview_scope), 14)
+
+        section {
+            label(getString(R.string.connect_device), 20, bold = true)
+            label(getString(R.string.connect_device_description))
+            if (canControl) {
+                action(getString(R.string.pair_client), InterfaceStyle.Action.PRIMARY) { showPair(true) }
+                action(getString(R.string.copy_base_card)) {
+                    ConnectionCard.copy(this, ConnectionCard(localIdentity, null, null).encode())
+                    status.setText(R.string.card_copied)
+                }
+            }
+            if (canReceive) {
+                action(getString(R.string.copy_client_card), InterfaceStyle.Action.PRIMARY) {
+                    val address = ConnectionCard.localAddress(this)
+                    if (address == null) showClientCard(localIdentity)
+                    else {
+                        ConnectionCard.copy(this, ConnectionCard(localIdentity, address, getString(R.string.default_port).toInt()).encode())
+                        status.setText(R.string.card_copied)
+                    }
+                }
+                action(getString(R.string.pair_base)) { showPair(false) }
+                disclosure(getString(R.string.connection_options), getString(R.string.hide_connection_options)) {
+                    action(getString(R.string.custom_connection_card)) { showClientCard(localIdentity) }
+                }
+            }
+            disclosure(getString(R.string.show_identity), getString(R.string.hide_identity)) {
+                label(getString(R.string.public_identity), 15, bold = true)
+                label(localIdentity, 14, selectable = true)
+            }
+        }
+
+        label(getString(R.string.your_devices), 22, bold = true)
+        label(getString(R.string.saved_grants, profile.optInt("peer_count")))
         val peers = profile.optJSONArray("peers")
-        if (peers != null) {
+        if (peers == null || peers.length() == 0) {
+            section {
+                label(getString(R.string.no_devices), 18, bold = true)
+                label(getString(R.string.no_devices_description))
+            }
+        } else {
             for (index in 0 until peers.length()) {
                 val peer = peers.getJSONObject(index)
                 val name = peer.getString("name")
                 val outbound = peer.getString("direction") == "outbound"
-                label(getString(R.string.peer_label, name, getString(if (outbound) R.string.outbound else R.string.inbound)), 17, bold = true)
-                label(peer.getString("identity"), 13, selectable = true)
-                peer.optJSONObject("route")?.let { route ->
-                    label(getString(R.string.saved_route, route.getString("host"), route.getInt("port")), 14)
-                }
-                action(getString(if (outbound) R.string.run_probe else R.string.listen_probe)) { showProbe(peer) }
-                if (!outbound) {
-                    action(getString(R.string.input_preview)) {
-                        startActivity(android.content.Intent(this, InputPreviewActivity::class.java)
-                            .putExtra(ScreenShareActivity.EXTRA_NAME, name)
-                            .putExtra(ScreenShareActivity.EXTRA_IDENTITY, peer.getString("identity")))
+                section {
+                    label(name, 20, bold = true)
+                    label(getString(if (outbound) R.string.paired_client else R.string.paired_base),
+                        14, InterfaceStyle.accent)
+                    if (!outbound) {
+                        label(getString(R.string.choose_access), 16, bold = true)
+                        if (Build.VERSION.SDK_INT >= 32) {
+                            action(getString(R.string.screen_share_title), InterfaceStyle.Action.PRIMARY) {
+                                startActivity(android.content.Intent(this, ScreenShareActivity::class.java)
+                                    .putExtra(ScreenShareActivity.EXTRA_NAME, name)
+                                    .putExtra(ScreenShareActivity.EXTRA_IDENTITY, peer.getString("identity")))
+                            }
+                        } else label(getString(R.string.screen_version_required), 14)
+                        action(getString(R.string.input_preview)) {
+                            startActivity(android.content.Intent(this, InputPreviewActivity::class.java)
+                                .putExtra(ScreenShareActivity.EXTRA_NAME, name)
+                                .putExtra(ScreenShareActivity.EXTRA_IDENTITY, peer.getString("identity")))
+                        }
+                        label(getString(R.string.scope_separate), 14)
+                    } else {
+                        action(getString(R.string.run_probe), InterfaceStyle.Action.PRIMARY) { showProbe(peer) }
+                        label(getString(R.string.base_preview_scope), 14)
+                    }
+                    disclosure(getString(R.string.connection_options), getString(R.string.hide_connection_options)) {
+                        label(peer.getString("identity"), 14, selectable = true)
+                        peer.optJSONObject("route")?.let { route ->
+                            label(getString(R.string.saved_route, route.getString("host"), route.getInt("port")), 14)
+                        }
+                        if (!outbound) action(getString(R.string.listen_probe)) { showProbe(peer) }
+                        action(getString(R.string.revoke_peer), InterfaceStyle.Action.DESTRUCTIVE) { showRevoke(name) }
                     }
                 }
-                if (!outbound && Build.VERSION.SDK_INT >= 32) {
-                    action(getString(R.string.screen_share_title)) {
-                        startActivity(android.content.Intent(this, ScreenShareActivity::class.java)
-                            .putExtra(ScreenShareActivity.EXTRA_NAME, name)
-                            .putExtra(ScreenShareActivity.EXTRA_IDENTITY, peer.getString("identity")))
-                    }
+            }
+        }
+        section {
+            label(getString(R.string.settings_title), 18, bold = true)
+            action(getString(R.string.rename_device)) { showRename() }
+            action(getString(R.string.change_role)) { showRoleChange(role) }
+            disclosure(getString(R.string.advanced_tools), getString(R.string.hide_advanced_tools)) {
+                label(getString(R.string.preview_scope), 14)
+                if (canReceive) action(getString(R.string.capture_title)) {
+                    startActivity(android.content.Intent(this, CaptureActivity::class.java))
                 }
-                action(getString(R.string.revoke_peer)) { showRevoke(name) }
             }
+            action(getString(R.string.lock)) { showUnlock() }
         }
-        if (role == "BASE" || role == "HYBRID") action(getString(R.string.pair_client)) { showPair(true) }
-        if (role == "CLIENT" || role == "HYBRID") action(getString(R.string.pair_base)) { showPair(false) }
-        if (role == "CLIENT" || role == "HYBRID") {
-            action(getString(R.string.capture_title)) {
-                startActivity(android.content.Intent(this, CaptureActivity::class.java))
-            }
-        }
-        action(getString(R.string.change_role)) { showRoleChange(role) }
-        action(getString(R.string.rename_device)) { showRename() }
-        action(getString(R.string.lock)) { showUnlock() }
     }
 
     private fun showClientCard(identity: String) {
@@ -344,7 +444,7 @@ class MainActivity : Activity() {
         val address = field(getString(R.string.local_ip), limit = 15)
         address.setText(ConnectionCard.localAddress(this).orEmpty())
         val port = portField()
-        action(getString(R.string.copy_card)) {
+        action(getString(R.string.copy_card), InterfaceStyle.Action.PRIMARY) {
             val ip = address.text.toString().trim()
             val selected = port.text.toString().toIntOrNull()
             if (!ConnectionCard.privateIp(ip) || selected == null || selected !in 1..65535) {
@@ -354,7 +454,7 @@ class MainActivity : Activity() {
                 status.setText(R.string.card_copied)
             }
         }
-        action(getString(R.string.cancel)) { showUnlock() }
+        action(getString(R.string.cancel)) { home() }
     }
 
     private fun portField(): EditText = field(getString(R.string.port), limit = 5).apply {
@@ -376,23 +476,56 @@ class MainActivity : Activity() {
 
     private fun showPair(outbound: Boolean) {
         page(getString(if (outbound) R.string.pair_client else R.string.pair_base), getString(R.string.pair_description))
-        val name = field(getString(R.string.peer_name), limit = 48)
-        val identity = field(getString(R.string.peer_identity), limit = 128)
-        val address = if (outbound) field(getString(R.string.peer_ip), limit = 15) else null
-        val port = if (outbound) portField() else null
-        action(getString(R.string.paste_card)) {
+        label(getString(R.string.pair_step_card), 18, bold = true)
+        val manual = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        lateinit var identity: EditText
+        var address: EditText? = null
+        var port: EditText? = null
+        val pasted = TextView(this).apply {
+            setText(R.string.pair_card_empty)
+            setTextColor(InterfaceStyle.muted)
+            textSize = 14f
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+            setPadding(0, dp(8), 0, dp(8))
+        }
+        action(getString(R.string.paste_card), InterfaceStyle.Action.PRIMARY) {
             val card = ConnectionCard.paste(this)
             if (card == null || (card.address != null) != outbound) {
+                identity.text.clear()
+                address?.text?.clear()
+                port?.setText(R.string.default_port)
+                pasted.setText(R.string.pair_card_empty)
                 status.setText(R.string.card_invalid)
             } else {
                 identity.setText(card.identity)
                 address?.setText(card.address)
                 port?.setText(card.port?.let { String.format(java.util.Locale.ROOT, "%d", it) })
-                status.setText(R.string.card_review)
+                pasted.setText(R.string.card_review)
+                status.text = ""
             }
         }
+        body.addView(pasted)
+        manual.visibility = View.GONE
+        val manualToggle = action(getString(R.string.enter_manual)) { button ->
+            val expand = manual.visibility != View.VISIBLE
+            manual.visibility = if (expand) View.VISIBLE else View.GONE
+            button.setText(if (expand) R.string.hide_manual else R.string.enter_manual)
+        }
+        manualToggle.accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+        val parent = body
+        parent.addView(manual)
+        body = manual
+        try {
+            identity = field(getString(R.string.peer_identity), limit = 128)
+            if (outbound) {
+                address = field(getString(R.string.peer_ip), limit = 15)
+                port = portField()
+            }
+        } finally { body = parent }
+        label(getString(R.string.pair_step_review), 18, bold = true)
+        val name = field(getString(R.string.peer_name), limit = 48)
         val password = field(getString(R.string.vault_passphrase), true)
-        action(getString(R.string.review_pair)) { button ->
+        action(getString(R.string.review_pair), InterfaceStyle.Action.PRIMARY) { button ->
             val peerName = name.text.toString().trim()
             val peerId = identity.text.toString().trim()
             val ip = address?.text?.toString()?.trim()
@@ -409,18 +542,18 @@ class MainActivity : Activity() {
                 run(button, secret(password)) { NativeBridge.pairDevice(vaultPath, request.toString(), it) }
             }
         }
-        action(getString(R.string.cancel)) { showUnlock() }
+        action(getString(R.string.cancel)) { home() }
     }
 
     private fun showRevoke(name: String) {
         page(getString(R.string.revoke_peer), getString(R.string.revoke_description, name))
         val password = field(getString(R.string.vault_passphrase), true)
-        action(getString(R.string.revoke_peer)) { button ->
+        action(getString(R.string.revoke_peer), InterfaceStyle.Action.DESTRUCTIVE) { button ->
             confirm(getString(R.string.revoke_peer), getString(R.string.revoke_description, name), password) {
                 run(button, secret(password)) { NativeBridge.revokeDevice(vaultPath, name, it) }
             }
         }
-        action(getString(R.string.cancel)) { showUnlock() }
+        action(getString(R.string.cancel)) { home() }
     }
 
     private fun showProbe(peer: JSONObject) {
@@ -439,7 +572,7 @@ class MainActivity : Activity() {
         } else null
         val port = if (!outbound) portField() else null
         val password = field(getString(R.string.vault_passphrase), true)
-        action(getString(R.string.start_probe)) { button ->
+        action(getString(R.string.start_probe), InterfaceStyle.Action.PRIMARY) { button ->
             val ip = address?.text?.toString()?.trim()
             val selectedPort = port?.text?.toString()?.toIntOrNull()
             if (!outbound && (ip.isNullOrEmpty() || (selectedPort == null || selectedPort !in 1..65535))) {
@@ -476,20 +609,20 @@ class MainActivity : Activity() {
         // Stop must remain available while the asynchronous diagnostic is busy.
         body.addView(Button(this).apply {
             setText(R.string.stop_probe)
-            isAllCaps = false
+            InterfaceStyle.button(this, InterfaceStyle.Action.DESTRUCTIVE)
             setOnClickListener {
                 stopDiagnostic()
                 if (activeProbe != 0L) status.setText(R.string.probe_stopping)
             }
         })
-        action(getString(R.string.cancel)) { showUnlock() }
+        action(getString(R.string.cancel)) { home() }
     }
 
     private fun showRoleChange(current: String) {
         page(getString(R.string.change_role_title), getString(R.string.change_role_description, current))
         val roles = roleChoice()
         val password = field(getString(R.string.vault_passphrase), true)
-        action(getString(R.string.apply_role_change)) { button ->
+        action(getString(R.string.apply_role_change), InterfaceStyle.Action.PRIMARY) { button ->
             val selected = roles.checkedRadioButtonId
             if (selected != BASE && selected != CLIENT) {
                 status.setText(R.string.choose_role)
@@ -508,14 +641,14 @@ class MainActivity : Activity() {
                 .setOnCancelListener { password.text.clear() }
                 .show()
         }
-        action(getString(R.string.cancel)) { password.text.clear(); showUnlock() }
+        action(getString(R.string.cancel)) { password.text.clear(); home() }
     }
 
     private fun showRename() {
         page(getString(R.string.rename_device), getString(R.string.rename_description))
         val name = field(getString(R.string.new_device_name))
         val password = field(getString(R.string.vault_passphrase), true)
-        action(getString(R.string.save_name)) { button ->
+        action(getString(R.string.save_name), InterfaceStyle.Action.PRIMARY) { button ->
             val localName = name.text.toString().trim()
             if (localName.isEmpty()) {
                 status.setText(R.string.enter_name)
@@ -523,7 +656,7 @@ class MainActivity : Activity() {
             }
             run(button, secret(password)) { NativeBridge.renameDevice(vaultPath, localName, it) }
         }
-        action(getString(R.string.cancel)) { password.text.clear(); showUnlock() }
+        action(getString(R.string.cancel)) { password.text.clear(); home() }
     }
 
     companion object {

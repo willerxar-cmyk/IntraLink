@@ -49,13 +49,16 @@ def create_pair(emu, password, base):
     text(emu, password)
     hide_keyboard(emu)
     emu.click("Create local identity")
+    emu.click("Show my public identity")
     emu.find("Public identity", {PACKAGE})
     ids = [n.get("text", "") for n in emu.ui().iter("node")
            if n.get("package") == PACKAGE and re.fullmatch(r"[0-9a-f]{64}", n.get("text", ""))]
     if len(ids) != 1:
         raise RuntimeError("Expected one local public identity")
     identity = ids[0]
+    emu.click("Hide my public identity")
     emu.click("Pair a BASE")
+    emu.click("Enter details manually")
     field(emu, "Peer label (letters, digits, underscore or hyphen)", "local-base")
     field(emu, "Complete peer public identity", base)
     field(emu, "Vault passphrase", password)
