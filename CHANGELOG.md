@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - Android preview.11 entire-display navigation
+
+- Add a separate explicit 90-second entire-display read-only sharing scope, preserving the 15-second default preview and requiring fresh local system consent. Bound navigation by authenticated capture demand, visible notification, screen-lock/task/rotation and service lifecycle checks.
+- Add an opt-in standalone offline navigation test APK and real owner-assisted Android-to-Windows video/WebView/Calculator acceptance with per-phase counters.
+- Retain the portable Compact/JPEG path, unchanged permissions/dependencies and unsigned distribution candidates. ADB test input is independent of IntraLink remote input.
+
 ## Unreleased - Android preview.10 read-only screen preview
 
 - Implement an independently approved, foreground-only Android 12L+ MediaProjection source for the existing v12 Compact/JPEG viewer, with bounded direct RGBA buffers, reusable Rust canvases, peer identity recheck and local cancellation.

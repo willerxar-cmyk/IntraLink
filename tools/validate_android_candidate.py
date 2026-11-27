@@ -196,7 +196,7 @@ def main():
         shutil.copy2(source, args.output / name)
     info = {
         "version": version, "version_code": version_code,
-        "scope": "encrypted onboarding, manual pairing, foreground private IPv4 diagnostics, local AVC diagnostic, experimental separately consented v12 read-only screen preview (Android 12L+); no remote input", "abis": list(ABIS),
+        "scope": "encrypted onboarding, manual pairing, foreground private IPv4 diagnostics, local AVC diagnostic, separately consented v12 read-only screen preview and bounded entire-display navigation (Android 12L+); no remote input", "abis": list(ABIS),
         "permissions": sorted(PERMISSIONS),
         "debug_and_test_signed": True, "release_signed": release_signed,
         "lint_diagnostics": issues, "physical_runtime_qualified": False,

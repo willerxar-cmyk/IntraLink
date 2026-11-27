@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:allowBackup="false" android:label="@string/app_name"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@drawable/ic_intralink"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <activity android:name=".MotionActivity" android:exported="true" />
+        <activity android:name=".ReadingActivity" android:exported="true" />
+    </application>
+</manifest>

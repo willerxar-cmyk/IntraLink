@@ -7,3 +7,8 @@ dependencyResolutionManagement {
 }
 rootProject.name = 'IntraLinkAndroid'
 include ':app'
+
+// A separate local-only fixture APK; never part of distribution builds.
+if (providers.gradleProperty('intralinkNavigationAssets').isPresent()) {
+    include ':navigation-fixture'
+}

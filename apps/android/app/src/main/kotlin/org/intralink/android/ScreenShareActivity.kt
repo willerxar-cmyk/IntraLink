@@ -22,6 +22,7 @@ import android.view.WindowInsets
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -40,6 +41,8 @@ class ScreenShareActivity : Activity() {
     private lateinit var status: TextView
     private lateinit var start: Button
     private lateinit var stop: Button
+    private lateinit var navigation: CheckBox
+    private var approvedNavigation = false
     private var foreground = false
     private var asking = false
     private var request: String? = null
@@ -85,6 +88,12 @@ class ScreenShareActivity : Activity() {
         form.addView(address)
         form.addView(port)
         form.addView(password)
+        navigation = CheckBox(this).apply {
+            setText(R.string.screen_share_navigation)
+            isChecked = false
+            isSaveEnabled = false
+        }
+        form.addView(navigation)
         body.addView(form)
         body.addView(PreviewFixture(this), LinearLayout.LayoutParams(-1, 0, 1f))
         status = TextView(this).apply {
@@ -182,8 +191,10 @@ class ScreenShareActivity : Activity() {
             status.setText(R.string.passphrase_length)
             return
         }
+        approvedNavigation = navigation.isChecked
         request = JSONObject().put("name", name).put("peer_id", identity)
-            .put("host", ip).put("port", udp).put("height", 1080).put("fps", 60).toString()
+            .put("host", ip).put("port", udp).put("height", 1080).put("fps", 60)
+            .put("seconds", if (approvedNavigation) 90 else 15).toString()
         pass = secret
         session = 0
         approvedAt = SystemClock.elapsedRealtime()
@@ -238,7 +249,8 @@ class ScreenShareActivity : Activity() {
         val bounds = windowManager.maximumWindowMetrics.bounds
         val id = try {
             ScreenShareRun.reserve(File(filesDir, "profile.vault").absolutePath,
-                payload, secret, bounds.width(), bounds.height(), resources.displayMetrics.densityDpi)
+                payload, secret, bounds.width(), bounds.height(), resources.displayMetrics.densityDpi,
+                approvedNavigation)
         } catch (_: Exception) { 0L } catch (_: LinkageError) { 0L }
         if (id == 0L) {
             clearPending()
@@ -285,7 +297,7 @@ class ScreenShareActivity : Activity() {
     override fun onPause() {
         foreground = false
         if (::password.isInitialized) password.text.clear()
-        if (session != 0L && ScreenShareRun.active(session)) cancel()
+        if (session != 0L && ScreenShareRun.active(session) && !ScreenShareRun.mayNavigate(session)) cancel()
         if (!asking && consent == null) clearPending()
         handler.removeCallbacks(tick)
         super.onPause()
@@ -294,7 +306,8 @@ class ScreenShareActivity : Activity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (!::start.isInitialized) return
-        if (hasFocus) begin() else if (session != 0L && ScreenShareRun.active(session)) cancel()
+        if (hasFocus) begin()
+        else if (session != 0L && ScreenShareRun.active(session) && !ScreenShareRun.mayNavigate(session)) cancel()
     }
 
     override fun onDestroy() {
@@ -320,7 +333,9 @@ class ScreenShareActivity : Activity() {
         if (session == 0L || current.id != session) return
         if (!running) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         when (current.phase) {
-            ScreenShareRun.Phase.WAITING -> status.setText(R.string.screen_share_waiting)
+            ScreenShareRun.Phase.WAITING -> status.setText(
+                if (ScreenShareRun.mayNavigate(session)) R.string.screen_share_navigation_active
+                else R.string.screen_share_waiting)
             ScreenShareRun.Phase.STOPPING -> status.setText(R.string.capture_stopping)
             ScreenShareRun.Phase.STOPPED -> status.setText(R.string.capture_stopped)
             ScreenShareRun.Phase.ERROR -> status.setText(R.string.screen_share_failed)

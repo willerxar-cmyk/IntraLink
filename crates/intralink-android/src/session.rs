@@ -301,6 +301,13 @@ pub(crate) struct ScreenRequest {
     pub port: u16,
     pub height: u16,
     pub fps: u32,
+    #[serde(default = "preview_seconds")]
+    pub seconds: u64,
+}
+
+#[cfg(target_os = "android")]
+const fn preview_seconds() -> u64 {
+    15
 }
 
 #[cfg(target_os = "android")]
@@ -337,7 +344,11 @@ pub(crate) fn run_screen(
         "Approved identity changed"
     );
     let local = private_address(&request.host, request.port)?;
-    let config = VideoConfig::new(request.height, request.fps, 75, 15)
+    ensure!(
+        matches!(request.seconds, 15 | 90),
+        "Unsupported local sharing duration"
+    );
+    let config = VideoConfig::new(request.height, request.fps, 75, request.seconds)
         .context("Invalid local screen limits")?
         .with_mode(CodecMode::Compact);
     let runtime = tokio::runtime::Builder::new_multi_thread()
@@ -382,7 +393,7 @@ pub(crate) fn run_screen(
         let result = tokio::select! {
             biased;
             _ = canceled(&mut lease.stop) => Err(anyhow::anyhow!("Screen approval canceled")),
-            result = timeout(Duration::from_secs(35), async {
+            result = timeout(Duration::from_secs(request.seconds + 20), async {
                 tokio::try_join!(
                     serve_view_with_protocol(&endpoint, peer, config, tx, ViewProtocol::Bounded),
                     source

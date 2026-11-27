@@ -53,6 +53,7 @@ internal class ProjectionFrameProducer(
             "IntraLink approved screen preview", width, height, approval.density,
             DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, surface, null, null
         ) ?: error("Cannot create approved virtual display")
+        ScreenShareRun.markAttached(approval.id)
     }
 
     override fun demand() { check(ScreenShareRun.active(approval.id)) }

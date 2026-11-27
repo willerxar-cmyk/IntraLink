@@ -1,0 +1,17 @@
+plugins { id 'com.android.application' }
+def fixtureAssets = providers.gradleProperty('intralinkNavigationAssets')
+android {
+    namespace = 'org.intralink.navigationfixture'
+    compileSdk = 36
+    defaultConfig {
+        applicationId = 'org.intralink.navigationfixture'
+        minSdk = 32
+        targetSdk = 36
+        versionCode = 1
+        versionName = '1.0-test'
+    }
+    sourceSets { main { res.srcDir file(fixtureAssets.get()) } }
+}
+androidComponents {
+    beforeVariants(selector().withBuildType('release')) { variant -> variant.enable = false }
+}

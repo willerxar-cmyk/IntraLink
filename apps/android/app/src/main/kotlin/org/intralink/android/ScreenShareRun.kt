@@ -14,25 +14,30 @@ internal object ScreenShareRun {
         val password: ByteArray,
         val width: Int,
         val height: Int,
-        val density: Int
+        val density: Int,
+        val navigation: Boolean
     )
     data class Snapshot(val id: Long, val phase: Phase, val result: String? = null)
 
     private var pending: Approval? = null
     private var state = Snapshot(0, Phase.STOPPED)
     private var claimed = false
+    private var navigation = false
+    private var attached = false
 
     @Synchronized
     fun reserve(path: String, request: String, password: ByteArray,
-                width: Int, height: Int, density: Int): Long {
+                width: Int, height: Int, density: Int, navigation: Boolean = false): Long {
         if (state.phase == Phase.WAITING || state.phase == Phase.STOPPING) return 0
         if (CaptureRun.snapshot().phase in setOf(CaptureRun.Phase.STARTING,
                 CaptureRun.Phase.RUNNING, CaptureRun.Phase.STOPPING)) return 0
         val id = NativeBridge.reserveProbe()
         if (id == 0L) return 0
-        pending = Approval(id, path, request, password, width, height, density)
+        pending = Approval(id, path, request, password, width, height, density, navigation)
         state = Snapshot(id, Phase.WAITING)
         claimed = false
+        this.navigation = navigation
+        attached = false
         return id
     }
 
@@ -48,6 +53,15 @@ internal object ScreenShareRun {
 
     @Synchronized
     fun active(id: Long): Boolean = state.id == id && state.phase == Phase.WAITING
+
+    /** Navigation is authorized only after the authenticated receiver demands capture. */
+    @Synchronized
+    fun markAttached(id: Long) {
+        if (active(id) && claimed) attached = true
+    }
+
+    @Synchronized
+    fun mayNavigate(id: Long): Boolean = active(id) && navigation && attached
 
     @Synchronized
     fun cancel(id: Long) {
@@ -70,6 +84,8 @@ internal object ScreenShareRun {
             else -> Phase.ERROR
         }, result)
         claimed = false
+        navigation = false
+        attached = false
     }
 
     @Synchronized

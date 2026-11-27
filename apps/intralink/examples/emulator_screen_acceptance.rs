@@ -32,7 +32,8 @@ async fn main() -> Result<()> {
         .parse()?;
     let selection = args.next();
     let physical = selection.as_deref() == Some("--surface-fixture");
-    let preview = selection.as_deref() == Some("--approved-preview");
+    let navigation = selection.as_deref() == Some("--approved-navigation");
+    let preview = selection.as_deref() == Some("--approved-preview") || navigation;
     ensure!(
         selection.is_none() || physical || preview,
         "Unknown acceptance mode"
@@ -66,6 +67,8 @@ async fn main() -> Result<()> {
     let mut window = Window::new(
         if physical {
             "IntraLink - physical generated Surface acceptance (ESC to stop)"
+        } else if navigation {
+            "IntraLink - owner-approved entire-display navigation (ESC to stop)"
         } else if preview {
             "IntraLink - owner-approved Android screen preview (ESC to stop)"
         } else {
@@ -85,7 +88,7 @@ async fn main() -> Result<()> {
     let ep = endpoint.clone();
     let task = tokio::spawn(async move {
         timeout(
-            Duration::from_secs(30),
+            Duration::from_secs(if navigation { 110 } else { 30 }),
             view_with_observations(
                 &ep,
                 peer,
@@ -120,10 +123,15 @@ async fn main() -> Result<()> {
     let mut blank = Vec::new();
     let mut first_decoded: Option<Instant> = None;
     let mut last_marker_counts = (0usize, 0usize, 0usize);
+    let mut bytes = 0u64;
+    let mut jpeg_frames = 0usize;
+    let mut tile_frames = 0usize;
+    let mut lossless_frames = 0usize;
+    let mut last_sample = Instant::now();
     let result = (|| -> Result<()> {
         while window.is_open()
             && !window.is_key_down(Key::Escape)
-            && started.elapsed() < Duration::from_secs(35)
+            && started.elapsed() < Duration::from_secs(if navigation { 115 } else { 35 })
         {
             let mut new_visible = false;
             if let Ok(frame) = rx.try_recv() {
@@ -140,6 +148,13 @@ async fn main() -> Result<()> {
                     )?;
                 }
                 decode_us += time.elapsed().as_micros();
+                bytes += frame.payload.len() as u64;
+                match frame.payload.first().copied() {
+                    Some(intralink_core::media::JPEG_TAG) => jpeg_frames += 1,
+                    Some(intralink_core::media::TILE_TAG) => tile_frames += 1,
+                    Some(intralink_core::media::LOSSLESS_KEYFRAME_TAG) => lossless_frames += 1,
+                    _ => anyhow::bail!("Unexpected media tag"),
+                }
                 dimensions = (
                     frame.config.width() as usize,
                     frame.config.height() as usize,
@@ -185,7 +200,7 @@ async fn main() -> Result<()> {
                 // The approved surface may first publish a blank transition.
                 // Continue ordered decoding, but never paint an unrecognized
                 // screen. Once the fixture is visible, loss ends the test.
-                if preview && !recognized {
+                if preview && !recognized && (!navigation || !visible) {
                     if visible {
                         anyhow::bail!("Approved preview fixture disappeared");
                     }
@@ -226,6 +241,25 @@ async fn main() -> Result<()> {
             if new_visible {
                 presented += 1;
                 presentation_us += painting.elapsed().as_micros();
+                if navigation && presented == 1 {
+                    println!("NAVIGATION_READY");
+                    io::stdout().flush()?;
+                }
+            }
+            if navigation && last_sample.elapsed() >= Duration::from_secs(1) {
+                println!(
+                    "NAVIGATION_SAMPLE ms={} frames={} presented={} bytes={} jpeg={} tiles={} lossless={} decode_us={}",
+                    started.elapsed().as_millis(),
+                    frames,
+                    presented,
+                    bytes,
+                    jpeg_frames,
+                    tile_frames,
+                    lossless_frames,
+                    decode_us
+                );
+                io::stdout().flush()?;
+                last_sample = Instant::now();
             }
             if task.is_finished() && rx.is_empty() {
                 return Ok(());
@@ -240,6 +274,7 @@ async fn main() -> Result<()> {
     endpoint.close().await;
     result?;
     let stats = network??;
+    ensure!(bytes == stats.media_bytes, "Media byte count mismatch");
     ensure!(
         presented + withheld == frames && frames == stats.frames,
         "Presentation/transport count mismatch"
@@ -257,6 +292,12 @@ async fn main() -> Result<()> {
         ensure!(
             presented >= 5 && changed >= 5 && fixture_frames >= 3,
             "Insufficient changing fixture frames: decoded={frames}, changed={changed}, fixture={fixture_frames}"
+        );
+    }
+    if navigation {
+        println!(
+            "NAVIGATION_FINAL jpeg={} tiles={} lossless={}",
+            jpeg_frames, tile_frames, lossless_frames
         );
     }
     println!(
