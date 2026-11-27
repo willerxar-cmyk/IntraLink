@@ -1,0 +1,92 @@
+Independent desktop candidate verification checkpoint, 2026-11-27. Synthetic policy tests are not native qualification.
+
+=== Initial verifier regression (old package docs list differed) (PID 31064) ===
+[Reading last 14 lines (total: 14 lines)]
+
+Traceback (most recent call last):
+  File "D:\IntraLink\tools\verify_desktop_candidate.py", line 181, in <module>
+    main()
+  File "D:\IntraLink\tools\verify_desktop_candidate.py", line 176, in main
+    print(json.dumps(verify(args.archive, args.revision, args.platform,
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\IntraLink\tools\verify_desktop_candidate.py", line 163, in verify
+    result = check_archive(archive, platform, revision, x11)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\IntraLink\tools\verify_desktop_candidate.py", line 88, in check_archive
+    require(required <= members.keys(), "Required package files missing")
+  File "D:\IntraLink\tools\verify_desktop_candidate.py", line 25, in require
+    raise ValueError(message)
+ValueError: Required package files missing
+✅ Process completed with exit code 1 (runtime: 0.47s)
+
+[executed on device: DESKTOP-54A9GFC (af27c91c-6f94-4f61-a934-0c3dc3c2c0a6)]
+
+=== Historical Linux candidate independent verification (PID 1964) ===
+[Reading last 15 lines (total: 15 lines)]
+
+{
+  "source_revision": "3b62c172e50255e19218625e3cb51cffbc678534",
+  "target": "x86_64-unknown-linux-gnu",
+  "verified_entries": 686,
+  "archive_entries": 687,
+  "binary_bytes": 18947136,
+  "binary_sha256": "075261f0c04d10391088d010cd64ddb2f31be9f655760a8a539102c25c8c23ad",
+  "dependency_packages": 374,
+  "review_required": [
+    "drm-fourcc 2.2.0",
+    "enum-assoc 1.4.2"
+  ],
+  "archive_sha256": "b930ed269cbc3b33f2c7a9f85a8052c27cf5dddc41450f71c326812e024b1db7",
+  "archive_bytes": 7898745
+}
+✅ Process completed with exit code 0 (runtime: 1.39s)
+
+[executed on device: DESKTOP-54A9GFC (af27c91c-6f94-4f61-a934-0c3dc3c2c0a6)]
+
+=== Historical Windows candidate predates the source-bound packager (expected rejection by strict verifier) (PID 23012) ===
+[Reading last 25 lines (total: 25 lines)]
+
+fatal: path 'tools/package_desktop_candidate.py' exists on disk, but not in '6f6ae57534947ca93a6a426a6122c918c281cd5a'
+Traceback (most recent call last):
+  File "D:\IntraLink\tools\verify_desktop_candidate.py", line 215, in <module>
+    main()
+  File "D:\IntraLink\tools\verify_desktop_candidate.py", line 210, in main
+    print(json.dumps(verify(args.archive, args.revision, args.platform,
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\IntraLink\tools\verify_desktop_candidate.py", line 197, in verify
+    result = check_archive(archive, platform, revision, x11)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\IntraLink\tools\verify_desktop_candidate.py", line 83, in check_archive
+    docs = source_docs(revision)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\IntraLink\tools\verify_desktop_candidate.py", line 67, in source_docs
+    tree = ast.parse(source_blob(revision, "tools/package_desktop_candidate.py"))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\IntraLink\tools\verify_desktop_candidate.py", line 61, in source_blob
+    return subprocess.check_output(["git", "show", f"{revision}:{name}"])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\subprocess.py", line 466, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['git', 'show', '6f6ae57534947ca93a6a426a6122c918c281cd5a:tools/package_desktop_candidate.py']' returned non-zero exit status 128.
+✅ Process completed with exit code 1 (runtime: 0.30s)
+
+[executed on device: DESKTOP-54A9GFC (af27c91c-6f94-4f61-a934-0c3dc3c2c0a6)]
+
+=== Verifier policy tests (PID 26900) ===
+[Reading last 9 lines (total: 9 lines)]
+
+test_both_archive_formats_and_source_binding (__main__.CandidateVerificationTests.test_both_archive_formats_and_source_binding) ... ok
+test_paths_and_manifests (__main__.CandidateVerificationTests.test_paths_and_manifests) ... ok
+test_rehashed_modified_document_is_rejected (__main__.CandidateVerificationTests.test_rehashed_modified_document_is_rejected) ... ok
+test_rehashed_unsafe_path_is_rejected (__main__.CandidateVerificationTests.test_rehashed_unsafe_path_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 1.526s
+
+OK
+✅ Process completed with exit code 0 (runtime: 1.83s)
+
+[executed on device: DESKTOP-54A9GFC (af27c91c-6f94-4f61-a934-0c3dc3c2c0a6)]

@@ -59,6 +59,8 @@ jobs:
           cargo fetch --locked
           python tools/release_inventory.py x11-notices.zip --platform linux --x11-input-preview
           python tools/package_desktop_candidate.py --platform linux --x11-input-preview --binary target/release/intralink --notices x11-notices.zip --output x11-candidate
+          python -B tools/test_verify_desktop_candidate.py -v
+          python -B tools/verify_desktop_candidate.py x11-candidate/*-candidate.tar.gz --platform linux --revision "$GITHUB_SHA" --x11-input-preview
       - uses: actions/upload-artifact@v4
         with:
           name: intralink-linux-x11-candidate-${{ github.sha }}
