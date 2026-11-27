@@ -1725,6 +1725,7 @@ dependencies = [
  "intralink-core",
  "intralink-d3d11",
  "intralink-input-win",
+ "intralink-input-x11",
  "intralink-transport",
  "intralink-vault",
  "iroh",
@@ -1787,6 +1788,15 @@ dependencies = [
  "anyhow",
  "intralink-core",
  "windows",
+]
+
+[[package]]
+name = "intralink-input-x11"
+version = "0.22.0"
+dependencies = [
+ "anyhow",
+ "intralink-core",
+ "xcb",
 ]
 
 [[package]]

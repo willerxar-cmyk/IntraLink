@@ -34,7 +34,7 @@ Preview.4 adds a graphical first-run BASE/CLIENT selector, named encrypted ident
 | Platform | Available distribution |
 |---|---|
 | Windows x64 | Preview 4 portable ZIP; local native diagnostics passed, physical KVM pending |
-| Linux x86_64 | Preview 4 TAR.GZ; native Ubuntu 24.04 CI build/tests passed; physical capture and input adapter pending |
+| Linux x86_64 | Preview 4 TAR.GZ; native Ubuntu 24.04 CI build/tests passed; optional X11 input host source under qualification |
 | Android | Preview.5 pairing/diagnostic APK/AAB candidate built and verified; physical acceptance and signed distribution pending |
 
 Android source and candidate build/validation instructions: [ANDROID.md](docs/ANDROID.md). The next Android candidate extends local identity setup with manual pairing and a foreground authenticated diagnostic. Screen sharing and remote input are not enabled.
@@ -49,7 +49,7 @@ From the extracted directory:
     ./intralink --help
     ./intralink setup
 
-Linux input injection/capture for KVM is not implemented yet. The native CI gate tests the actual binary and transport; it is not a physical desktop acceptance test. Read the license provenance notes included in the package.
+The public Linux preview.4 does not include input KVM. A later opt-in X11 receiving host is under qualification in source (see [INPUT-SHARING.md](docs/INPUT-SHARING.md)); Linux BASE and Wayland input remain pending. The native CI gate tests the actual binary and transport; it is not a physical desktop acceptance test. Read the license provenance notes included in the package.
 
 ## Install
 

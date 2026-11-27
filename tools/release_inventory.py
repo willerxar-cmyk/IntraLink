@@ -101,12 +101,17 @@ def main():
     parser.add_argument("output", type=pathlib.Path)
     parser.add_argument("--platform", choices=PLATFORMS, default="windows")
     parser.add_argument("--input-preview", action="store_true", help="Inventory the explicit Windows input build")
+    parser.add_argument("--x11-input-preview", action="store_true", help="Inventory the Linux X11 receiving-host build")
     args = parser.parse_args()
     target, features = PLATFORMS[args.platform]
     if args.input_preview:
         if args.platform != "windows":
             parser.error("--input-preview requires Windows")
         features += ",intralink/input-preview"
+    if args.x11_input_preview:
+        if args.platform != "linux":
+            parser.error("--x11-input-preview requires Linux")
+        features += ",intralink/input-x11-preview"
     if args.output.exists():
         raise FileExistsError(args.output)
     package_name = "intralink-android" if args.platform.startswith("android-") else "intralink"

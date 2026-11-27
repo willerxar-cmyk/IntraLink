@@ -1,8 +1,6 @@
-//! Explicit, foreground, Windows input-only preview. No global input hooks.
+//! Explicit, foreground Windows controller pad. No global input hooks.
 use std::{
     collections::BTreeSet,
-    io::{self, IsTerminal},
-    net::SocketAddr,
     path::Path,
     sync::{
         Arc, Mutex,
@@ -13,25 +11,25 @@ use std::{
 
 use anyhow::{Context, Result, ensure};
 use intralink_core::{
-    input::{Button, Event, Focus, Key, MAX_SECONDS, MAX_SLOTS},
+    input::{Button, Event, Focus, Key, MAX_SLOTS},
     input_layout::Layout,
 };
-use intralink_input_win::NativeInput;
 use intralink_transport::{
     bind_workspace_controller,
-    input::{Delivery, InputConnection, bind_input, serve_input},
+    input::InputConnection,
     input_queue::{self, INTERACTIVE_BUDGET},
 };
 use intralink_vault::{Direction, Route, Vault};
 use iroh::{Endpoint, EndpointId};
 use minifb::{Key as LocalKey, KeyRepeat, MouseButton, MouseMode, Window, WindowOptions};
 use tokio::{
-    sync::{mpsc, oneshot},
+    sync::oneshot,
     task::JoinHandle,
     time::{MissedTickBehavior, sleep},
 };
 
 use crate::{
+    input_host::private_lan,
     local::{approve, prompt_password},
     routing,
 };
@@ -45,51 +43,13 @@ const POLL: Duration = Duration::from_millis(8);
 const HEARTBEAT: Duration = Duration::from_millis(500);
 const UI_LEASE: Duration = Duration::from_secs(1);
 
-#[derive(clap::Subcommand)]
-pub enum Action {
-    /// Accept one separately approved, private-LAN Windows input session.
-    Host {
-        #[arg(long)]
-        bind: SocketAddr,
-        #[arg(long)]
-        controller: String,
-        #[arg(long, default_value_t = 300, value_parser = clap::value_parser!(u16).range(1..=3600))]
-        seconds: u16,
-    },
-    /// Open an input-only focused pad for up to eight paired hosts.
-    Workspace {
-        #[arg(long, required = true)]
-        device: Vec<String>,
-        /// Numbered spatial pad; F9 explicitly arms automatic zone switching.
-        #[arg(long)]
-        spatial: bool,
-    },
-}
-
-impl Action {
-    pub async fn run(self, path: &Path) -> Result<()> {
-        ensure!(
-            io::stdin().is_terminal() && io::stdout().is_terminal(),
-            "Input preview requires a local interactive terminal"
-        );
-        match self {
-            Self::Host {
-                bind,
-                controller,
-                seconds,
-            } => host(path, bind, &controller, seconds).await,
-            Self::Workspace { device, spatial } => workspace(path, &device, spatial).await,
-        }
-    }
-}
-
-/// This initial preview is deliberately limited to explicitly addressed
-/// private IPv4 LANs. No relay, public bind, loopback injection or discovery.
-fn private_lan(address: SocketAddr) -> bool {
-    matches!(address.ip(), std::net::IpAddr::V4(ip) if ip.is_private()) && address.port() != 0
-}
-
-fn window(title: &str, width: usize, height: usize, topmost: bool, color: u32) -> Result<Window> {
+pub(super) fn window(
+    title: &str,
+    width: usize,
+    height: usize,
+    topmost: bool,
+    color: u32,
+) -> Result<Window> {
     let mut window = Window::new(
         title,
         width,
@@ -106,88 +66,6 @@ fn window(title: &str, width: usize, height: usize, topmost: bool, color: u32) -
         .update_with_buffer(&vec![color; width * height], width, height)
         .map_err(|error| anyhow::anyhow!("Input window: {error}"))?;
     Ok(window)
-}
-
-async fn host(path: &Path, address: SocketAddr, controller: &str, seconds: u16) -> Result<()> {
-    ensure!(
-        private_lan(address),
-        "Input preview requires an explicit private IPv4 LAN address"
-    );
-    ensure!(
-        (1..=MAX_SECONDS).contains(&seconds),
-        "Invalid input duration"
-    );
-    let vault = Vault::lock(path)?;
-    let password = prompt_password()?;
-    let profile = vault.load(password.as_bytes())?;
-    drop(password);
-    ensure!(profile.role().can_receive(), "Profile cannot receive input");
-    let peer = profile.peer(controller, Direction::Inbound)?.identity()?;
-    let secret = profile.secret_key();
-    drop(profile);
-    println!(
-        "Controller: {controller} ({peer})\nInput-only session: primary display, keyboard, mouse, wheel; no screen stream."
-    );
-    approve(
-        "Allow this paired controller to operate the current Windows user desktop for this session? The visible red window stops access; close it or focus it and press Escape. Do not use elevated, sensitive or unattended desktops.",
-    )?;
-    let mut indicator = window(
-        "IntraLink: INPUT SHARING — close or focus + ESC to STOP",
-        460,
-        80,
-        true,
-        0x00b92436,
-    )?;
-    ensure!(indicator.is_open(), "Local input indicator closed");
-    let endpoint = bind_input(secret, address).await?;
-    let (sender, mut receiver) = mpsc::channel::<Delivery>(1);
-    let listener = endpoint.clone();
-    let mut task = tokio::spawn(async move { serve_input(&listener, peer, seconds, sender).await });
-    let mut native = NativeInput::default();
-    println!(
-        "Input listener active for {controller}. Local approval is session-specific; no video."
-    );
-    let local = async {
-        loop {
-            indicator.update();
-            if !indicator.is_open() || (indicator.is_active() && indicator.is_key_down(LocalKey::Escape)) || task.is_finished() { break; }
-            tokio::select! {
-                biased;
-                delivery = receiver.recv() => {
-                    let Some(delivery) = delivery else { break; };
-                    indicator.update();
-                    if !indicator.is_open() || (indicator.is_active() && indicator.is_key_down(LocalKey::Escape))
-                        || task.is_finished() || delivery.accepted.is_closed() { break; }
-                    // Native application occurs only under fresh local approval
-                    // and while the visible stop indicator is still open.
-                    let applied = native.apply(delivery.record);
-                    let failed = applied.is_err();
-                    if delivery.accepted.send(applied).is_err() || failed {
-                        anyhow::bail!("Input acceptance failed; closing session");
-                    }
-                }
-                _ = sleep(POLL) => {}
-            }
-        }
-        Ok::<(), anyhow::Error>(())
-    }.await;
-    // Stop receiving before releasing owned input. Never apply queued records
-    // after local stop, loss of the consumer or network failure.
-    let completed = task.is_finished();
-    if !completed {
-        task.abort();
-    }
-    drop(receiver);
-    let released = native.release_all();
-    let joined = (&mut task).await;
-    endpoint.close().await;
-    local?;
-    released?;
-    if completed {
-        joined??;
-    }
-    println!("Input session closed. Owned held input released.");
-    Ok(())
 }
 
 struct Slot {
@@ -577,7 +455,7 @@ fn title(slots: &[Slot], focus: &Focus, spatial: Option<&Spatial>) -> String {
     )
 }
 
-async fn workspace(path: &Path, names: &[String], spatial: bool) -> Result<()> {
+pub(super) async fn workspace(path: &Path, names: &[String], spatial: bool) -> Result<()> {
     ensure!(
         (1..=MAX_SLOTS).contains(&names.len()),
         "Select 1-8 distinct input hosts"
@@ -716,14 +594,5 @@ mod tests {
         assert!(verify_ui_lease(&current).is_ok());
         let expired = Mutex::new(Instant::now() - UI_LEASE - Duration::from_secs(1));
         assert!(verify_ui_lease(&expired).is_err());
-    }
-
-    #[test]
-    fn input_preview_rejects_public_loopback_and_wildcard_routes() {
-        assert!(private_lan("192.168.1.20:45100".parse().unwrap()));
-        assert!(!private_lan("127.0.0.1:45100".parse().unwrap()));
-        assert!(!private_lan("0.0.0.0:45100".parse().unwrap()));
-        assert!(!private_lan("1.1.1.1:45100".parse().unwrap()));
-        assert!(!private_lan("192.168.1.20:0".parse().unwrap()));
     }
 }

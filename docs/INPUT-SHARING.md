@@ -52,3 +52,22 @@ Before production or enabling global desktop edge capture, qualify on two and th
 ## Next steps
 
 Create a native local input-source boundary with explicit opt-in and a reliable emergency release gesture, actual physical display topology and coordinate/edge hysteresis, suppression of injected feedback, raw input/physical-layout semantics and coalesced pointer motion without dropping key/button transitions. Qualify Windows first, then permissioned Linux X11/Wayland, macOS and supported Android/iOS roles. Integrate independently authorized view/input/resource capabilities into one connection manager and support Hybrid direction changes with separately scoped consent, independent revocation and no implicit reciprocal permission. Clipboard, files and audio need their own grants and bounded protocols. See REFERENCES.md; no external KVM source copied or linked.
+
+
+## Linux X11 receiving-host development candidate
+
+The opt-in input-x11-preview feature adds a native X11 CLIENT (Host) using the existing input/1 protocol. Build without any video or GPU dependency:
+
+    cargo build --locked --release -p intralink --no-default-features --features input-x11-preview
+
+On a distinct, owner-authorized Linux machine with a local X11 login, initialize and pair the controller identity using the existing encrypted vault. Then run:
+
+    ./intralink input host --bind HOST_IP:45100 --controller central --seconds 300
+
+Type APPROVE locally after comparing the complete peer identity. The application opens a managed red stop window before binding the listener. Click the window or press a key inside it to stop. Closing, unmapping or receiving an obscured visibility event also stops the session. The window manager is asked to keep it above normal windows; if it cannot remain fully visible the session is not allowed to continue. Never minimize it, use a sensitive desktop, or leave the owner absent. Windows BASE uses the same input workspace command and ALPN as before. Linux BASE focused native capture is still pending; this feature intentionally exposes host only.
+
+The native crate uses safe Rust XCB checked requests, XTEST 2.2, XKB 1.0 physical key names and RandR 1.5 monitor queries. It refuses Wayland/XWayland, SSH environments, nonlocal display addresses, multiple screens/monitors, incomplete/ambiguous physical keyboard maps, unsupported pointer mappings and invalid geometry. This is a conservative first adapter; no guessed keycode fallback. Mouse coordinates map to the one active monitor covering the X11 root; three buttons and bounded wheel events use the standard X11 button mapping. Geometry/keyboard/button mapping changes cause fail-closed stop. Physical key positions are mapped at the destination; desktop source capture and international layouts still require real-device tests.
+
+Every record is independently validated against the ordered input state. Checked server requests precede ACK, which does not prove the destination application processed the event. Track the original physical code of potentially accepted downs; release nonmodifiers before modifiers and clean up session-owned buttons, including a partial wheel operation. Reject down when the same key/button is already locally held. The X11 server cannot distinguish all concurrent local and injected input ownership; cleanup is best effort if the server hangs, connection dies, process is killed, or hardware/local input changes concurrently. No privileged driver, input grab, background service, access-control changes, or global input capture. The stop window's visibility and actual session-lock behavior depend on the real window manager; do not treat X11 as a security isolation boundary or use with privileged applications.
+
+Native and transport layers are shared through input_host.rs; Windows still uses its prior foreground MiniFB stop window and SendInput adapter. The new X11 candidate workflow runs strict lint, pure tests, an explicitly isolated authenticated Xvfb test for actual XTEST movement/key/button state, release and stop, then the CPU-only application build and CLI tests. The native test is ignored by ordinary cargo test and must only run on a disposable Xvfb display. No physical desktop injection in automated tests. Linux builds without the feature retain their previous behavior. No release promotion until native CI and physical acceptance are reviewed. See SECURITY.md and PLATFORMS.md.

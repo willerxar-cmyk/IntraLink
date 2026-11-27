@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - native Linux X11 input host
+
+- Add opt-in XCB/XTEST receiving adapter with XKB physical positions, single-monitor RandR geometry, checked input requests, visible local stop and owned-state cleanup.
+- Share the approved input host transport and CLI lifecycle with Windows, leaving the Windows focused controller pad unchanged.
+- Add native Linux isolated Xvfb and CLI qualification workflow; no Wayland or Linux controller support claim.
+
 ## Unreleased - Android diagnostic pairing
 
 - Add explicit Android directional pairing, saved peer dashboard, revocation and one-shot private IPv4 QUIC diagnostic using the existing pinned-identity transport.

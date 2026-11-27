@@ -1,0 +1,53 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling quick-xml v0.41.0
+   Compiling serde v1.0.229
+   Compiling libc v0.2.191
+   Compiling syn v3.0.10
+   Compiling xcb v1.7.1
+   Compiling anyhow v1.0.105
+    Checking bitflags v2.13.2
+   Compiling serde_derive v1.0.229
+    Checking intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+    Checking intralink-input-x11 v0.22.0 (D:\IntraLink\crates\intralink-input-x11)
+error[E0433]: cannot find `GetNamesValueList` in `xkb`
+  --> crates\intralink-input-x11\src\keyboard.rs:85:25
+   |
+85 |             if let xkb::GetNamesValueList::KeyNames { key_names } = value {
+   |                         ^^^^^^^^^^^^^^^^^ could not find `GetNamesValueList` in `xkb`
+   |
+help: an enum with a similar name exists
+   |
+85 -             if let xkb::GetNamesValueList::KeyNames { key_names } = value {
+85 +             if let xkb::SetNamesValues::KeyNames { key_names } = value {
+   |
+System.Management.Automation.RemoteException
+error: unused import: `Xid`
+ --> crates\intralink-input-x11\src\indicator.rs:5:23
+  |
+5 | use xcb::{Connection, Xid, x};
+  |                       ^^^
+  |
+  = note: `-D unused-imports` implied by `-D warnings`
+  = help: to override `-D warnings` add `#[allow(unused_imports)]`
+System.Management.Automation.RemoteException
+error[E0599]: no variant, associated function, or constant named `XTest` found for enum `xcb::Extension` in the current scope
+   --> crates\intralink-input-x11\src\native.rs:128:60
+    |
+128 |             &[Extension::RandR, Extension::Xkb, Extension::XTest],
+    |                                                            ^^^^^ variant, associated function, or constant not found in `xcb::Extension`
+    |
+help: there is a variant with a similar name
+    |
+128 -             &[Extension::RandR, Extension::Xkb, Extension::XTest],
+128 +             &[Extension::RandR, Extension::Xkb, Extension::Test],
+    |
+System.Management.Automation.RemoteException
+Some errors have detailed explanations: E0433, E0599.
+For more information about an error, try `rustc --explain E0433`.
+error: could not compile `intralink-input-x11` (lib) due to 3 previous errors
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `intralink-input-x11` (lib test) due to 3 previous errors
+EXIT 101

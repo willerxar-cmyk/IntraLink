@@ -17,7 +17,7 @@ DOCS = (
     "README.md", "CHANGELOG.md", "LICENSE", "docs/SECURITY.md",
     "docs/PLATFORMS.md", "docs/INPUT-SHARING.md", "docs/INPUT-QUEUE.md",
     "docs/DESKTOP.md", "docs/ENROLLMENT.md", "docs/WORKSPACE.md",
-    "docs/RELEASE-PREVIEW.md",
+    "docs/RELEASE-PREVIEW.md", "docs/ONBOARDING.md",
 )
 
 
@@ -54,6 +54,10 @@ def contents(args, revision):
         {"intralink/wgc-preview", "intralink/input-preview"}
         if args.platform == "windows" else {"intralink/desktop-preview"}
     )
+    if args.x11_input_preview:
+        if args.platform != "linux":
+            raise ValueError("X11 input is Linux-only")
+        platform_features.add("intralink/input-x11-preview")
     if features != set(required) | platform_features:
         raise ValueError("Inventory features do not match the candidate")
     if not files["THIRD-PARTY-NOTICES.txt"]:
@@ -72,7 +76,9 @@ def contents(args, revision):
     if args.platform == "linux":
         note.extend([
             "Run ./intralink --help in an X11 session with the required system",
-            "libraries installed. Input KVM is not implemented on Linux.",
+            "libraries installed.",
+            ("Opt-in X11 receiving host; no Linux controller or physical KVM qualification."
+             if args.x11_input_preview else "Input KVM is not enabled in this Linux candidate."),
             "Wayland and physical Linux capture remain unqualified.",
         ])
         files["linux-runtime-libraries.txt"] = Path("linux-runtime-libraries.txt").read_bytes()
@@ -122,6 +128,7 @@ def write_archive(path, platform, files, binary):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--platform", required=True, choices=TARGETS)
+    parser.add_argument("--x11-input-preview", action="store_true")
     parser.add_argument("--binary", required=True, type=Path)
     parser.add_argument("--notices", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
@@ -133,8 +140,9 @@ def main():
     files, binary = contents(args, revision)
     args.output.mkdir(parents=True, exist_ok=False)
     extension = "zip" if args.platform == "windows" else "tar.gz"
+    variant = "-x11-input" if args.x11_input_preview else ""
     archive = args.output / (
-        f"intralink-{version}-{args.platform}-x64-{revision[:12]}-candidate.{extension}"
+        f"intralink-{version}-{args.platform}-x64{variant}-{revision[:12]}-candidate.{extension}"
     )
     write_archive(archive, args.platform, files, binary)
     checksum = sha(archive.read_bytes())

@@ -1,0 +1,99 @@
+START windows-clippy
+    Checking intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+    Checking intralink-input-win v0.22.0 (D:\IntraLink\crates\intralink-input-win)
+    Checking intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+    Checking intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+    Checking intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 14.39s
+EXIT windows-clippy 0
+START windows-tests
+   Compiling intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+   Compiling intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 02s
+     Running unittests src\main.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink-78c9131e31ed6686.exe)
+
+running 58 tests
+test ddns::tests::update_address_modes ... ok
+test desktop::calibration::tests::capture_lock_diagnostic_is_explicit_and_exclusive ... ok
+test desktop::host_calibration::tests::cancellation_prevents_dense_encoding ... ok
+test desktop::calibration::tests::staged_readback_diagnostic_is_explicit_and_exclusive ... ok
+test desktop::host_capture::tests::explicit_backend_never_silently_falls_back ... ok
+test desktop::host_capture::tests::identity_requires_same_display_name_geometry_position_and_rotation ... ok
+test desktop::host_pipeline::tests::demand_gate_keeps_one_slot_and_never_starts_early ... ok
+test desktop::codec::tests::compact_hybrid_decodes_palette_after_lossless_keyframe_and_rejects_mode_switch ... ok
+test desktop::codec::tests::malformed_oversized_and_wrong_dimensions_are_rejected ... ok
+test desktop::codec::tests::codec_round_trip_and_letterbox ... ok
+test desktop::codec::tests::hybrid_uses_ordered_tiles_after_keyframe ... ok
+test desktop::jpeg_parallel::tests::generated_header_rejects_invalid_and_mismatched_strips ... ok
+test desktop::codec::tests::static_pixels_skip_encoding_and_change_triggers_new_jpeg ... ok
+test desktop::codec::tests::compact_exact_then_jpeg_then_exact_refresh ... ok
+test desktop::calibration::tests::failed_warmup_cancels_waiting_workers ... ok
+test desktop::codec::tests::adaptive_encoder_forces_keyframe_and_decoder_rejects_unnegotiated_geometry ... ok
+test desktop::host_pipeline::tests::lane_holds_only_two_and_keeps_exact_delta_base ... ok
+test desktop::resize::tests::aspect_and_rounding ... ok
+test desktop::overview::tests::disconnected_card_removes_all_previous_pixels ... ok
+test desktop::overview::tests::local_notice_preserves_original_pixels_and_reuses_scratch ... ok
+test desktop::receive_limits::tests::per_device_limits_are_independent_and_bounded ... ok
+test desktop::jpeg::tests::bounded_writer_rejects_before_mutation_and_reuses_capacity ... ok
+test desktop::overview::tests::all_supported_card_counts_render_in_one_reusable_canvas ... ok
+test desktop::overview::tests::busy_decoder_retains_thumbnail_but_session_restart_invalidates_it ... ok
+test desktop::host_pipeline::tests::stop_joins_active_and_discards_queued_without_publication ... ok
+test desktop::jpeg::oversized_dense_jpeg_leaves_no_partial_record ... ok
+test desktop::resize::tests::downsampling_preserves_antialiasing ... ok
+test desktop::resize::tests::invalid_geometry_is_atomic_and_exact_size_skips_resize ... ok
+test desktop::calibration::fixtures::tests::generated_jpeg_fits_wire_limit_at_every_resolution ... ok
+test desktop::resize::tests::opaque_screen_colors_and_reused_buffer ... ok
+test discovery::tests::discovery_is_restricted_to_private_ipv4_hints ... ok
+test desktop::setup::tests::cards_are_disjoint_and_render_with_selection ... ok
+test desktop::source_status::tests::no_update_notice_is_delayed_and_only_observed_pixels_clear_it ... ok
+test desktop::jpeg_parallel::tests::oversized_combined_frame_is_atomic ... ok
+test input_host::tests::input_preview_rejects_public_loopback_and_wildcard_routes ... ok
+test input_ui::keys::tests::reserved_local_controls_never_become_remote_keys ... ok
+test input_ui::pad::tests::every_cell_renders_and_active_state_is_visually_distinct ... ok
+test input_ui::tests::input_worker_requires_recent_ui_lease_for_active_session ... ok
+test resources::tests::json_distinguishes_missing_metrics_from_zero_usage ... ok
+test journal::tests::full_or_busy_journal_is_not_overwritten ... ok
+test journal::tests::opt_out_does_not_create_file_and_corruption_blocks_operation ... ok
+test routing::tests::candidates_are_bounded_unique_and_dual_stack ... ok
+test routing::tests::numeric_routes_are_normalized_without_dns ... ok
+test journal::tests::wrapper_records_completion_and_preserves_command_error ... ok
+test journal::tests::recording_persists_and_interruption_is_unknown ... ok
+test resources::tests::missing_cpu_is_not_printed_as_idle_and_ram_uses_bytes ... ok
+test routing::tests::address_classes_do_not_claim_reachability ... ok
+test desktop::visual_fidelity::tests::detects_channel_swap_local_corruption_and_lossless_mismatch ... ok
+test desktop::visual_fixture::tests::reference_cards_are_stable_and_animation_is_localized ... ok
+test desktop::calibration::tests::concurrent_mixed_geometry_workers_complete_and_join ... ok
+test desktop::media_check::tests::fixture_markers_survive_animation_and_reject_wrong_content ... ok
+test desktop::jpeg::tests::preserves_baseline_sampling_quantization_and_image_quality ... ok
+test desktop::codec::tests::adaptive_jpeg_quality_preserves_1080p_wire_config_and_reduces_payload ... ok
+test desktop::media_check::tests::static_markers_distinguish_final_update_from_stale_frame ... ok
+test desktop::visual_fidelity::tests::accepts_real_jpeg_and_ordered_tiles_for_generated_scene ... ok
+test desktop::calibration::tests::real_software_fixtures_round_trip_without_timing_assumptions ... ok
+test desktop::host_calibration::tests::changing_dense_fixture_uses_production_codecs_and_keeps_marker ... ok
+test desktop::jpeg_parallel::tests::restart_strips_decode_identically_to_serial_at_every_tier has been running for over 60 seconds
+test desktop::jpeg_parallel::tests::restart_strips_decode_identically_to_serial_at_every_tier ... ok
+
+test result: ok. 58 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 62.84s
+
+     Running tests\cli_smoke.rs (D:\IntraLink-validation-v020\target\debug\deps\cli_smoke-ab587a6a907740ef.exe)
+
+running 9 tests
+test cli_help_and_version_exit_successfully ... ok
+test encoder_diagnostic_is_local_and_explicit ... ok
+test setup_cli_exposes_base_client_and_rejects_unattended_creation ... ok
+test host_calibration_is_opt_in_and_keeps_explicit_capture ... ok
+test calibration_cli_is_explicit_and_validated_before_connection ... ok
+test pipeline_requires_explicit_fixed_profile_before_connection ... ok
+test visual_fidelity_diagnostic_is_explicit_and_separate_from_benchmarks ... ok
+test portable_share_defaults_to_1080p_and_adaptive_quality ... ok
+test bounded_profile_cli_rejects_invalid_limits_before_session_start ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.09s
+
+     Running tests\decoder_process.rs (D:\IntraLink-validation-v020\target\debug\deps\decoder_process-d9b35db7383ccfdb.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT windows-tests 0

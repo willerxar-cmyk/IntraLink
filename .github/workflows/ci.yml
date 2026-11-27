@@ -47,6 +47,11 @@ jobs:
       - name: Resolve dependencies when no lockfile exists
         shell: bash
         run: if [ ! -f Cargo.lock ]; then cargo generate-lockfile; fi
+      - name: Install Linux workspace XCB dependency
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxcb1-dev libxcb-xkb-dev libxcb-randr0-dev libxcb-xtest0-dev
       - run: cargo metadata --locked --format-version 1 > cargo-metadata.json
         shell: bash
       - run: cargo clippy --locked --workspace --all-targets -- -D warnings

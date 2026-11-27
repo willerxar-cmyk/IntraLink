@@ -288,3 +288,37 @@ fn visual_fidelity_diagnostic_is_explicit_and_separate_from_benchmarks() {
         assert!(String::from_utf8_lossy(&output.stderr).contains("cannot be used with"));
     }
 }
+
+#[cfg(any(
+    all(target_os = "windows", feature = "input-preview"),
+    all(target_os = "linux", feature = "input-x11-preview")
+))]
+#[test]
+fn input_host_is_explicit_and_rejects_unattended_start() {
+    let help = stdout(&["input", "--help"]);
+    assert!(help.contains("host"));
+    #[cfg(target_os = "windows")]
+    assert!(help.contains("workspace"));
+    #[cfg(target_os = "linux")]
+    assert!(!help.contains("workspace"));
+    let host = stdout(&["input", "host", "--help"]);
+    assert!(host.contains("--bind") && host.contains("--controller") && host.contains("--seconds"));
+    let temporary = tempfile::tempdir().expect("Temporary local profile");
+    let path = temporary.path().join("profile.vault");
+    let output = Command::new(env!("CARGO_BIN_EXE_intralink"))
+        .arg("--vault")
+        .arg(&path)
+        .args([
+            "input",
+            "host",
+            "--bind",
+            "192.168.1.20:45100",
+            "--controller",
+            "test",
+        ])
+        .output()
+        .expect("Run noninteractive input command");
+    assert!(!output.status.success());
+    assert!(!path.exists());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("local interactive terminal"));
+}

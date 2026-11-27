@@ -9,6 +9,16 @@ mod ddns;
 mod desktop;
 mod discovery;
 mod enrollment;
+#[cfg(any(
+    all(feature = "input-preview", target_os = "windows"),
+    all(feature = "input-x11-preview", target_os = "linux")
+))]
+mod input_command;
+#[cfg(any(
+    all(feature = "input-preview", target_os = "windows"),
+    all(feature = "input-x11-preview", target_os = "linux")
+))]
+mod input_host;
 #[cfg(all(feature = "input-preview", target_os = "windows"))]
 mod input_ui;
 mod journal;
@@ -460,11 +470,14 @@ enum Command {
         #[arg(long)]
         all_live: bool,
     },
-    /// Explicit foreground input-only sharing (experimental Windows software KVM).
-    #[cfg(all(feature = "input-preview", target_os = "windows"))]
+    /// Explicit foreground input-only sharing (experimental software KVM).
+    #[cfg(any(
+        all(feature = "input-preview", target_os = "windows"),
+        all(feature = "input-x11-preview", target_os = "linux")
+    ))]
     Input {
         #[command(subcommand)]
-        action: input_ui::Action,
+        action: input_command::Action,
     },
     /// Resolve a saved route; classify addresses and an optional owner-supplied router WAN IP.
     Diagnose {
@@ -617,7 +630,10 @@ fn main() -> Result<()> {
         Command::ConfirmInvite { name } => enrollment::confirm(&path, &name),
         Command::CancelInvite => enrollment::cancel(&path),
         Command::Devices => local::devices(&path),
-        #[cfg(all(feature = "input-preview", target_os = "windows"))]
+        #[cfg(any(
+            all(feature = "input-preview", target_os = "windows"),
+            all(feature = "input-x11-preview", target_os = "linux")
+        ))]
         Command::Input { action } => run_async(|| action.run(&path)),
         Command::History => journal::show(&path),
         Command::Revoke { name } => local::revoke(&path, &name),
