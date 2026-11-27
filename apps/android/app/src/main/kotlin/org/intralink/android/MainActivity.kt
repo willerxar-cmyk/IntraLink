@@ -313,7 +313,7 @@ class MainActivity : Activity() {
 
     private fun portField(): EditText = field(getString(R.string.port), limit = 5).apply {
         inputType = InputType.TYPE_CLASS_NUMBER
-        setText(45100.toString())
+        setText(R.string.default_port)
     }
 
     private fun confirm(title: String, message: String, password: EditText, approved: () -> Unit) {

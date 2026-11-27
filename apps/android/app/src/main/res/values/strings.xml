@@ -60,6 +60,7 @@
     <string name="peer_ip">Peer private IPv4 address</string>
     <string name="local_ip">This device private IPv4 address</string>
     <string name="port">UDP port</string>
+    <string name="default_port" translatable="false">45100</string>
     <string name="review_pair">Review pairing</string>
     <string name="pair_invalid">Enter the required peer details and a valid port.</string>
     <string name="pair_review">Check the full identity independently before approving.\nName: %1$s\nPublic identity: %2$s\n%3$s\nThis grants diagnostic pairing only.</string>
