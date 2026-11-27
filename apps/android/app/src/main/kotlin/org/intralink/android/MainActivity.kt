@@ -387,7 +387,7 @@ class MainActivity : Activity() {
             } else {
                 identity.setText(card.identity)
                 address?.setText(card.address)
-                port?.setText(card.port?.toString())
+                port?.setText(card.port?.let { String.format(java.util.Locale.ROOT, "%d", it) })
                 status.setText(R.string.card_review)
             }
         }
