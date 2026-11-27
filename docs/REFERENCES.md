@@ -39,3 +39,12 @@ This source is an independent implementation, not a fork or a port of copied DWS
 - `mini-nvcodec` 0.1.0 and `mini-cuda` 0.1.1: https://github.com/AdrianEddy/wgpu-interop — both MIT OR Apache-2.0 per inspected local registry manifests. The optional diagnostic uses their C ABI types, not their default DLL loaders.
 - `libloading` 0.9.0: https://github.com/nagisa/rust_libloading/ — ISC per inspected local registry manifest; system-directory-only Windows loading is required in the local driver wrapper.
 - No NVIDIA driver DLLs or CUDA SDK redistributables are bundled. Driver compatibility and commercial H.264 distribution/patent licensing review remain separate release gates. The optional FFmpeg verification script uses an externally installed executable only.
+
+
+## Software KVM references (2026-11-27)
+
+- Deskflow: https://github.com/deskflow/deskflow — GPL-2.0 project, reference for multi-computer keyboard/mouse sharing and screen layout. No source copied or linked.
+- OpenMouse mouse-protocol: https://github.com/OpenMouse-Project/mouse-protocol — AGPL-3.0; reference for device-level input protocol ideas, not a network KVM transport dependency. No source copied or linked.
+- Mousemaster: https://github.com/petoncle/mousemaster — reference for keyboard-driven pointer control and configurable input modes. No source copied or linked; no license compatibility assumed.
+
+The release uses the existing checked-in MPL-2.0 LICENSE and independent Rust implementation. `tools/release_inventory.py` inventories the resolved Windows x64 portable normal/build dependency graph and includes original available license/notice files. Exact upstream Git commits supply omitted root notices where possible. This inventory is not a completed legal or security audit, and no NVIDIA driver DLLs are distributed.
