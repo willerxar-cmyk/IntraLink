@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - physical Android/Windows LAN acceptance
+
+- Add owner-selected ADB instrumentation and a Windows peer example for actual private-LAN JNI/QUIC probes with fresh identities, temporary encrypted vault, revocation and lease cleanup.
+- Add explicit non-distributable lan-fixture feature for generated 1080p Compact v12 traffic and complete RGB reconstruction across physical devices. Disable Release variants in fixture builds and reject fixture exports in distribution packages.
+- Qualify physical ARM64 native software decode and two real 60-frame Android-to-Windows media sessions. Preserve ordinary preview.9 APK, previous candidates and documented reverse-direction UDP blocker.
+
 ## Unreleased - AVC negotiation and preview.9 native decoder qualification
 
 - Add canonical bounded exact operating-point negotiation over pinned-identity Iroh QUIC, with independent confirmation, explicit rejection and separate loopback-only ALPN. No capture or decoder authorization.

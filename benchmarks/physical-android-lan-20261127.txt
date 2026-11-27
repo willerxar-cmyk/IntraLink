@@ -1,0 +1,18 @@
+Physical Windows/Android acceptance, 2026-11-27. Owner-selected private IPv4 endpoints and ephemeral public identities omitted from this committed evidence.
+Device: TB373FU, Android 16, API 36, ARM64, display 1840x2944. Preview.9 exact ordinary debug/test pair installed without clearing data.
+PID 34528 exit 0: JNI onboarding, AVC direct buffer, SPS, Android software decoder fixture PASSED; c2.android.avc.decoder; 6+4 frames, recovered 12441600 YUV bytes, exact hashes match, sampled error <=12.
+PID 33400 exit 1: Android outbound probe deadline elapsed. Windows Public Wi-Fi; firewall profiles enabled. Inbound UDP restriction suspected; no firewall change.
+PID 24104 exit 0: Windows-initiated Android inbound actual probe 1193/1295 ms, fresh pinned identities, revocation and lease cleanup.
+PID 34492 exit 0: three repeats 1079/1186, 1054/1150, 1026/1132 ms (Android/Windows total session duration).
+PID 27236 exit 0: feature strict Clippy and optimized Windows example build.
+PID 26696 exit 0: both Android feature ABIs strict Clippy and Release, Gradle debug/test/lint build, release variant disabled.
+PID 30032 exit 0: MEDIA PASS 60 1920x1080 frames, 45276 encoded bytes; every RGB pixel verified; Android 3605 ms, Windows 3689 ms.
+PID 31180 exit 0: normal ARM64/x86_64 JNI export check accepted; both fixture libraries correctly rejected.
+PID 23744 exit 0: default host core transport/Android strict Clippy and format, Cargo.lock unchanged.
+PID 30464 exit 0: final instrumentation reservation cleanup rebuild; MEDIA PASS 60 1920x1080 frames, 45276 encoded bytes, every RGB pixel verified; Android 3196 ms, Windows 3299 ms; revocation and lease cleanup; ordinary APK and test restored.
+PID 24584: ordinary versionCode 220009 / 0.22.0-preview.9, Media Projection null, app services empty.
+Fixture debug APK SHA256 5a29b0517c122be18a3d03733f1946e3aed4394be2d8d3f4cfb01f8c7c0d226a
+Final fixture instrumentation SHA256 3230ce04da4655aa50251ba675debe321680c9523248b460e88411df9679962b
+Windows example SHA256 81007458a1c48f03f3ee71cd625fa73e4c81f597963167200468a31f09136a3f
+Not for distribution. No physical capture, real screen, input, native remote decode or sustained FPS claim.
+Previous hosted Android/Windows/Linux/X11 candidate downloads and source/manifest verification completed, PID 34712 exit 0; preview.9 Android hosted candidate PID 34348 exit 0. Corrected Rust CI 46042543295 success (CPU verification and artifact upload passed).
