@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.22.0-preview.3 - Windows input queue and native regression
+
+- Bound queued input age and coalesce only replaceable unsent pointer motion; preserve held-key, drag, wheel, focus and acknowledgment barriers. Cancel pending sink acceptance when authenticated transport closes.
+- Pass six native video regression gates on the preserved exact portable binary; retain prior automated test evidence. No physical KVM, Linux/Android distribution or production certification claim.
+- Document BASE/CLIENT terminology, independent permissions and platform status.
+
 ## 0.22.0 — shared endpoint and full application validation
 
 - Refine fixed-v8 overlap scheduling with single-use monotonic capture-start grants, early bounded demand reservations, a single foreground deadline gate and per-stage local timing. Preserve credit, consent and pixel integrity checks.

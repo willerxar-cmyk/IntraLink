@@ -4,9 +4,9 @@
 
 IntraLink is an independent Rust remote-access project designed for a single controller, several computers, and optional host/controller roles on the same device. It uses Iroh QUIC with pinned device identities, without a mandatory account, directory or commercial relay.
 
-[Download Windows preview](https://github.com/willerxar-cmyk/IntraLink/releases) · [Quick start](#quick-start) · [Security](docs/SECURITY.md) · [Roadmap](docs/ROADMAP.md)
+[Download Windows preview](https://github.com/willerxar-cmyk/IntraLink/releases/tag/v0.22.0-preview.3) · [Quick start](#quick-start) · [Security](docs/SECURITY.md) · [Roadmap](docs/ROADMAP.md)
 
-> **Development preview 0.22.0.** Windows x64 local diagnostics and authenticated loopback sessions have passed. This is not a production-certified remote-control tool. Use only on private, owner-authorized test networks. Physical multi-device sessions, sustained 1080p60, code signing, and independent security review are still open.
+> **Development preview 0.22.0-preview.3 (Windows x64).** Windows x64 local diagnostics and authenticated loopback sessions have passed. This is not a production-certified remote-control tool. Use only on private, owner-authorized test networks. Physical multi-device sessions, sustained 1080p60, code signing, and independent security review are still open.
 
 ## What works today
 
@@ -23,6 +23,19 @@ IntraLink is an independent Rust remote-access project designed for a single con
 | macOS, Wayland, Android, iOS host/controller adapters | Not distributed in this release |
 
 The Windows portable build uses optional WGC/D3D11 capture and scaling; the software codec does not require CUDA, NVENC or a dedicated NVIDIA card. The scalar CPU codec path remains separately tested. No background service, unattended control, arbitrary shell or automatic firewall changes.
+
+## Choose your device role
+
+- **BASE - Control other devices:** use the central computer with your keyboard and mouse. The current CLI calls this role `controller`.
+- **CLIENT - Receive control:** use the device that shares its screen or receives approved input. The current CLI calls this role `host`.
+
+The present preview requires explicit CLI setup; the graphical first-run role selector is not implemented yet. Screen and input permissions are independent. Existing paired identities are preserved; changing an existing vault role is not supported by this preview.
+
+| Platform | Available distribution |
+|---|---|
+| Windows x64 | Preview 3 portable ZIP; local native diagnostics passed, physical KVM pending |
+| Linux x86_64 | Desktop source present; no qualified native release yet |
+| Android | Application and signed APK/AAB not available yet |
 
 ## Install
 
