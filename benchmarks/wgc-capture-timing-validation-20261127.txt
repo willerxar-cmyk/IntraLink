@@ -1,0 +1,1872 @@
+﻿START fmt
+EXIT fmt 0
+START fmt-check
+EXIT fmt-check 0
+START core-compile
+EXIT core-compile 0
+START core-test
+
+running 98 tests
+test adaptive::tests::geometry_transitions_are_keyframe_only_bounded_and_atomic ... ok
+test adaptive::tests::request_and_alpn_are_distinct_without_fallback ... ok
+test canvas::tests::odd_bars_are_centered_and_old_content_is_erased ... ok
+test adaptive::tests::mode_and_payload_bounds_are_enforced ... ok
+test calibration::tests::malformed_or_unmeasured_layouts_are_rejected ... ok
+test adaptive::tests::pressure_reduces_stepwise_and_recovers_to_approved_ceiling ... ok
+test desktop::tests::priority_feedback_is_ordered_and_cannot_grant_credit ... ok
+test canvas::tests::full_size_overwrites_every_byte_and_ignores_alpha ... ok
+test capabilities::tests::all_masks_are_bounded_and_selection_is_symmetric ... ok
+test adaptive::tests::static_neutral_and_approved_ceiling_prevent_unwanted_transitions ... ok
+test capabilities::tests::local_codec_ceiling_and_request_roundtrip ... ok
+test calibration::tests::eight_measured_workers_do_not_divide_their_budget_again ... ok
+test desktop::tests::configuration_is_bounded_and_versioned ... ok
+test desktop::tests::credit_is_bounded_and_receipts_are_ordered ... ok
+test calibration::tests::slow_devices_choose_best_balanced_feasible_layout ... ok
+test canvas::tests::invalid_lengths_and_dimensions_leave_output_unchanged ... ok
+test h264::parameters::tests::native_parameter_sets_match_exact_profiles ... ok
+test calibration::tests::mixed_ceilings_use_one_observed_cohort_and_keep_manual_bounds ... ok
+test h264::parameters::tests::rbsp_escape_rules_and_exp_golomb_limits ... ok
+test desktop::tests::requests_and_acknowledgments_are_exact ... ok
+test desktop::tests::lengths_are_bounded_before_allocation ... ok
+test h264::parameters::tests::truncated_parameter_sets_and_extra_rbsp_are_rejected ... ok
+test h264::tests::envelope_rejects_limits_and_unknown_flags ... ok
+test h264::tests::profile_and_wire_version_are_exact ... ok
+test h264::tests::rejects_missing_headers_b_slices_and_multiple_pictures ... ok
+test h264::tests::rejected_parameter_change_does_not_advance_state ... ok
+test h264::tests::state_rejects_missing_base_gaps_and_gop_expiration_atomically ... ok
+test host_calibration::tests::cpu_only_path_can_select_lower_resolution_and_rate ... ok
+test journal::tests::maximal_numeric_values_fit_reserved_line_budget ... ok
+test host_calibration::tests::rejects_duplicate_unknown_zero_and_over_ceiling_samples ... ok
+test journal::tests::roundtrip_preserves_unknown_cancelled_and_completed_outcomes ... ok
+test journal::tests::rejects_truncation_control_fields_and_unbounded_input ... ok
+test journal::tests::rejects_duplicate_wrong_and_out_of_order_end_records ... ok
+test host_calibration::tests::selects_measured_best_backend_at_highest_usable_resolution ... ok
+test media::compact::tests::runs_must_cover_the_exact_tile ... ok
+test h264::tests::every_truncation_and_mutation_is_bounded ... ok
+test media::compact::tests::palette_padding_and_invalid_index_are_rejected ... ok
+test media::tests::budget_exhaustion_never_emits_partial_updates ... ok
+test media::compact::budget_tests::early_run_budget_rejection_preserves_exact_best_encoding ... ok
+test media::tests::compact_records_are_rejected_by_basic_tiles_and_jpeg ... ok
+test network::tests::comparison_is_family_aware_and_normalizes_mapped_values ... ok
+test network::tests::each_family_is_bounded_and_selection_is_idempotent ... ok
+test network::tests::malformed_or_unsupported_destinations_are_not_attempted ... ok
+test network::tests::mapped_addresses_are_deduplicated_before_family_limits ... ok
+test network::tests::private_and_shared_ip_labels_do_not_assert_reachability ... ok
+test network::tests::scan_budget_is_bounded_even_for_duplicate_answers ... ok
+test overview::tests::every_layout_has_nonoverlapping_cards_and_distinct_controls ... ok
+test pacing::tests::sixty_fps_and_background_cadence ... ok
+test pacing::tests::intermittent_changes_do_not_enter_idle_mode ... ok
+test overview::tests::pointer_mapping_respects_bars_and_nonfinite_input ... ok
+test pacing::tests::slower_profiles_are_never_accelerated_or_delayed ... ok
+test presentation::tests::allocation_is_reused_when_no_snapshot_is_held ... ok
+test presentation::tests::concurrent_presentation_keeps_immutable_pixels ... ok
+test pacing::tests::static_scene_slows_in_two_bounded_steps ... ok
+test presentation::tests::adaptive_keyframe_replaces_geometry_without_mutating_old_snapshot ... ok
+test presentation::tests::failed_decode_poisoning_preserves_old_snapshot_but_hides_partial_update ... ok
+test media::tests::malformed_later_compact_tile_cannot_apply_earlier_tile ... ok
+test presentation::tests::invalid_geometry_is_rejected_before_decoding ... ok
+test presentation::tests::short_decode_cannot_be_published ... ok
+test presentation::tests::unchanged_or_older_sequence_never_creates_a_snapshot ... ok
+test media::tests::malformed_updates_do_not_mutate_pixels ... ok
+test profile_limits::tests::malformed_limits_and_changed_selection_are_rejected ... ok
+test quality::tests::pressure_is_bounded_and_background_does_not_signal_recovery ... ok
+test quality::tests::recovery_is_slower_and_never_exceeds_approved_quality ... ok
+test quality::tests::static_and_neutral_interrupt_streaks_and_floor_is_safe ... ok
+test quality::tests::sustained_high_pressure_reduces_quality_and_floor_is_enforced ... ok
+test resources::tests::memory_is_checked_and_used_cannot_underflow ... ok
+test resources::tests::cpu_never_reports_unavailable_or_nonfinite_data_as_a_measurement ... ok
+test telemetry::tests::actual_elapsed_time_and_distinct_rates ... ok
+test telemetry::tests::resets_never_report_old_session_rates ... ok
+test telemetry::tests::stages_are_independent_and_payload_is_counted_once ... ok
+test overview::tests::invalid_geometry_and_source_leave_canvas_unchanged ... ok
+test media::tests::invalid_keyframes_never_resize_or_mutate_existing_canvas ... ok
+test telemetry::tests::concurrent_updates_are_not_lost ... ok
+test workspace::tests::inactive_is_distinct_from_background_and_all_live ... ok
+test workspace::tests::three_live_devices_switch_focus_without_deactivation ... ok
+test workspace::tests::bounds_and_all_eight_slots ... ok
+test yuv::tests::black_white_and_neutral_grays ... ok
+test yuv::tests::invalid_layouts_are_atomic ... ok
+test yuv::tests::primary_color_vectors ... ok
+test yuv::tests::averages_chroma_and_preserves_stride_padding ... ok
+test profile_limits::tests::valid_limits_and_exact_intersection ... ok
+test viewer_overview::tests::local_notice_preserves_original_pixels_and_reuses_scratch ... ok
+test desktop::tests::credit_cannot_exceed_absolute_sequence_budget ... ok
+test overview::tests::thumbnail_preserves_aspect_and_does_not_touch_other_cards ... ok
+test media::tests::keyframe_budget_and_mode_fail_closed ... ok
+test viewer_overview::tests::disconnected_card_removes_all_previous_pixels ... ok
+test media::tests::edge_tiles_round_trip_and_solid_tiles_are_nine_bytes ... ok
+test viewer_overview::tests::busy_decoder_retains_thumbnail_but_session_restart_invalidates_it ... ok
+test media::tests::uniform_row_comparison_preserves_nonuniform_edge_tiles ... ok
+test viewer_overview::tests::all_supported_card_counts_render_in_one_reusable_canvas ... ok
+test media::tests::lossless_keyframe_and_following_delta_preserve_every_pixel ... ok
+test media::tests::failed_compact_delta_implies_no_complete_keyframe_with_same_or_smaller_budget ... ok
+test media::tests::compact_selects_smallest_exact_tile_representation ... ok
+test media::tests::ordered_deltas_reconstruct_changed_tiles_and_restore_pixels ... ok
+test media::tests::compact_never_exceeds_basic_payload_under_same_budget ... ok
+test media::tests::compact_palette_cardinalities_and_edge_geometry_round_trip ... ok
+test media::tests::lossless_uniform_keyframes_have_full_coverage_at_all_resolutions ... ok
+
+test result: ok. 98 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+
+EXIT core-test 0
+START clippy-cpu
+    Checking intralink-d3d11 v0.22.0 (D:\IntraLink\crates\intralink-d3d11)
+    Checking intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.18s
+EXIT clippy-cpu 0
+START clippy-wgc
+    Checking intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.43s
+EXIT clippy-wgc 0
+START clippy-nvidia
+    Checking intralink-d3d11 v0.22.0 (D:\IntraLink\crates\intralink-d3d11)
+    Checking intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.79s
+EXIT clippy-nvidia 0
+START clippy-scalar
+    Checking intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.50s
+EXIT clippy-scalar 0
+START test-cpu
+   Compiling intralink-d3d11 v0.22.0 (D:\IntraLink\crates\intralink-d3d11)
+   Compiling intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.25s
+     Running unittests src\main.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink-3b1b122a8e729542.exe)
+
+running 52 tests
+test ddns::tests::update_address_modes ... ok
+test desktop::calibration::tests::capture_lock_diagnostic_is_explicit_and_exclusive ... ok
+test desktop::host_calibration::tests::cancellation_prevents_dense_encoding ... ok
+test desktop::host_capture::tests::explicit_backend_never_silently_falls_back ... ok
+test desktop::host_capture::tests::identity_requires_same_display_name_geometry_position_and_rotation ... ok
+test desktop::host_pipeline::tests::demand_gate_keeps_one_slot_and_never_starts_early ... ok
+test desktop::jpeg_parallel::tests::generated_header_rejects_invalid_and_mismatched_strips ... ok
+test desktop::codec::tests::compact_hybrid_decodes_palette_after_lossless_keyframe_and_rejects_mode_switch ... ok
+test desktop::host_pipeline::tests::lane_holds_only_two_and_keeps_exact_delta_base ... ok
+test desktop::codec::tests::malformed_oversized_and_wrong_dimensions_are_rejected ... ok
+test desktop::overview::tests::all_supported_card_counts_render_in_one_reusable_canvas ... ok
+test desktop::host_pipeline::tests::stop_joins_active_and_discards_queued_without_publication ... ok
+test desktop::overview::tests::disconnected_card_removes_all_previous_pixels ... ok
+test desktop::codec::tests::codec_round_trip_and_letterbox ... ok
+test desktop::receive_limits::tests::per_device_limits_are_independent_and_bounded ... ok
+test desktop::resize::tests::aspect_and_rounding ... ok
+test desktop::overview::tests::busy_decoder_retains_thumbnail_but_session_restart_invalidates_it ... ok
+test desktop::overview::tests::local_notice_preserves_original_pixels_and_reuses_scratch ... ok
+test desktop::resize::tests::downsampling_preserves_antialiasing ... ok
+test desktop::resize::tests::invalid_geometry_is_atomic_and_exact_size_skips_resize ... ok
+test desktop::resize::tests::opaque_screen_colors_and_reused_buffer ... ok
+test desktop::codec::tests::hybrid_uses_ordered_tiles_after_keyframe ... ok
+test desktop::source_status::tests::no_update_notice_is_delayed_and_only_observed_pixels_clear_it ... ok
+test discovery::tests::discovery_is_restricted_to_private_ipv4_hints ... ok
+test journal::tests::full_or_busy_journal_is_not_overwritten ... ok
+test journal::tests::opt_out_does_not_create_file_and_corruption_blocks_operation ... ok
+test desktop::codec::tests::static_pixels_skip_encoding_and_change_triggers_new_jpeg ... ok
+test desktop::jpeg::tests::bounded_writer_rejects_before_mutation_and_reuses_capacity ... ok
+test resources::tests::json_distinguishes_missing_metrics_from_zero_usage ... ok
+test resources::tests::missing_cpu_is_not_printed_as_idle_and_ram_uses_bytes ... ok
+test routing::tests::address_classes_do_not_claim_reachability ... ok
+test desktop::jpeg_parallel::tests::oversized_combined_frame_is_atomic ... ok
+test routing::tests::numeric_routes_are_normalized_without_dns ... ok
+test routing::tests::candidates_are_bounded_unique_and_dual_stack ... ok
+test desktop::calibration::tests::failed_warmup_cancels_waiting_workers ... ok
+test journal::tests::recording_persists_and_interruption_is_unknown ... ok
+test journal::tests::wrapper_records_completion_and_preserves_command_error ... ok
+test desktop::jpeg::oversized_dense_jpeg_leaves_no_partial_record ... ok
+test desktop::codec::tests::compact_exact_then_jpeg_then_exact_refresh ... ok
+test desktop::codec::tests::adaptive_encoder_forces_keyframe_and_decoder_rejects_unnegotiated_geometry ... ok
+test desktop::visual_fidelity::tests::detects_channel_swap_local_corruption_and_lossless_mismatch ... ok
+test desktop::visual_fixture::tests::reference_cards_are_stable_and_animation_is_localized ... ok
+test desktop::calibration::fixtures::tests::generated_jpeg_fits_wire_limit_at_every_resolution ... ok
+test desktop::jpeg::tests::preserves_baseline_sampling_quantization_and_image_quality ... ok
+test desktop::media_check::tests::static_markers_distinguish_final_update_from_stale_frame ... ok
+test desktop::visual_fidelity::tests::accepts_real_jpeg_and_ordered_tiles_for_generated_scene ... ok
+test desktop::media_check::tests::fixture_markers_survive_animation_and_reject_wrong_content ... ok
+test desktop::calibration::tests::concurrent_mixed_geometry_workers_complete_and_join ... ok
+test desktop::codec::tests::adaptive_jpeg_quality_preserves_1080p_wire_config_and_reduces_payload ... ok
+test desktop::calibration::tests::real_software_fixtures_round_trip_without_timing_assumptions ... ok
+test desktop::host_calibration::tests::changing_dense_fixture_uses_production_codecs_and_keeps_marker ... ok
+test desktop::jpeg_parallel::tests::restart_strips_decode_identically_to_serial_at_every_tier ... ok
+
+test result: ok. 52 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.64s
+
+     Running tests\cli_smoke.rs (D:\IntraLink-validation-v020\target\debug\deps\cli_smoke-209a9998b8b620cf.exe)
+
+running 8 tests
+test cli_help_and_version_exit_successfully ... ok
+test encoder_diagnostic_is_local_and_explicit ... ok
+test host_calibration_is_opt_in_and_keeps_explicit_capture ... ok
+test calibration_cli_is_explicit_and_validated_before_connection ... ok
+test visual_fidelity_diagnostic_is_explicit_and_separate_from_benchmarks ... ok
+test pipeline_requires_explicit_fixed_profile_before_connection ... ok
+test portable_share_defaults_to_1080p_and_adaptive_quality ... ok
+test bounded_profile_cli_rejects_invalid_limits_before_session_start ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+     Running tests\decoder_process.rs (D:\IntraLink-validation-v020\target\debug\deps\decoder_process-f6079fdfe74393fc.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_core-3e3e99ad2bbf7776.exe)
+
+running 97 tests
+test adaptive::tests::pressure_reduces_stepwise_and_recovers_to_approved_ceiling ... ok
+test adaptive::tests::static_neutral_and_approved_ceiling_prevent_unwanted_transitions ... ok
+test calibration::tests::eight_measured_workers_do_not_divide_their_budget_again ... ok
+test calibration::tests::malformed_or_unmeasured_layouts_are_rejected ... ok
+test desktop::tests::lengths_are_bounded_before_allocation ... ok
+test adaptive::tests::request_and_alpn_are_distinct_without_fallback ... ok
+test calibration::tests::mixed_ceilings_use_one_observed_cohort_and_keep_manual_bounds ... ok
+test calibration::tests::slow_devices_choose_best_balanced_feasible_layout ... ok
+test canvas::tests::full_size_overwrites_every_byte_and_ignores_alpha ... ok
+test adaptive::tests::mode_and_payload_bounds_are_enforced ... ok
+test canvas::tests::invalid_lengths_and_dimensions_leave_output_unchanged ... ok
+test canvas::tests::odd_bars_are_centered_and_old_content_is_erased ... ok
+test capabilities::tests::local_codec_ceiling_and_request_roundtrip ... ok
+test desktop::tests::configuration_is_bounded_and_versioned ... ok
+test desktop::tests::credit_is_bounded_and_receipts_are_ordered ... ok
+test adaptive::tests::geometry_transitions_are_keyframe_only_bounded_and_atomic ... ok
+test desktop::tests::requests_and_acknowledgments_are_exact ... ok
+test desktop::tests::priority_feedback_is_ordered_and_cannot_grant_credit ... ok
+test capabilities::tests::all_masks_are_bounded_and_selection_is_symmetric ... ok
+test h264::parameters::tests::rbsp_escape_rules_and_exp_golomb_limits ... ok
+test h264::parameters::tests::native_parameter_sets_match_exact_profiles ... ok
+test h264::parameters::tests::truncated_parameter_sets_and_extra_rbsp_are_rejected ... ok
+test h264::tests::envelope_rejects_limits_and_unknown_flags ... ok
+test h264::tests::profile_and_wire_version_are_exact ... ok
+test h264::tests::rejected_parameter_change_does_not_advance_state ... ok
+test h264::tests::rejects_missing_headers_b_slices_and_multiple_pictures ... ok
+test h264::tests::state_rejects_missing_base_gaps_and_gop_expiration_atomically ... ok
+test host_calibration::tests::cpu_only_path_can_select_lower_resolution_and_rate ... ok
+test host_calibration::tests::rejects_duplicate_unknown_zero_and_over_ceiling_samples ... ok
+test host_calibration::tests::selects_measured_best_backend_at_highest_usable_resolution ... ok
+test journal::tests::maximal_numeric_values_fit_reserved_line_budget ... ok
+test journal::tests::rejects_duplicate_wrong_and_out_of_order_end_records ... ok
+test journal::tests::roundtrip_preserves_unknown_cancelled_and_completed_outcomes ... ok
+test journal::tests::rejects_truncation_control_fields_and_unbounded_input ... ok
+test media::compact::tests::palette_padding_and_invalid_index_are_rejected ... ok
+test media::compact::tests::runs_must_cover_the_exact_tile ... ok
+test h264::tests::every_truncation_and_mutation_is_bounded ... ok
+test network::tests::malformed_or_unsupported_destinations_are_not_attempted ... ok
+test network::tests::comparison_is_family_aware_and_normalizes_mapped_values ... ok
+test media::tests::budget_exhaustion_never_emits_partial_updates ... ok
+test network::tests::each_family_is_bounded_and_selection_is_idempotent ... ok
+test network::tests::mapped_addresses_are_deduplicated_before_family_limits ... ok
+test network::tests::private_and_shared_ip_labels_do_not_assert_reachability ... ok
+test network::tests::scan_budget_is_bounded_even_for_duplicate_answers ... ok
+test overview::tests::every_layout_has_nonoverlapping_cards_and_distinct_controls ... ok
+test pacing::tests::intermittent_changes_do_not_enter_idle_mode ... ok
+test overview::tests::pointer_mapping_respects_bars_and_nonfinite_input ... ok
+test pacing::tests::sixty_fps_and_background_cadence ... ok
+test pacing::tests::slower_profiles_are_never_accelerated_or_delayed ... ok
+test presentation::tests::adaptive_keyframe_replaces_geometry_without_mutating_old_snapshot ... ok
+test pacing::tests::static_scene_slows_in_two_bounded_steps ... ok
+test media::compact::budget_tests::early_run_budget_rejection_preserves_exact_best_encoding ... ok
+test presentation::tests::allocation_is_reused_when_no_snapshot_is_held ... ok
+test presentation::tests::concurrent_presentation_keeps_immutable_pixels ... ok
+test presentation::tests::failed_decode_poisoning_preserves_old_snapshot_but_hides_partial_update ... ok
+test presentation::tests::short_decode_cannot_be_published ... ok
+test presentation::tests::invalid_geometry_is_rejected_before_decoding ... ok
+test presentation::tests::unchanged_or_older_sequence_never_creates_a_snapshot ... ok
+test profile_limits::tests::malformed_limits_and_changed_selection_are_rejected ... ok
+test quality::tests::recovery_is_slower_and_never_exceeds_approved_quality ... ok
+test quality::tests::pressure_is_bounded_and_background_does_not_signal_recovery ... ok
+test quality::tests::static_and_neutral_interrupt_streaks_and_floor_is_safe ... ok
+test quality::tests::sustained_high_pressure_reduces_quality_and_floor_is_enforced ... ok
+test media::tests::malformed_later_compact_tile_cannot_apply_earlier_tile ... ok
+test resources::tests::cpu_never_reports_unavailable_or_nonfinite_data_as_a_measurement ... ok
+test resources::tests::memory_is_checked_and_used_cannot_underflow ... ok
+test telemetry::tests::actual_elapsed_time_and_distinct_rates ... ok
+test telemetry::tests::resets_never_report_old_session_rates ... ok
+test tests::accepts_only_single_duckdns_label ... ok
+test telemetry::tests::stages_are_independent_and_payload_is_counted_once ... ok
+test media::tests::malformed_updates_do_not_mutate_pixels ... ok
+test tests::only_exact_probe_is_valid ... ok
+test tests::roles_are_directional ... ok
+test telemetry::tests::concurrent_updates_are_not_lost ... ok
+test workspace::tests::bounds_and_all_eight_slots ... ok
+test workspace::tests::inactive_is_distinct_from_background_and_all_live ... ok
+test workspace::tests::three_live_devices_switch_focus_without_deactivation ... ok
+test yuv::tests::averages_chroma_and_preserves_stride_padding ... ok
+test yuv::tests::invalid_layouts_are_atomic ... ok
+test yuv::tests::black_white_and_neutral_grays ... ok
+test overview::tests::invalid_geometry_and_source_leave_canvas_unchanged ... ok
+test yuv::tests::primary_color_vectors ... ok
+test profile_limits::tests::valid_limits_and_exact_intersection ... ok
+test media::tests::invalid_keyframes_never_resize_or_mutate_existing_canvas ... ok
+test media::tests::compact_records_are_rejected_by_basic_tiles_and_jpeg ... ok
+test desktop::tests::credit_cannot_exceed_absolute_sequence_budget ... ok
+test overview::tests::thumbnail_preserves_aspect_and_does_not_touch_other_cards ... ok
+test media::tests::keyframe_budget_and_mode_fail_closed ... ok
+test media::tests::edge_tiles_round_trip_and_solid_tiles_are_nine_bytes ... ok
+test media::tests::uniform_row_comparison_preserves_nonuniform_edge_tiles ... ok
+test media::tests::lossless_keyframe_and_following_delta_preserve_every_pixel ... ok
+test media::tests::failed_compact_delta_implies_no_complete_keyframe_with_same_or_smaller_budget ... ok
+test media::tests::ordered_deltas_reconstruct_changed_tiles_and_restore_pixels ... ok
+test media::tests::compact_selects_smallest_exact_tile_representation ... ok
+test media::tests::compact_never_exceeds_basic_payload_under_same_budget ... ok
+test media::tests::compact_palette_cardinalities_and_edge_geometry_round_trip ... ok
+test media::tests::lossless_uniform_keyframes_have_full_coverage_at_all_resolutions ... ok
+
+test result: ok. 97 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_d3d11-46f1f58284437b22.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_transport-212ab32856368cdd.exe)
+
+running 47 tests
+test desktop::adaptive_tests::v8_cannot_negotiate_adaptive_only_endpoint ... ok
+test desktop::pipeline::tests::first_keyframe_cannot_have_overlapping_demand ... ok
+test desktop::pipeline::tests::reservations_share_existing_credit_and_record_limit ... ok
+test desktop::pipeline_tests::capture_grant_rejects_early_duplicate_and_canceled_starts ... ok
+test desktop::h264_tests::separate_alpn_and_non_loopback_routes_are_rejected ... ok
+test desktop::h264_tests::invalid_peer_access_unit_is_rejected_before_consumer_and_ack ... ok
+test desktop::h264_tests::unapproved_identity_never_requests_h264_capture ... ok
+test desktop::adaptive_tests::wrong_identity_cannot_request_adaptive_capture ... ok
+test desktop::h264_tests::invalid_local_access_unit_never_reaches_consumer ... ok
+test desktop::bounded_tests::bounded_selection_reduces_codec_height_and_fps_before_capture ... ok
+test desktop::negotiated_tests::viewer_rejects_host_selection_outside_intersection ... ok
+test desktop::h264_tests::early_local_timer_does_not_grant_next_capture ... ok
+test desktop::adaptive_tests::adaptive_rejects_delta_as_first_frame_without_delivery ... ok
+test desktop::adaptive_tests::invalid_peer_geometry_is_rejected_before_consumer_and_receipt ... ok
+test desktop::bounded_tests::viewer_rejects_host_exceeding_receiver_limits_before_confirmation ... ok
+test desktop::h264_tests::unapproved_profile_never_requests_capture ... ok
+test desktop::negotiated_tests::chooses_mutual_compact_and_reconstructs_real_pixels ... ok
+test desktop::tests::payload_preparation_preserves_allocation_and_rejects_invalid_sizes ... ok
+test desktop::negotiated_tests::negotiation_requires_identity_and_explicit_version ... ok
+test desktop::pipeline_tests::reply_without_start_is_rejected ... ok
+test desktop::pipeline_tests::wrong_identity_never_reserves_pipeline_capture ... ok
+test desktop::tests::authorized_source_can_stop_without_capture ... ok
+test desktop::tests::mismatched_media_mode_never_requests_capture ... ok
+test desktop::tests::no_update_before_first_frame_is_rejected_by_sender ... ok
+test desktop::h264_tests::ordered_h264_records_keep_coded_sequence_distinct_from_receipts ... ok
+test desktop::tests::no_update_before_first_frame_is_rejected_by_receiver ... ok
+test desktop::tests::rejected_identity_never_requests_capture ... ok
+test desktop::tests::repeat_before_first_frame_is_rejected ... ok
+test desktop::negotiated_tests::different_codec_ceilings_negotiate_before_capture ... ok
+test tests::mapped_ipv4_route_uses_real_ipv4_transport ... ok
+test tests::authorized_probe_on_loopback ... ok
+test tests::unapproved_identity_is_rejected ... ok
+test tests::multiple_candidates_include_reachable_address ... ok
+test tests::wrong_host_pin_is_rejected ... ok
+test desktop::pipeline_tests::two_demands_overlap_and_out_of_order_completion_is_serialized ... ok
+test desktop::bounded_tests::malformed_limits_and_wrong_confirmation_never_request_capture ... ok
+test desktop::negotiated_tests::invalid_offer_or_confirmation_cannot_start_capture ... ok
+test desktop::tests::changed_and_repeat_records_preserve_sequence_and_recycle_buffer ... ok
+test desktop::tests::three_sessions_are_isolated_when_one_host_refuses ... ok
+test desktop::tests::receiver_reuses_consumed_payload_across_ordered_records ... ok
+test desktop::pipeline_tests::reserved_start_is_based_on_actual_previous_start ... ok
+test desktop::tests::no_update_is_ordered_but_never_decoded_or_counted_as_repeat ... ok
+test desktop::pipeline_tests::reserved_unsent_demands_cannot_expand_credit ... ok
+test desktop::tests::credit_allows_bounded_records_before_ack_and_drains_at_end ... ok
+test desktop::tests::wrong_ack_cannot_exceed_credit_window ... ok
+test desktop::adaptive_tests::adaptive_downshift_and_recovery_preserve_one_authenticated_session ... ok
+test desktop::tests::diagnostic_protocol_cannot_open_view_listener ... ok
+
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.35s
+
+     Running tests\multi_host.rs (D:\IntraLink-validation-v020\target\debug\deps\multi_host-08cb10324155845e.exe)
+
+running 3 tests
+test one_controller_three_paired_hosts_keep_independent_compact_canvases ... ok
+test one_controller_three_paired_hosts_negotiate_independent_receiver_limits ... ok
+test stopping_one_view_preserves_sibling_and_allows_later_connection ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.89s
+
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_vault-9bb03e2a191291b3.exe)
+
+running 11 tests
+test profile::tests::legacy_profile_fields_are_accepted ... ok
+test profile::tests::rejects_invalid_routes_and_self_pairing ... ok
+test profile::tests::role_isolation_and_revocation ... ok
+test invitation::tests::signed_codes_reject_tampering_and_wrong_kind ... ok
+test profile::tests::canceled_or_replaced_offers_cannot_activate ... ok
+test profile::tests::invitation_needs_both_approvals_and_cannot_be_reused ... ok
+test store::tests::save_rejects_corrupted_existing_ciphertext ... ok
+test store::tests::save_rejects_wrong_password_and_identity_without_overwriting ... ok
+test envelope::tests::roundtrip_and_reject_tampering ... ok
+test store::tests::persistent_identity_and_revocation ... ok
+test store::tests::pending_offer_and_replay_state_survive_vault_reopen ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.76s
+
+   Doc-tests intralink_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests intralink_d3d11
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests intralink_transport
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests intralink_vault
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT test-cpu 0
+START test-nvidia
+   Compiling intralink-d3d11 v0.22.0 (D:\IntraLink\crates\intralink-d3d11)
+   Compiling intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14.17s
+     Running unittests src\main.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink-ca8fbb89db7563e0.exe)
+
+running 56 tests
+test ddns::tests::update_address_modes ... ok
+test desktop::decoder_ipc::tests::stop_and_invalid_lengths_do_not_allocate_or_decode ... ok
+test desktop::decoder_process::tests::response_lines_are_bounded_and_exact ... ok
+test desktop::host_capture::tests::explicit_backend_never_silently_falls_back ... ok
+test desktop::host_calibration::tests::cancellation_prevents_dense_encoding ... ok
+test desktop::decoder_ipc::tests::bootstrap_is_exact_and_bounded ... ok
+test desktop::calibration::tests::capture_lock_diagnostic_is_explicit_and_exclusive ... ok
+test desktop::host_capture::tests::identity_requires_same_display_name_geometry_position_and_rotation ... ok
+test desktop::host_pipeline::tests::demand_gate_keeps_one_slot_and_never_starts_early ... ok
+test desktop::jpeg_parallel::tests::generated_header_rejects_invalid_and_mismatched_strips ... ok
+test desktop::codec::tests::compact_hybrid_decodes_palette_after_lossless_keyframe_and_rejects_mode_switch ... ok
+test desktop::live_h264::tests::exact_native_origin_is_required_before_decode ... ok
+test desktop::codec::tests::malformed_oversized_and_wrong_dimensions_are_rejected ... ok
+test desktop::host_pipeline::tests::lane_holds_only_two_and_keeps_exact_delta_base ... ok
+test desktop::host_pipeline::tests::stop_joins_active_and_discards_queued_without_publication ... ok
+test desktop::overview::tests::all_supported_card_counts_render_in_one_reusable_canvas ... ok
+test desktop::overview::tests::busy_decoder_retains_thumbnail_but_session_restart_invalidates_it ... ok
+test desktop::overview::tests::local_notice_preserves_original_pixels_and_reuses_scratch ... ok
+test desktop::overview::tests::disconnected_card_removes_all_previous_pixels ... ok
+test desktop::receive_limits::tests::per_device_limits_are_independent_and_bounded ... ok
+test desktop::resize::tests::aspect_and_rounding ... ok
+test desktop::codec::tests::codec_round_trip_and_letterbox ... ok
+test desktop::resize::tests::downsampling_preserves_antialiasing ... ok
+test desktop::resize::tests::invalid_geometry_is_atomic_and_exact_size_skips_resize ... ok
+test desktop::source_status::tests::no_update_notice_is_delayed_and_only_observed_pixels_clear_it ... ok
+test desktop::resize::tests::opaque_screen_colors_and_reused_buffer ... ok
+test desktop::jpeg::tests::bounded_writer_rejects_before_mutation_and_reuses_capacity ... ok
+test discovery::tests::discovery_is_restricted_to_private_ipv4_hints ... ok
+test desktop::codec::tests::hybrid_uses_ordered_tiles_after_keyframe ... ok
+test journal::tests::opt_out_does_not_create_file_and_corruption_blocks_operation ... ok
+test journal::tests::full_or_busy_journal_is_not_overwritten ... ok
+test desktop::jpeg_parallel::tests::oversized_combined_frame_is_atomic ... ok
+test journal::tests::recording_persists_and_interruption_is_unknown ... ok
+test journal::tests::wrapper_records_completion_and_preserves_command_error ... ok
+test resources::tests::json_distinguishes_missing_metrics_from_zero_usage ... ok
+test desktop::codec::tests::static_pixels_skip_encoding_and_change_triggers_new_jpeg ... ok
+test resources::tests::missing_cpu_is_not_printed_as_idle_and_ram_uses_bytes ... ok
+test routing::tests::address_classes_do_not_claim_reachability ... ok
+test routing::tests::candidates_are_bounded_unique_and_dual_stack ... ok
+test desktop::jpeg::oversized_dense_jpeg_leaves_no_partial_record ... ok
+test routing::tests::numeric_routes_are_normalized_without_dns ... ok
+test desktop::calibration::tests::failed_warmup_cancels_waiting_workers ... ok
+test desktop::codec::tests::adaptive_encoder_forces_keyframe_and_decoder_rejects_unnegotiated_geometry ... ok
+test desktop::codec::tests::compact_exact_then_jpeg_then_exact_refresh ... ok
+test desktop::visual_fidelity::tests::detects_channel_swap_local_corruption_and_lossless_mismatch ... ok
+test desktop::visual_fixture::tests::reference_cards_are_stable_and_animation_is_localized ... ok
+test desktop::calibration::fixtures::tests::generated_jpeg_fits_wire_limit_at_every_resolution ... ok
+test desktop::media_check::tests::static_markers_distinguish_final_update_from_stale_frame ... ok
+test desktop::visual_fidelity::tests::accepts_real_jpeg_and_ordered_tiles_for_generated_scene ... ok
+test desktop::media_check::tests::fixture_markers_survive_animation_and_reject_wrong_content ... ok
+test desktop::jpeg::tests::preserves_baseline_sampling_quantization_and_image_quality ... ok
+test desktop::calibration::tests::concurrent_mixed_geometry_workers_complete_and_join ... ok
+test desktop::codec::tests::adaptive_jpeg_quality_preserves_1080p_wire_config_and_reduces_payload ... ok
+test desktop::calibration::tests::real_software_fixtures_round_trip_without_timing_assumptions ... ok
+test desktop::host_calibration::tests::changing_dense_fixture_uses_production_codecs_and_keeps_marker ... ok
+test desktop::jpeg_parallel::tests::restart_strips_decode_identically_to_serial_at_every_tier ... ok
+
+test result: ok. 56 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.86s
+
+     Running tests\cli_smoke.rs (D:\IntraLink-validation-v020\target\debug\deps\cli_smoke-2080778287e427bd.exe)
+
+running 9 tests
+test encoder_diagnostic_is_local_and_explicit ... ok
+test cli_help_and_version_exit_successfully ... ok
+test host_calibration_is_opt_in_and_keeps_explicit_capture ... ok
+test h264_diagnostic_help_does_not_initialize_driver_or_network ... ok
+test calibration_cli_is_explicit_and_validated_before_connection ... ok
+test pipeline_requires_explicit_fixed_profile_before_connection ... ok
+test visual_fidelity_diagnostic_is_explicit_and_separate_from_benchmarks ... ok
+test portable_share_defaults_to_1080p_and_adaptive_quality ... ok
+test bounded_profile_cli_rejects_invalid_limits_before_session_start ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+
+     Running tests\decoder_process.rs (D:\IntraLink-validation-v020\target\debug\deps\decoder_process-49728737282febd6.exe)
+
+running 5 tests
+test restricted_decoder_requires_explicit_process_isolation ... ok
+test explicit_job_termination_uses_failure_exit_status ... ok
+test invalid_bootstrap_is_rejected_before_driver_initialization ... ok
+test private_worker_rejects_vault_arguments ... ok
+test kill_on_close_releases_a_real_child_blocked_on_ipc ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_core-3e3e99ad2bbf7776.exe)
+
+running 97 tests
+test adaptive::tests::geometry_transitions_are_keyframe_only_bounded_and_atomic ... ok
+test adaptive::tests::static_neutral_and_approved_ceiling_prevent_unwanted_transitions ... ok
+test calibration::tests::malformed_or_unmeasured_layouts_are_rejected ... ok
+test calibration::tests::mixed_ceilings_use_one_observed_cohort_and_keep_manual_bounds ... ok
+test canvas::tests::full_size_overwrites_every_byte_and_ignores_alpha ... ok
+test adaptive::tests::mode_and_payload_bounds_are_enforced ... ok
+test adaptive::tests::pressure_reduces_stepwise_and_recovers_to_approved_ceiling ... ok
+test capabilities::tests::local_codec_ceiling_and_request_roundtrip ... ok
+test desktop::tests::configuration_is_bounded_and_versioned ... ok
+test desktop::tests::credit_is_bounded_and_receipts_are_ordered ... ok
+test canvas::tests::odd_bars_are_centered_and_old_content_is_erased ... ok
+test desktop::tests::priority_feedback_is_ordered_and_cannot_grant_credit ... ok
+test desktop::tests::requests_and_acknowledgments_are_exact ... ok
+test adaptive::tests::request_and_alpn_are_distinct_without_fallback ... ok
+test calibration::tests::eight_measured_workers_do_not_divide_their_budget_again ... ok
+test calibration::tests::slow_devices_choose_best_balanced_feasible_layout ... ok
+test capabilities::tests::all_masks_are_bounded_and_selection_is_symmetric ... ok
+test canvas::tests::invalid_lengths_and_dimensions_leave_output_unchanged ... ok
+test desktop::tests::lengths_are_bounded_before_allocation ... ok
+test h264::parameters::tests::native_parameter_sets_match_exact_profiles ... ok
+test h264::tests::envelope_rejects_limits_and_unknown_flags ... ok
+test h264::parameters::tests::rbsp_escape_rules_and_exp_golomb_limits ... ok
+test h264::parameters::tests::truncated_parameter_sets_and_extra_rbsp_are_rejected ... ok
+test h264::tests::rejected_parameter_change_does_not_advance_state ... ok
+test h264::tests::profile_and_wire_version_are_exact ... ok
+test h264::tests::rejects_missing_headers_b_slices_and_multiple_pictures ... ok
+test h264::tests::state_rejects_missing_base_gaps_and_gop_expiration_atomically ... ok
+test host_calibration::tests::rejects_duplicate_unknown_zero_and_over_ceiling_samples ... ok
+test host_calibration::tests::selects_measured_best_backend_at_highest_usable_resolution ... ok
+test host_calibration::tests::cpu_only_path_can_select_lower_resolution_and_rate ... ok
+test journal::tests::maximal_numeric_values_fit_reserved_line_budget ... ok
+test journal::tests::rejects_duplicate_wrong_and_out_of_order_end_records ... ok
+test journal::tests::rejects_truncation_control_fields_and_unbounded_input ... ok
+test journal::tests::roundtrip_preserves_unknown_cancelled_and_completed_outcomes ... ok
+test media::compact::tests::palette_padding_and_invalid_index_are_rejected ... ok
+test media::compact::tests::runs_must_cover_the_exact_tile ... ok
+test h264::tests::every_truncation_and_mutation_is_bounded ... ok
+test media::tests::budget_exhaustion_never_emits_partial_updates ... ok
+test network::tests::each_family_is_bounded_and_selection_is_idempotent ... ok
+test network::tests::comparison_is_family_aware_and_normalizes_mapped_values ... ok
+test network::tests::malformed_or_unsupported_destinations_are_not_attempted ... ok
+test network::tests::mapped_addresses_are_deduplicated_before_family_limits ... ok
+test network::tests::scan_budget_is_bounded_even_for_duplicate_answers ... ok
+test network::tests::private_and_shared_ip_labels_do_not_assert_reachability ... ok
+test overview::tests::every_layout_has_nonoverlapping_cards_and_distinct_controls ... ok
+test overview::tests::pointer_mapping_respects_bars_and_nonfinite_input ... ok
+test pacing::tests::intermittent_changes_do_not_enter_idle_mode ... ok
+test pacing::tests::sixty_fps_and_background_cadence ... ok
+test media::compact::budget_tests::early_run_budget_rejection_preserves_exact_best_encoding ... ok
+test pacing::tests::slower_profiles_are_never_accelerated_or_delayed ... ok
+test pacing::tests::static_scene_slows_in_two_bounded_steps ... ok
+test presentation::tests::adaptive_keyframe_replaces_geometry_without_mutating_old_snapshot ... ok
+test presentation::tests::allocation_is_reused_when_no_snapshot_is_held ... ok
+test presentation::tests::concurrent_presentation_keeps_immutable_pixels ... ok
+test presentation::tests::failed_decode_poisoning_preserves_old_snapshot_but_hides_partial_update ... ok
+test presentation::tests::invalid_geometry_is_rejected_before_decoding ... ok
+test presentation::tests::short_decode_cannot_be_published ... ok
+test presentation::tests::unchanged_or_older_sequence_never_creates_a_snapshot ... ok
+test profile_limits::tests::malformed_limits_and_changed_selection_are_rejected ... ok
+test quality::tests::pressure_is_bounded_and_background_does_not_signal_recovery ... ok
+test quality::tests::recovery_is_slower_and_never_exceeds_approved_quality ... ok
+test quality::tests::static_and_neutral_interrupt_streaks_and_floor_is_safe ... ok
+test quality::tests::sustained_high_pressure_reduces_quality_and_floor_is_enforced ... ok
+test resources::tests::cpu_never_reports_unavailable_or_nonfinite_data_as_a_measurement ... ok
+test resources::tests::memory_is_checked_and_used_cannot_underflow ... ok
+test telemetry::tests::actual_elapsed_time_and_distinct_rates ... ok
+test telemetry::tests::resets_never_report_old_session_rates ... ok
+test telemetry::tests::concurrent_updates_are_not_lost ... ok
+test telemetry::tests::stages_are_independent_and_payload_is_counted_once ... ok
+test tests::accepts_only_single_duckdns_label ... ok
+test tests::only_exact_probe_is_valid ... ok
+test tests::roles_are_directional ... ok
+test profile_limits::tests::valid_limits_and_exact_intersection ... ok
+test workspace::tests::bounds_and_all_eight_slots ... ok
+test workspace::tests::inactive_is_distinct_from_background_and_all_live ... ok
+test workspace::tests::three_live_devices_switch_focus_without_deactivation ... ok
+test yuv::tests::averages_chroma_and_preserves_stride_padding ... ok
+test media::tests::malformed_later_compact_tile_cannot_apply_earlier_tile ... ok
+test yuv::tests::invalid_layouts_are_atomic ... ok
+test yuv::tests::primary_color_vectors ... ok
+test yuv::tests::black_white_and_neutral_grays ... ok
+test overview::tests::invalid_geometry_and_source_leave_canvas_unchanged ... ok
+test media::tests::malformed_updates_do_not_mutate_pixels ... ok
+test media::tests::invalid_keyframes_never_resize_or_mutate_existing_canvas ... ok
+test media::tests::compact_records_are_rejected_by_basic_tiles_and_jpeg ... ok
+test overview::tests::thumbnail_preserves_aspect_and_does_not_touch_other_cards ... ok
+test desktop::tests::credit_cannot_exceed_absolute_sequence_budget ... ok
+test media::tests::keyframe_budget_and_mode_fail_closed ... ok
+test media::tests::edge_tiles_round_trip_and_solid_tiles_are_nine_bytes ... ok
+test media::tests::uniform_row_comparison_preserves_nonuniform_edge_tiles ... ok
+test media::tests::failed_compact_delta_implies_no_complete_keyframe_with_same_or_smaller_budget ... ok
+test media::tests::lossless_keyframe_and_following_delta_preserve_every_pixel ... ok
+test media::tests::ordered_deltas_reconstruct_changed_tiles_and_restore_pixels ... ok
+test media::tests::compact_selects_smallest_exact_tile_representation ... ok
+test media::tests::compact_never_exceeds_basic_payload_under_same_budget ... ok
+test media::tests::compact_palette_cardinalities_and_edge_geometry_round_trip ... ok
+test media::tests::lossless_uniform_keyframes_have_full_coverage_at_all_resolutions ... ok
+
+test result: ok. 97 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_d3d11-ed7cea5e27dcf8da.exe)
+
+running 3 tests
+test nvenc_check::tests::annex_b_checks_required_nals_and_ignores_forbidden_bit ... ok
+test readback::tests::readback_geometry_and_pitch_are_bounded ... ok
+test readback::tests::nv12_layout_rejects_odd_and_invalid_dimensions_and_pitch ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_transport-5df30fe935c76eeb.exe)
+
+running 47 tests
+test desktop::adaptive_tests::v8_cannot_negotiate_adaptive_only_endpoint ... ok
+test desktop::pipeline::tests::first_keyframe_cannot_have_overlapping_demand ... ok
+test desktop::pipeline::tests::reservations_share_existing_credit_and_record_limit ... ok
+test desktop::pipeline_tests::capture_grant_rejects_early_duplicate_and_canceled_starts ... ok
+test desktop::h264_tests::separate_alpn_and_non_loopback_routes_are_rejected ... ok
+test desktop::h264_tests::unapproved_identity_never_requests_h264_capture ... ok
+test desktop::adaptive_tests::adaptive_rejects_delta_as_first_frame_without_delivery ... ok
+test desktop::h264_tests::invalid_peer_access_unit_is_rejected_before_consumer_and_ack ... ok
+test desktop::bounded_tests::bounded_selection_reduces_codec_height_and_fps_before_capture ... ok
+test desktop::h264_tests::invalid_local_access_unit_never_reaches_consumer ... ok
+test desktop::h264_tests::early_local_timer_does_not_grant_next_capture ... ok
+test desktop::adaptive_tests::wrong_identity_cannot_request_adaptive_capture ... ok
+test desktop::adaptive_tests::invalid_peer_geometry_is_rejected_before_consumer_and_receipt ... ok
+test desktop::h264_tests::unapproved_profile_never_requests_capture ... ok
+test desktop::negotiated_tests::viewer_rejects_host_selection_outside_intersection ... ok
+test desktop::bounded_tests::viewer_rejects_host_exceeding_receiver_limits_before_confirmation ... ok
+test desktop::negotiated_tests::chooses_mutual_compact_and_reconstructs_real_pixels ... ok
+test desktop::tests::payload_preparation_preserves_allocation_and_rejects_invalid_sizes ... ok
+test desktop::negotiated_tests::negotiation_requires_identity_and_explicit_version ... ok
+test desktop::pipeline_tests::reply_without_start_is_rejected ... ok
+test desktop::pipeline_tests::wrong_identity_never_reserves_pipeline_capture ... ok
+test desktop::tests::authorized_source_can_stop_without_capture ... ok
+test desktop::tests::mismatched_media_mode_never_requests_capture ... ok
+test desktop::tests::no_update_before_first_frame_is_rejected_by_receiver ... ok
+test desktop::tests::no_update_before_first_frame_is_rejected_by_sender ... ok
+test desktop::tests::rejected_identity_never_requests_capture ... ok
+test desktop::h264_tests::ordered_h264_records_keep_coded_sequence_distinct_from_receipts ... ok
+test desktop::tests::repeat_before_first_frame_is_rejected ... ok
+test tests::authorized_probe_on_loopback ... ok
+test tests::multiple_candidates_include_reachable_address ... ok
+test tests::mapped_ipv4_route_uses_real_ipv4_transport ... ok
+test desktop::negotiated_tests::different_codec_ceilings_negotiate_before_capture ... ok
+test tests::wrong_host_pin_is_rejected ... ok
+test tests::unapproved_identity_is_rejected ... ok
+test desktop::negotiated_tests::invalid_offer_or_confirmation_cannot_start_capture ... ok
+test desktop::bounded_tests::malformed_limits_and_wrong_confirmation_never_request_capture ... ok
+test desktop::pipeline_tests::two_demands_overlap_and_out_of_order_completion_is_serialized ... ok
+test desktop::tests::changed_and_repeat_records_preserve_sequence_and_recycle_buffer ... ok
+test desktop::tests::three_sessions_are_isolated_when_one_host_refuses ... ok
+test desktop::pipeline_tests::reserved_start_is_based_on_actual_previous_start ... ok
+test desktop::tests::receiver_reuses_consumed_payload_across_ordered_records ... ok
+test desktop::tests::no_update_is_ordered_but_never_decoded_or_counted_as_repeat ... ok
+test desktop::pipeline_tests::reserved_unsent_demands_cannot_expand_credit ... ok
+test desktop::tests::credit_allows_bounded_records_before_ack_and_drains_at_end ... ok
+test desktop::tests::wrong_ack_cannot_exceed_credit_window ... ok
+test desktop::adaptive_tests::adaptive_downshift_and_recovery_preserve_one_authenticated_session ... ok
+test desktop::tests::diagnostic_protocol_cannot_open_view_listener ... ok
+
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.28s
+
+     Running tests\multi_host.rs (D:\IntraLink-validation-v020\target\debug\deps\multi_host-6bbd326c87dd0193.exe)
+
+running 3 tests
+test one_controller_three_paired_hosts_keep_independent_compact_canvases ... ok
+test one_controller_three_paired_hosts_negotiate_independent_receiver_limits ... ok
+test stopping_one_view_preserves_sibling_and_allows_later_connection ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.90s
+
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_vault-307103b0bf62829f.exe)
+
+running 11 tests
+test profile::tests::legacy_profile_fields_are_accepted ... ok
+test profile::tests::role_isolation_and_revocation ... ok
+test profile::tests::rejects_invalid_routes_and_self_pairing ... ok
+test invitation::tests::signed_codes_reject_tampering_and_wrong_kind ... ok
+test profile::tests::canceled_or_replaced_offers_cannot_activate ... ok
+test profile::tests::invitation_needs_both_approvals_and_cannot_be_reused ... ok
+test store::tests::save_rejects_corrupted_existing_ciphertext ... ok
+test store::tests::save_rejects_wrong_password_and_identity_without_overwriting ... ok
+test envelope::tests::roundtrip_and_reject_tampering ... ok
+test store::tests::persistent_identity_and_revocation ... ok
+test store::tests::pending_offer_and_replay_state_survive_vault_reopen ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.59s
+
+   Doc-tests intralink_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests intralink_d3d11
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests intralink_transport
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests intralink_vault
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT test-nvidia 0
+START test-scalar
+   Compiling intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 9.24s
+     Running unittests src\main.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink-5c18d238353629e1.exe)
+
+running 52 tests
+test ddns::tests::update_address_modes ... ok
+test desktop::calibration::tests::capture_lock_diagnostic_is_explicit_and_exclusive ... ok
+test desktop::host_capture::tests::explicit_backend_never_silently_falls_back ... ok
+test desktop::host_capture::tests::identity_requires_same_display_name_geometry_position_and_rotation ... ok
+test desktop::host_calibration::tests::cancellation_prevents_dense_encoding ... ok
+test desktop::host_pipeline::tests::demand_gate_keeps_one_slot_and_never_starts_early ... ok
+test desktop::jpeg_parallel::tests::generated_header_rejects_invalid_and_mismatched_strips ... ok
+test desktop::codec::tests::compact_hybrid_decodes_palette_after_lossless_keyframe_and_rejects_mode_switch ... ok
+test desktop::host_pipeline::tests::lane_holds_only_two_and_keeps_exact_delta_base ... ok
+test desktop::codec::tests::malformed_oversized_and_wrong_dimensions_are_rejected ... ok
+test desktop::host_pipeline::tests::stop_joins_active_and_discards_queued_without_publication ... ok
+test desktop::jpeg::tests::bounded_writer_rejects_before_mutation_and_reuses_capacity ... ok
+test desktop::overview::tests::all_supported_card_counts_render_in_one_reusable_canvas ... ok
+test desktop::overview::tests::busy_decoder_retains_thumbnail_but_session_restart_invalidates_it ... ok
+test desktop::overview::tests::disconnected_card_removes_all_previous_pixels ... ok
+test desktop::resize::tests::aspect_and_rounding ... ok
+test desktop::overview::tests::local_notice_preserves_original_pixels_and_reuses_scratch ... ok
+test desktop::receive_limits::tests::per_device_limits_are_independent_and_bounded ... ok
+test desktop::resize::tests::downsampling_preserves_antialiasing ... ok
+test desktop::resize::tests::invalid_geometry_is_atomic_and_exact_size_skips_resize ... ok
+test desktop::resize::tests::opaque_screen_colors_and_reused_buffer ... ok
+test desktop::source_status::tests::no_update_notice_is_delayed_and_only_observed_pixels_clear_it ... ok
+test desktop::codec::tests::hybrid_uses_ordered_tiles_after_keyframe ... ok
+test desktop::codec::tests::codec_round_trip_and_letterbox ... ok
+test discovery::tests::discovery_is_restricted_to_private_ipv4_hints ... ok
+test desktop::jpeg_parallel::tests::oversized_combined_frame_is_atomic ... ok
+test journal::tests::opt_out_does_not_create_file_and_corruption_blocks_operation ... ok
+test journal::tests::full_or_busy_journal_is_not_overwritten ... ok
+test resources::tests::json_distinguishes_missing_metrics_from_zero_usage ... ok
+test resources::tests::missing_cpu_is_not_printed_as_idle_and_ram_uses_bytes ... ok
+test routing::tests::address_classes_do_not_claim_reachability ... ok
+test routing::tests::candidates_are_bounded_unique_and_dual_stack ... ok
+test routing::tests::numeric_routes_are_normalized_without_dns ... ok
+test journal::tests::wrapper_records_completion_and_preserves_command_error ... ok
+test journal::tests::recording_persists_and_interruption_is_unknown ... ok
+test desktop::jpeg::oversized_dense_jpeg_leaves_no_partial_record ... ok
+test desktop::codec::tests::compact_exact_then_jpeg_then_exact_refresh ... ok
+test desktop::calibration::tests::failed_warmup_cancels_waiting_workers ... ok
+test desktop::codec::tests::static_pixels_skip_encoding_and_change_triggers_new_jpeg ... ok
+test desktop::visual_fidelity::tests::detects_channel_swap_local_corruption_and_lossless_mismatch ... ok
+test desktop::visual_fixture::tests::reference_cards_are_stable_and_animation_is_localized ... ok
+test desktop::codec::tests::adaptive_encoder_forces_keyframe_and_decoder_rejects_unnegotiated_geometry ... ok
+test desktop::calibration::fixtures::tests::generated_jpeg_fits_wire_limit_at_every_resolution ... ok
+test desktop::jpeg::tests::preserves_baseline_sampling_quantization_and_image_quality ... ok
+test desktop::media_check::tests::static_markers_distinguish_final_update_from_stale_frame ... ok
+test desktop::media_check::tests::fixture_markers_survive_animation_and_reject_wrong_content ... ok
+test desktop::visual_fidelity::tests::accepts_real_jpeg_and_ordered_tiles_for_generated_scene ... ok
+test desktop::calibration::tests::concurrent_mixed_geometry_workers_complete_and_join ... ok
+test desktop::codec::tests::adaptive_jpeg_quality_preserves_1080p_wire_config_and_reduces_payload ... ok
+test desktop::calibration::tests::real_software_fixtures_round_trip_without_timing_assumptions ... ok
+test desktop::host_calibration::tests::changing_dense_fixture_uses_production_codecs_and_keeps_marker ... ok
+test desktop::jpeg_parallel::tests::restart_strips_decode_identically_to_serial_at_every_tier ... ok
+
+test result: ok. 52 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.23s
+
+     Running tests\cli_smoke.rs (D:\IntraLink-validation-v020\target\debug\deps\cli_smoke-bd18d1c42c4cc68a.exe)
+
+running 8 tests
+test cli_help_and_version_exit_successfully ... ok
+test encoder_diagnostic_is_local_and_explicit ... ok
+test host_calibration_is_opt_in_and_keeps_explicit_capture ... ok
+test calibration_cli_is_explicit_and_validated_before_connection ... ok
+test visual_fidelity_diagnostic_is_explicit_and_separate_from_benchmarks ... ok
+test pipeline_requires_explicit_fixed_profile_before_connection ... ok
+test portable_share_defaults_to_1080p_and_adaptive_quality ... ok
+test bounded_profile_cli_rejects_invalid_limits_before_session_start ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.23s
+
+     Running tests\decoder_process.rs (D:\IntraLink-validation-v020\target\debug\deps\decoder_process-e1b01e47c20ebc6b.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT test-scalar 0
+intralink v0.22.0 (D:\IntraLink\apps\intralink)
+Ôö£ÔöÇÔöÇ anyhow v1.0.105
+Ôö£ÔöÇÔöÇ clap v4.6.10
+Ôöé   Ôö£ÔöÇÔöÇ clap_builder v4.6.10
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ anstream v1.0.0
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ anstyle v1.0.14
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ anstyle-parse v1.0.0
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ utf8parse v0.2.2
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ anstyle-query v1.1.5
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ windows-sys v0.61.2
+Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ windows-link v0.2.1
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ anstyle-wincon v3.0.11
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ anstyle v1.0.14
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ once_cell_polyfill v1.70.2
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ windows-sys v0.61.2 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ colorchoice v1.0.5
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ is_terminal_polyfill v1.70.2
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ utf8parse v0.2.2
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ anstyle v1.0.14
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ clap_lex v1.1.2
+Ôöé   Ôöé   ÔööÔöÇÔöÇ strsim v0.11.1
+Ôöé   ÔööÔöÇÔöÇ clap_derive v4.6.9 (proc-macro)
+Ôöé       Ôö£ÔöÇÔöÇ heck v0.5.0
+Ôöé       Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107
+Ôöé       Ôöé   ÔööÔöÇÔöÇ unicode-ident v1.0.27
+Ôöé       Ôö£ÔöÇÔöÇ quote v1.0.47
+Ôöé       Ôöé   ÔööÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé       ÔööÔöÇÔöÇ syn v3.0.10
+Ôöé           Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé           Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé           ÔööÔöÇÔöÇ unicode-ident v1.0.27
+Ôö£ÔöÇÔöÇ directories v6.0.0
+Ôöé   ÔööÔöÇÔöÇ dirs-sys v0.5.0
+Ôöé       Ôö£ÔöÇÔöÇ option-ext v0.2.0
+Ôöé       ÔööÔöÇÔöÇ windows-sys v0.61.2 (*)
+Ôö£ÔöÇÔöÇ fast_image_resize v6.2.0
+Ôöé   Ôö£ÔöÇÔöÇ cfg-if v1.0.5
+Ôöé   Ôö£ÔöÇÔöÇ document-features v0.2.12 (proc-macro)
+Ôöé   Ôöé   ÔööÔöÇÔöÇ litrs v1.1.0
+Ôöé   Ôö£ÔöÇÔöÇ num-traits v0.2.19
+Ôöé   ÔööÔöÇÔöÇ thiserror v2.0.21
+Ôöé       ÔööÔöÇÔöÇ thiserror-impl v2.0.21 (proc-macro)
+Ôöé           Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé           Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé           ÔööÔöÇÔöÇ syn v3.0.10 (*)
+Ôö£ÔöÇÔöÇ fs2 v0.4.3
+Ôöé   ÔööÔöÇÔöÇ winapi v0.3.9
+Ôö£ÔöÇÔöÇ image v0.25.10
+Ôöé   Ôö£ÔöÇÔöÇ bytemuck v1.25.2
+Ôöé   Ôö£ÔöÇÔöÇ byteorder-lite v0.1.0
+Ôöé   Ôö£ÔöÇÔöÇ moxcms v0.8.1
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ num-traits v0.2.19
+Ôöé   Ôöé   ÔööÔöÇÔöÇ pxfm v0.1.30
+Ôöé   Ôö£ÔöÇÔöÇ num-traits v0.2.19
+Ôöé   Ôö£ÔöÇÔöÇ png v0.18.1
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ bitflags v2.13.2
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ crc32fast v1.5.6
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ cfg-if v1.0.5
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ fdeflate v0.3.7
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ simd-adler32 v0.3.10
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ flate2 v1.1.11
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ crc32fast v1.5.6 (*)
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ miniz_oxide v0.9.1
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ adler2 v2.0.1
+Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ simd-adler32 v0.3.10
+Ôöé   Ôöé   ÔööÔöÇÔöÇ miniz_oxide v0.8.9
+Ôöé   Ôöé       Ôö£ÔöÇÔöÇ adler2 v2.0.1
+Ôöé   Ôöé       ÔööÔöÇÔöÇ simd-adler32 v0.3.10
+Ôöé   Ôö£ÔöÇÔöÇ zune-core v0.5.3
+Ôöé   ÔööÔöÇÔöÇ zune-jpeg v0.5.15
+Ôöé       ÔööÔöÇÔöÇ zune-core v0.5.3
+Ôö£ÔöÇÔöÇ intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+Ôöé   ÔööÔöÇÔöÇ serde v1.0.229
+Ôöé       Ôö£ÔöÇÔöÇ serde_core v1.0.229
+Ôöé       ÔööÔöÇÔöÇ serde_derive v1.0.229 (proc-macro)
+Ôöé           Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé           Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé           ÔööÔöÇÔöÇ syn v3.0.10 (*)
+Ôö£ÔöÇÔöÇ intralink-d3d11 v0.22.0 (D:\IntraLink\crates\intralink-d3d11)
+Ôöé   Ôö£ÔöÇÔöÇ anyhow v1.0.105
+Ôöé   Ôö£ÔöÇÔöÇ windows v0.62.2
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ windows-collections v0.3.2
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ windows-core v0.62.2
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ windows-implement v0.60.2 (proc-macro)
+Ôöé   Ôöé   Ôöé       Ôöé   Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé       Ôöé   Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé       Ôöé   ÔööÔöÇÔöÇ syn v2.0.119
+Ôöé   Ôöé   Ôöé       Ôöé       Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé       Ôöé       Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé       Ôöé       ÔööÔöÇÔöÇ unicode-ident v1.0.27
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ windows-interface v0.59.3 (proc-macro)
+Ôöé   Ôöé   Ôöé       Ôöé   Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé       Ôöé   Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé       Ôöé   ÔööÔöÇÔöÇ syn v2.0.119 (*)
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ windows-link v0.2.1
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ windows-result v0.4.1
+Ôöé   Ôöé   Ôöé       Ôöé   ÔööÔöÇÔöÇ windows-link v0.2.1
+Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ windows-strings v0.5.1
+Ôöé   Ôöé   Ôöé           ÔööÔöÇÔöÇ windows-link v0.2.1
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ windows-core v0.62.2 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ windows-future v0.3.2
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ windows-core v0.62.2 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ windows-link v0.2.1
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ windows-threading v0.2.1
+Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ windows-link v0.2.1
+Ôöé   Ôöé   ÔööÔöÇÔöÇ windows-numerics v0.3.1
+Ôöé   Ôöé       Ôö£ÔöÇÔöÇ windows-core v0.62.2 (*)
+Ôöé   Ôöé       ÔööÔöÇÔöÇ windows-link v0.2.1
+Ôöé   ÔööÔöÇÔöÇ windows-capture v2.0.1
+Ôöé       Ôö£ÔöÇÔöÇ parking_lot v0.12.5
+Ôöé       Ôöé   Ôö£ÔöÇÔöÇ lock_api v0.4.14
+Ôöé       Ôöé   Ôöé   ÔööÔöÇÔöÇ scopeguard v1.2.0
+Ôöé       Ôöé   ÔööÔöÇÔöÇ parking_lot_core v0.9.12
+Ôöé       Ôöé       Ôö£ÔöÇÔöÇ cfg-if v1.0.5
+Ôöé       Ôöé       Ôö£ÔöÇÔöÇ smallvec v1.16.6
+Ôöé       Ôöé       ÔööÔöÇÔöÇ windows-link v0.2.1
+Ôöé       Ôö£ÔöÇÔöÇ rayon v1.12.0
+Ôöé       Ôöé   Ôö£ÔöÇÔöÇ either v1.19.0
+Ôöé       Ôöé   ÔööÔöÇÔöÇ rayon-core v1.13.0
+Ôöé       Ôöé       Ôö£ÔöÇÔöÇ crossbeam-deque v0.8.8
+Ôöé       Ôöé       Ôöé   Ôö£ÔöÇÔöÇ crossbeam-epoch v0.9.21
+Ôöé       Ôöé       Ôöé   Ôöé   ÔööÔöÇÔöÇ crossbeam-utils v0.8.23
+Ôöé       Ôöé       Ôöé   ÔööÔöÇÔöÇ crossbeam-utils v0.8.23
+Ôöé       Ôöé       ÔööÔöÇÔöÇ crossbeam-utils v0.8.23
+Ôöé       Ôö£ÔöÇÔöÇ thiserror v2.0.21 (*)
+Ôöé       Ôö£ÔöÇÔöÇ windows v0.62.2 (*)
+Ôöé       ÔööÔöÇÔöÇ windows-future v0.3.2 (*)
+Ôö£ÔöÇÔöÇ intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+Ôöé   Ôö£ÔöÇÔöÇ anyhow v1.0.105
+Ôöé   Ôö£ÔöÇÔöÇ intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core) (*)
+Ôöé   Ôö£ÔöÇÔöÇ iroh v1.5.0
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ backon v1.6.0
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ fastrand v2.5.0
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ tokio v1.54.1
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ bytes v1.12.2
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ mio v1.2.5
+Ôöé   Ôöé   Ôöé       Ôöé   Ôö£ÔöÇÔöÇ log v0.4.35
+Ôöé   Ôöé   Ôöé       Ôöé   ÔööÔöÇÔöÇ windows-sys v0.61.2 (*)
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ pin-project-lite v0.2.18
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ socket2 v0.6.5
+Ôöé   Ôöé   Ôöé       Ôöé   ÔööÔöÇÔöÇ windows-sys v0.61.2 (*)
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ tokio-macros v2.7.2 (proc-macro)
+Ôöé   Ôöé   Ôöé       Ôöé   Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé       Ôöé   Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé       Ôöé   ÔööÔöÇÔöÇ syn v3.0.10 (*)
+Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ windows-sys v0.61.2 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ blake3 v1.8.7
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ arrayvec v0.7.8
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cfg-if v1.0.5
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ constant_time_eq v0.4.2
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ cpufeatures v0.3.1
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ bytes v1.12.2
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ctutils v0.4.8
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ cmov v0.5.4
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ data-encoding v2.11.1
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ derive_more v2.1.1
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ derive_more-impl v2.1.1 (proc-macro)
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ convert_case v0.10.0
+Ôöé   Ôöé   Ôöé       Ôöé   ÔööÔöÇÔöÇ unicode-segmentation v1.13.3
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ syn v2.0.119 (*)
+Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ unicode-xid v0.2.6
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ed25519-dalek v3.0.0
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ curve25519-dalek v5.0.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cfg-if v1.0.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cpufeatures v0.3.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ curve25519-dalek-derive v0.1.1 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ syn v2.0.119 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ digest v0.11.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ block-buffer v0.12.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ hybrid-array v0.4.15
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ typenum v1.20.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ crypto-common v0.2.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ hybrid-array v0.4.15 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ rand_core v0.10.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rand_core v0.10.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ serde v1.0.229 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ subtle v2.6.1
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ zeroize v1.9.2
+Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ zeroize_derive v1.5.0 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé           Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé           Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé           ÔööÔöÇÔöÇ syn v2.0.119 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ed25519 v3.0.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ pkcs8 v0.11.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ der v0.8.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ const-oid v0.10.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ pem-rfc7468 v1.0.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ base64ct v1.8.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ zeroize v1.9.2 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ spki v0.8.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ der v0.8.3 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ serdect v0.4.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ base16ct v1.0.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ serde v1.0.229 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ signature v3.0.0
+Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ rand_core v0.10.1
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rand_core v0.10.1
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ serde v1.0.229 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ sha2 v0.11.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cfg-if v1.0.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cpufeatures v0.3.1
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ digest v0.11.3 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ signature v3.0.0 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ subtle v2.6.1
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ zeroize v1.9.2 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-util v0.3.34
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-channel v0.3.34
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-core v0.3.34
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ futures-sink v0.3.34
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-core v0.3.34
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-io v0.3.34
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-macro v0.3.34 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ syn v3.0.10 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-sink v0.3.34
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-task v0.3.34
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ memchr v2.8.3
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ pin-project-lite v0.2.18
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ slab v0.4.12
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ http v1.5.0
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ bytes v1.12.2
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ itoa v1.0.19
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ipnet v2.12.2
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ iroh-base v1.5.0
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ curve25519-dalek v5.0.0 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ data-encoding v2.11.1
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ data-encoding-macro v0.1.21
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ data-encoding v2.11.1
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ data-encoding-macro-internal v0.1.19 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ data-encoding v2.11.1
+Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ syn v3.0.10 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ derive_more v2.1.1 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ed25519-dalek v3.0.0 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-error v1.0.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-error-macros v1.0.3 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ syn v2.0.119 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ spez v0.1.2 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ syn v2.0.119 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rand v0.10.4
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ chacha20 v0.10.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cfg-if v1.0.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cpufeatures v0.3.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ rand_core v0.10.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ getrandom v0.4.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cfg-if v1.0.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ rand_core v0.10.1
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ rand_core v0.10.1
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ serde v1.0.229 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tracing v0.1.44
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ log v0.4.35
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ pin-project-lite v0.2.18
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tracing-attributes v0.1.31 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ syn v2.0.119 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ tracing-core v0.1.36
+Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ once_cell v1.21.4
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ url v2.5.9
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ form_urlencoded v1.2.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ percent-encoding v2.3.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ idna v1.1.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ idna_adapter v1.2.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ icu_normalizer v2.4.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ icu_collections v2.4.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ displaydoc v0.2.7 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ syn v3.0.10 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ potential_utf v0.1.6
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ zerovec v0.11.9
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ yoke v0.8.4
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé   Ôö£ÔöÇÔöÇ stable_deref_trait v1.2.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé   Ôö£ÔöÇÔöÇ yoke-derive v0.8.4 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé   Ôöé   Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé   Ôöé   Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé   Ôöé   Ôö£ÔöÇÔöÇ syn v3.0.10 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé   Ôöé   ÔööÔöÇÔöÇ synstructure v0.14.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé   Ôöé       Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé   Ôöé       Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé   Ôöé       ÔööÔöÇÔöÇ syn v3.0.10 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé   ÔööÔöÇÔöÇ zerofrom v0.1.8
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé       ÔööÔöÇÔöÇ zerofrom-derive v0.1.8 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé           Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé           Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé           Ôö£ÔöÇÔöÇ syn v3.0.10 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé           ÔööÔöÇÔöÇ synstructure v0.14.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ zerofrom v0.1.8 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ zerovec-derive v0.11.7 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé           Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé           Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé           ÔööÔöÇÔöÇ syn v3.0.10 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ utf8_iter v1.1.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ utf_types v1.0.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ yoke v0.8.4 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ zerofrom v0.1.8 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ zerovec v0.11.9 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ icu_normalizer_data v2.4.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ icu_provider v2.4.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ displaydoc v0.2.7 (proc-macro) (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ icu_locale_core v2.4.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ displaydoc v0.2.7 (proc-macro) (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ litemap v0.8.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tinystr v0.8.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ displaydoc v0.2.7 (proc-macro) (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ zerovec v0.11.9 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ writeable v0.6.4
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ zerovec v0.11.9 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ writeable v0.6.4
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ yoke v0.8.4 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ zerofrom v0.1.8 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ zerotrie v0.2.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ displaydoc v0.2.7 (proc-macro) (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ yoke v0.8.4 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ zerofrom v0.1.8 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ zerovec v0.11.9 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ smallvec v1.16.6
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ zerovec v0.11.9 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ icu_properties v2.4.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ displaydoc v0.2.7 (proc-macro) (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ icu_collections v2.4.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ icu_locale_core v2.4.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ icu_properties_data v2.4.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ icu_provider v2.4.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ zerotrie v0.2.5 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ zerovec v0.11.9 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ smallvec v1.16.6
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ utf8_iter v1.1.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ percent-encoding v2.3.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ serde v1.0.229 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ serde_derive v1.0.229 (proc-macro) (*)
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ zeroize v1.9.2 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ iroh-dns v1.5.0
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ arc-swap v1.9.5
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ rustversion v1.0.23 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ derive_more v2.1.1 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ iroh-base v1.5.0 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-dns-resolver v0.1.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ derive_more v2.1.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ipconfig v0.3.4
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ socket2 v0.6.5 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ widestring v1.2.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ windows-registry v0.6.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ windows-link v0.2.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ windows-result v0.4.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ windows-strings v0.5.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ windows-result v0.4.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ windows-sys v0.61.2 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ lru v0.18.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ hashbrown v0.17.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ foldhash v0.2.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-error v1.0.3 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-future v0.3.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ derive_more v2.1.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-buffered v0.2.14
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cordyceps v0.3.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ diatomic-waker v0.2.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ fixedbitset v0.5.9
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-core v0.3.34
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ pin-project-lite v0.2.18
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ spin v0.10.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-lite v2.6.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ fastrand v2.5.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-core v0.3.34
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-io v0.3.34
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ parking v2.2.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ pin-project-lite v0.2.18
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-util v0.3.34 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ pin-project v1.2.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ pin-project-internal v1.2.0 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ syn v3.0.10 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ tokio-util v0.7.20
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ bytes v1.12.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ futures-core v0.3.34
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ futures-sink v0.3.34
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ futures-util v0.3.34 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ pin-project-lite v0.2.18
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rand v0.10.4 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ reqwest v0.13.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ base64 v0.23.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ bytes v1.12.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-core v0.3.34
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-util v0.3.34 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ http v1.5.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ http-body v1.1.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ bytes v1.12.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ http v1.5.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ http-body-util v0.1.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ bytes v1.12.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-core v0.3.34
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ http v1.5.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ http-body v1.1.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ pin-project-lite v0.2.18
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ hyper v1.13.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ atomic-waker v1.1.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ bytes v1.12.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-core v0.3.34
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ http v1.5.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ http-body v1.1.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ httparse v1.10.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ httpdate v1.0.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ itoa v1.0.19
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ pin-project-lite v0.2.18
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ smallvec v1.16.6
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ want v0.3.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ try-lock v0.2.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ hyper-rustls v0.27.10
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ http v1.5.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ hyper v1.13.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ hyper-util v0.1.21
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ base64 v0.23.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ bytes v1.12.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-channel v0.3.34 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-util v0.3.34 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ http v1.5.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ http-body v1.1.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ httparse v1.10.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ hyper v1.13.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ipnet v2.12.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ libc v0.2.191
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ percent-encoding v2.3.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ pin-project-lite v0.2.18
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ socket2 v0.6.5 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tower-service v0.3.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ tracing v0.1.44 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls v0.23.46
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ log v0.4.35
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ once_cell v1.21.4
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ring v0.17.14
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cfg-if v1.0.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ getrandom v0.2.17
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ cfg-if v1.0.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ untrusted v0.9.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls-pki-types v1.16.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ zeroize v1.9.2 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls-webpki v0.103.17
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ring v0.17.14 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls-pki-types v1.16.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ untrusted v0.9.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ subtle v2.6.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ zeroize v1.9.2 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio-rustls v0.26.6
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls v0.23.46 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tower-service v0.3.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ webpki-roots v1.0.12
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ rustls-pki-types v1.16.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ hyper-util v0.1.21 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ log v0.4.35
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ percent-encoding v2.3.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ pin-project-lite v0.2.18
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls v0.23.46 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls-pki-types v1.16.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls-platform-verifier v0.7.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ log v0.4.35
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls v0.23.46 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ windows-sys v0.61.2 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ sync_wrapper v1.0.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ futures-core v0.3.34
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio-rustls v0.26.6 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio-util v0.7.20 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tower v0.5.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-core v0.3.34
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-util v0.3.34 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ pin-project-lite v0.2.18
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ sync_wrapper v1.0.2 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tower-layer v0.3.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ tower-service v0.3.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tower-http v0.6.11
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ bitflags v2.13.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ bytes v1.12.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-util v0.3.34 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ http v1.5.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ http-body v1.1.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ pin-project-lite v0.2.18
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tower v0.5.3 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tower-layer v0.3.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tower-service v0.3.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ url v2.5.9 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tower-service v0.3.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ url v2.5.9 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustc-hash v2.1.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls v0.23.46 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ simple-dns v0.13.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ bitflags v2.13.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio-rustls v0.26.6 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tracing v0.1.44 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ webpki-roots v1.0.12 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-error v1.0.3 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-future v0.3.2 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ portable-atomic v1.15.0
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ serde v1.0.229 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rand v0.10.4 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls v0.23.46 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ simple-dns v0.13.1 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ strum v0.28.0
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ strum_macros v0.28.0 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ heck v0.5.0
+Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ syn v2.0.119 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tracing v0.1.44 (*)
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ url v2.5.9 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ iroh-metrics v1.0.3
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ iroh-metrics-derive v1.0.1 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ heck v0.5.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ syn v2.0.119 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ itoa v1.0.19
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-error v1.0.3 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ portable-atomic v1.15.0 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ryu v1.0.23
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ serde v1.0.229 (*)
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ tracing v0.1.44 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ iroh-relay v1.5.0
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ blake3 v1.8.7 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ bytes v1.12.2
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ data-encoding v2.11.1
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ derive_more v2.1.1 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ http v1.5.0 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ http-body-util v0.1.5 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ hyper v1.13.0 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ hyper-util v0.1.21 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ iroh-base v1.5.0 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ iroh-dns v1.5.0 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ iroh-metrics v1.0.3 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ lru v0.19.2
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ hashbrown v0.17.2 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-error v1.0.3 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-future v0.3.2 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ noq v1.5.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ bytes v1.12.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ derive_more v2.1.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ noq-proto v1.5.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ aes-gcm v0.10.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ aead v0.5.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ crypto-common v0.1.7
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ generic-array v0.14.7
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ typenum v1.20.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rand_core v0.6.4
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ getrandom v0.2.17 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ typenum v1.20.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ generic-array v0.14.7 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ aes v0.8.4
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cfg-if v1.0.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cipher v0.4.4
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ crypto-common v0.1.7 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ inout v0.1.4
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ generic-array v0.14.7 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ zeroize v1.9.2 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ cpufeatures v0.2.17
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cipher v0.4.4 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ctr v0.9.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ cipher v0.4.4 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ghash v0.5.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ opaque-debug v0.3.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ polyval v0.6.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ cfg-if v1.0.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ cpufeatures v0.2.17
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ opaque-debug v0.3.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ universal-hash v0.5.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé           Ôö£ÔöÇÔöÇ crypto-common v0.1.7 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé           ÔööÔöÇÔöÇ subtle v2.6.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ subtle v2.6.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ bytes v1.12.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ derive_more v2.1.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ enum-assoc v1.4.2 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ syn v3.0.10 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ identity-hash v0.1.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ lru-slab v0.1.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rand v0.10.4 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rand_pcg v0.10.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ rand_core v0.10.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ring v0.17.14 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustc-hash v2.1.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls v0.23.46 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ slab v0.4.12
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ sorted-index-buffer v0.2.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ thiserror v2.0.21 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tinyvec v1.13.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ tracing v0.1.44 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ noq-udp v1.5.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ libc v0.2.191
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ socket2 v0.6.5 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tracing v0.1.44 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ windows-sys v0.61.2 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ pin-project-lite v0.2.18
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustc-hash v2.1.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls v0.23.46 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ socket2 v0.6.5 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ thiserror v2.0.21 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio-stream v0.1.19
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-core v0.3.34
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ pin-project-lite v0.2.18
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ tokio-util v0.7.20 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ tracing v0.1.44 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ noq-proto v1.5.0 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ num_enum v0.7.6
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ num_enum_derive v0.7.6 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ proc-macro-crate v3.5.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ toml_edit v0.25.21+spec-1.1.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ indexmap v2.14.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé   Ôö£ÔöÇÔöÇ equivalent v1.0.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé   ÔööÔöÇÔöÇ hashbrown v0.17.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ toml_datetime v1.1.3+spec-1.1.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ toml_parser v1.1.7+spec-1.1.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       Ôöé   ÔööÔöÇÔöÇ winnow v1.0.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ winnow v1.0.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ syn v2.0.119 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ rustversion v1.0.23 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ percent-encoding v2.3.2
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ pin-project v1.2.0 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ postcard v1.2.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cobs v0.3.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ thiserror v2.0.21 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ postcard-derive v0.2.3 (proc-macro)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ proc-macro2 v1.0.107 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ quote v1.0.47 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ syn v2.0.119 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ serde v1.0.229 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rand v0.10.4 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ reqwest v0.13.5 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls v0.23.46 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls-pki-types v1.16.0 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ serde v1.0.229 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ serde_bytes v0.11.19
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ serde_core v1.0.229
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ strum v0.28.0 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio-rustls v0.26.6 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio-util v0.7.20 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio-websockets v0.13.3
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ base64 v0.22.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ bytes v1.12.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-core v0.3.34
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-sink v0.3.34
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ getrandom v0.4.3 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ http v1.5.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ httparse v1.10.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rand v0.10.4 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ring v0.17.14 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls-pki-types v1.16.0 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ sha1_smol v1.0.1
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ simdutf8 v0.1.5
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio-rustls v0.26.6 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ tokio-util v0.7.20 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tracing v0.1.44 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ url v2.5.9 (*)
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ webpki-roots v1.0.12 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-error v1.0.3 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-future v0.3.2 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-watcher v1.0.1
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ derive_more v2.1.1 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-error v1.0.3 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-future v0.3.2 (*)
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ slotmap v1.1.1
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ netwatch v0.20.2
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ atomic-waker v1.1.2
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ bytes v1.12.2
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ chrono v0.4.45
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ num-traits v0.2.19
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ serde v1.0.229 (*)
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ windows-link v0.2.1
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ derive_more v2.1.1 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ipnet v2.12.2
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ libc v0.2.191
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-error v1.0.3 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-future v0.3.2 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ n0-watcher v1.0.1 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ netdev v0.47.0
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ipnet v2.12.2
+Ôöé   Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ mac-addr v0.3.0
+Ôöé   Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ windows-sys v0.61.2 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ noq-udp v1.5.0 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ pin-project-lite v0.2.18
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ serde v1.0.229 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ socket2 v0.6.5 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio-util v0.7.20 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tracing v0.1.44 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ windows v0.62.2 (*)
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ windows-result v0.4.1 (*)
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ wmi v0.18.4
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ chrono v0.4.45 (*)
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ futures v0.3.34
+Ôöé   Ôöé   Ôöé       Ôöé   Ôö£ÔöÇÔöÇ futures-channel v0.3.34 (*)
+Ôöé   Ôöé   Ôöé       Ôöé   Ôö£ÔöÇÔöÇ futures-core v0.3.34
+Ôöé   Ôöé   Ôöé       Ôöé   Ôö£ÔöÇÔöÇ futures-executor v0.3.34
+Ôöé   Ôöé   Ôöé       Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-core v0.3.34
+Ôöé   Ôöé   Ôöé       Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-task v0.3.34
+Ôöé   Ôöé   Ôöé       Ôöé   Ôöé   ÔööÔöÇÔöÇ futures-util v0.3.34 (*)
+Ôöé   Ôöé   Ôöé       Ôöé   Ôö£ÔöÇÔöÇ futures-io v0.3.34
+Ôöé   Ôöé   Ôöé       Ôöé   Ôö£ÔöÇÔöÇ futures-sink v0.3.34
+Ôöé   Ôöé   Ôöé       Ôöé   Ôö£ÔöÇÔöÇ futures-task v0.3.34
+Ôöé   Ôöé   Ôöé       Ôöé   ÔööÔöÇÔöÇ futures-util v0.3.34 (*)
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ log v0.4.35
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ serde v1.0.229 (*)
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ thiserror v2.0.21 (*)
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ windows v0.62.2 (*)
+Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ windows-core v0.62.2 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ noq v1.5.0 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ noq-proto v1.5.0 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ noq-udp v1.5.0 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ papaya v0.2.5
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ equivalent v1.0.3
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ seize v0.5.1
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ pin-project v1.2.0 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ portable-atomic v1.15.0 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rand v0.10.4 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ reqwest v0.13.5 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustc-hash v2.1.3
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls v0.23.46 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ rustls-pki-types v1.16.0 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ serde v1.0.229 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ smallvec v1.16.6
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ strum v0.28.0 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio-stream v0.1.19 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tokio-util v0.7.20 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ tracing v0.1.44 (*)
+Ôöé   Ôöé   ÔööÔöÇÔöÇ url v2.5.9 (*)
+Ôöé   ÔööÔöÇÔöÇ tokio v1.54.1 (*)
+Ôö£ÔöÇÔöÇ intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+Ôöé   Ôö£ÔöÇÔöÇ anyhow v1.0.105
+Ôöé   Ôö£ÔöÇÔöÇ argon2 v0.5.3
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ base64ct v1.8.3
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ blake2 v0.10.6
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ digest v0.10.7
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ block-buffer v0.10.4
+Ôöé   Ôöé   Ôöé       Ôöé   ÔööÔöÇÔöÇ generic-array v0.14.7 (*)
+Ôöé   Ôöé   Ôöé       Ôö£ÔöÇÔöÇ crypto-common v0.1.7 (*)
+Ôöé   Ôöé   Ôöé       ÔööÔöÇÔöÇ subtle v2.6.1
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cpufeatures v0.2.17
+Ôöé   Ôöé   ÔööÔöÇÔöÇ password-hash v0.5.0
+Ôöé   Ôöé       Ôö£ÔöÇÔöÇ base64ct v1.8.3
+Ôöé   Ôöé       Ôö£ÔöÇÔöÇ rand_core v0.6.4 (*)
+Ôöé   Ôöé       ÔööÔöÇÔöÇ subtle v2.6.1
+Ôöé   Ôö£ÔöÇÔöÇ base64 v0.22.1
+Ôöé   Ôö£ÔöÇÔöÇ chacha20poly1305 v0.10.1
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ aead v0.5.2 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ chacha20 v0.9.1
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cfg-if v1.0.5
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cipher v0.4.4 (*)
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ cpufeatures v0.2.17
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cipher v0.4.4 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ poly1305 v0.8.0
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ cpufeatures v0.2.17
+Ôöé   Ôöé   Ôöé   Ôö£ÔöÇÔöÇ opaque-debug v0.3.1
+Ôöé   Ôöé   Ôöé   ÔööÔöÇÔöÇ universal-hash v0.5.1 (*)
+Ôöé   Ôöé   ÔööÔöÇÔöÇ zeroize v1.9.2 (*)
+Ôöé   Ôö£ÔöÇÔöÇ fs2 v0.4.3 (*)
+Ôöé   Ôö£ÔöÇÔöÇ intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core) (*)
+Ôöé   Ôö£ÔöÇÔöÇ iroh v1.5.0 (*)
+Ôöé   Ôö£ÔöÇÔöÇ rand_core v0.6.4 (*)
+Ôöé   Ôö£ÔöÇÔöÇ serde v1.0.229 (*)
+Ôöé   Ôö£ÔöÇÔöÇ serde_json v1.0.154
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ itoa v1.0.19
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ memchr v2.8.3
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ serde_core v1.0.229
+Ôöé   Ôöé   ÔööÔöÇÔöÇ zmij v1.0.23
+Ôöé   Ôö£ÔöÇÔöÇ tempfile v3.27.0
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ fastrand v2.5.0
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ getrandom v0.4.3 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ once_cell v1.21.4
+Ôöé   Ôöé   ÔööÔöÇÔöÇ windows-sys v0.61.2 (*)
+Ôöé   ÔööÔöÇÔöÇ zeroize v1.9.2 (*)
+Ôö£ÔöÇÔöÇ iroh v1.5.0 (*)
+Ôö£ÔöÇÔöÇ jpeg-encoder v0.7.1
+Ôö£ÔöÇÔöÇ mdns-sd v0.21.7
+Ôöé   Ôö£ÔöÇÔöÇ fastrand v2.5.0
+Ôöé   Ôö£ÔöÇÔöÇ flume v0.12.0
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-core v0.3.34
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ futures-sink v0.3.34
+Ôöé   Ôöé   ÔööÔöÇÔöÇ spin v0.9.9
+Ôöé   Ôöé       ÔööÔöÇÔöÇ lock_api v0.4.14 (*)
+Ôöé   Ôö£ÔöÇÔöÇ if-addrs v0.15.0
+Ôöé   Ôöé   ÔööÔöÇÔöÇ windows-sys v0.61.2 (*)
+Ôöé   Ôö£ÔöÇÔöÇ log v0.4.35
+Ôöé   Ôö£ÔöÇÔöÇ mio v1.2.5 (*)
+Ôöé   Ôö£ÔöÇÔöÇ socket-pktinfo v0.4.2
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ socket2 v0.6.5 (*)
+Ôöé   Ôöé   ÔööÔöÇÔöÇ windows-sys v0.61.2 (*)
+Ôöé   ÔööÔöÇÔöÇ socket2 v0.6.5 (*)
+Ôö£ÔöÇÔöÇ minifb v0.29.0
+Ôöé   Ôö£ÔöÇÔöÇ raw-window-handle v0.6.2
+Ôöé   Ôö£ÔöÇÔöÇ web-time v1.1.0
+Ôöé   ÔööÔöÇÔöÇ winapi v0.3.9
+Ôö£ÔöÇÔöÇ qrcode v0.14.1
+Ôö£ÔöÇÔöÇ reqwest v0.12.28
+Ôöé   Ôö£ÔöÇÔöÇ base64 v0.22.1
+Ôöé   Ôö£ÔöÇÔöÇ bytes v1.12.2
+Ôöé   Ôö£ÔöÇÔöÇ futures-core v0.3.34
+Ôöé   Ôö£ÔöÇÔöÇ http v1.5.0 (*)
+Ôöé   Ôö£ÔöÇÔöÇ http-body v1.1.0 (*)
+Ôöé   Ôö£ÔöÇÔöÇ http-body-util v0.1.5 (*)
+Ôöé   Ôö£ÔöÇÔöÇ hyper v1.13.0 (*)
+Ôöé   Ôö£ÔöÇÔöÇ hyper-rustls v0.27.10 (*)
+Ôöé   Ôö£ÔöÇÔöÇ hyper-util v0.1.21 (*)
+Ôöé   Ôö£ÔöÇÔöÇ log v0.4.35
+Ôöé   Ôö£ÔöÇÔöÇ percent-encoding v2.3.2
+Ôöé   Ôö£ÔöÇÔöÇ pin-project-lite v0.2.18
+Ôöé   Ôö£ÔöÇÔöÇ rustls v0.23.46 (*)
+Ôöé   Ôö£ÔöÇÔöÇ rustls-pki-types v1.16.0 (*)
+Ôöé   Ôö£ÔöÇÔöÇ serde v1.0.229 (*)
+Ôöé   Ôö£ÔöÇÔöÇ serde_urlencoded v0.7.1
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ form_urlencoded v1.2.3 (*)
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ itoa v1.0.19
+Ôöé   Ôöé   Ôö£ÔöÇÔöÇ ryu v1.0.23
+Ôöé   Ôöé   ÔööÔöÇÔöÇ serde v1.0.229 (*)
+Ôöé   Ôö£ÔöÇÔöÇ sync_wrapper v1.0.2 (*)
+Ôöé   Ôö£ÔöÇÔöÇ tokio v1.54.1 (*)
+Ôöé   Ôö£ÔöÇÔöÇ tokio-rustls v0.26.6 (*)
+Ôöé   Ôö£ÔöÇÔöÇ tower v0.5.3 (*)
+Ôöé   Ôö£ÔöÇÔöÇ tower-http v0.6.11 (*)
+Ôöé   Ôö£ÔöÇÔöÇ tower-service v0.3.3
+Ôöé   Ôö£ÔöÇÔöÇ url v2.5.9 (*)
+Ôöé   ÔööÔöÇÔöÇ webpki-roots v1.0.12 (*)
+Ôö£ÔöÇÔöÇ rpassword v7.5.5
+Ôöé   Ôö£ÔöÇÔöÇ rtoolbox v0.0.6
+Ôöé   Ôöé   ÔööÔöÇÔöÇ windows-sys v0.61.2 (*)
+Ôöé   ÔööÔöÇÔöÇ windows-sys v0.61.2 (*)
+Ôö£ÔöÇÔöÇ serde v1.0.229 (*)
+Ôö£ÔöÇÔöÇ serde_json v1.0.154 (*)
+Ôö£ÔöÇÔöÇ sysinfo v0.40.4
+Ôöé   Ôö£ÔöÇÔöÇ libc v0.2.191
+Ôöé   Ôö£ÔöÇÔöÇ memchr v2.8.3
+Ôöé   Ôö£ÔöÇÔöÇ ntapi v0.4.3
+Ôöé   Ôöé   ÔööÔöÇÔöÇ winapi v0.3.9
+Ôöé   ÔööÔöÇÔöÇ windows v0.62.2 (*)
+Ôö£ÔöÇÔöÇ tokio v1.54.1 (*)
+Ôö£ÔöÇÔöÇ windows-capture v2.0.1 (*)
+Ôö£ÔöÇÔöÇ xcap v0.9.10
+Ôöé   Ôö£ÔöÇÔöÇ image v0.25.10 (*)
+Ôöé   Ôö£ÔöÇÔöÇ log v0.4.35
+Ôöé   Ôö£ÔöÇÔöÇ scopeguard v1.2.0
+Ôöé   Ôö£ÔöÇÔöÇ thiserror v2.0.21 (*)
+Ôöé   Ôö£ÔöÇÔöÇ widestring v1.2.1
+Ôöé   ÔööÔöÇÔöÇ windows v0.62.2 (*)
+ÔööÔöÇÔöÇ zeroize v1.9.2 (*)
+EXIT tree 0
+WGC tree excludes mini-cuda and mini-nvcodec
+START release-portable
+   Compiling intralink-d3d11 v0.22.0 (D:\IntraLink\crates\intralink-d3d11)
+   Compiling intralink v0.22.0 (D:\IntraLink\apps\intralink)
+    Finished `release` profile [optimized] target(s) in 1m 16s
+EXIT release-portable 0
+START pipeline
+Local labeled visual test window only. No real monitor capture. Focus window and press ESC to cancel.
+pipeline=false, bounded_lock_wait=false, records=60, changed=58, repeats=2, no_updates=0, native_samples=60, overlapping_captures=0, elapsed_s=1.312, records_fps=45.72, changed_fps=44.20, capture_ms=467.122, encode_ms=589.664, media_bytes=10161876
+stage=planned_wait, samples=60, p50_ms=0.000, p95_ms=0.000, p99_ms=0.000, worst_ms=0.000
+stage=start_lateness, samples=60, p50_ms=0.020, p95_ms=0.187, p99_ms=82.640, worst_ms=82.640
+stage=actual_capture_cadence, samples=59, p50_ms=18.776, p95_ms=29.582, p99_ms=52.404, worst_ms=52.404
+stage=native_capture, samples=60, p50_ms=7.312, p95_ms=8.971, p99_ms=37.533, worst_ms=37.533
+stage=encoder_queue, samples=60, p50_ms=0.054, p95_ms=0.152, p99_ms=0.175, worst_ms=0.175
+stage=encode, samples=60, p50_ms=9.666, p95_ms=13.118, p99_ms=14.492, worst_ms=14.492
+stage=publication_delay, samples=60, p50_ms=0.034, p95_ms=0.101, p99_ms=0.110, worst_ms=0.110
+stage=local_delivery, samples=58, p50_ms=1.033, p95_ms=1.565, p99_ms=2.068, worst_ms=2.068
+stage=viewer_decode, samples=58, p50_ms=8.143, p95_ms=9.951, p99_ms=10.298, worst_ms=10.298
+capture_contention_polls=0, affected_attempts=0
+stage=generation_notification_wait, samples=60, p50_ms=0.000, p95_ms=0.000, p99_ms=12.026, worst_ms=12.026
+stage=callback_contention_wait, samples=60, p50_ms=0.000, p95_ms=0.000, p99_ms=0.000, worst_ms=0.000
+stage=native_consume, samples=60, p50_ms=7.270, p95_ms=8.636, p99_ms=25.454, worst_ms=25.454
+stage=scale_submission, samples=60, p50_ms=0.342, p95_ms=0.799, p99_ms=2.564, worst_ms=2.564
+stage=copy_submission, samples=60, p50_ms=0.004, p95_ms=0.012, p99_ms=0.090, worst_ms=0.090
+stage=map_wait, samples=60, p50_ms=5.903, p95_ms=7.088, p99_ms=7.652, worst_ms=7.652
+stage=cpu_row_copy_unmap, samples=60, p50_ms=0.874, p95_ms=1.361, p99_ms=2.670, worst_ms=2.670
+pipeline=true, bounded_lock_wait=false, records=60, changed=59, repeats=1, no_updates=0, native_samples=60, overlapping_captures=20, elapsed_s=1.287, records_fps=46.63, changed_fps=45.85, capture_ms=478.681, encode_ms=593.179, media_bytes=10336983
+stage=planned_wait, samples=60, p50_ms=16.577, p95_ms=16.659, p99_ms=16.664, worst_ms=16.664
+stage=start_lateness, samples=60, p50_ms=2.351, p95_ms=7.606, p99_ms=57.332, worst_ms=57.332
+stage=actual_capture_cadence, samples=59, p50_ms=19.562, p95_ms=24.365, p99_ms=55.910, worst_ms=55.910
+stage=native_capture, samples=60, p50_ms=7.059, p95_ms=11.788, p99_ms=45.995, worst_ms=45.995
+stage=encoder_queue, samples=60, p50_ms=0.058, p95_ms=0.166, p99_ms=0.175, worst_ms=0.175
+stage=encode, samples=60, p50_ms=9.745, p95_ms=13.289, p99_ms=13.985, worst_ms=13.985
+stage=publication_delay, samples=60, p50_ms=0.047, p95_ms=9.140, p99_ms=12.735, worst_ms=12.735
+stage=local_delivery, samples=59, p50_ms=1.046, p95_ms=1.309, p99_ms=1.766, worst_ms=1.766
+stage=viewer_decode, samples=59, p50_ms=7.848, p95_ms=9.676, p99_ms=9.902, worst_ms=9.902
+capture_contention_polls=0, affected_attempts=0
+stage=generation_notification_wait, samples=60, p50_ms=0.000, p95_ms=0.000, p99_ms=14.229, worst_ms=14.229
+stage=callback_contention_wait, samples=60, p50_ms=0.000, p95_ms=0.000, p99_ms=0.000, worst_ms=0.000
+stage=native_consume, samples=60, p50_ms=7.019, p95_ms=11.764, p99_ms=31.691, worst_ms=31.691
+stage=scale_submission, samples=60, p50_ms=0.322, p95_ms=0.543, p99_ms=2.515, worst_ms=2.515
+stage=copy_submission, samples=60, p50_ms=0.004, p95_ms=0.007, p99_ms=0.100, worst_ms=0.100
+stage=map_wait, samples=60, p50_ms=5.799, p95_ms=10.548, p99_ms=12.205, worst_ms=12.205
+stage=cpu_row_copy_unmap, samples=60, p50_ms=0.781, p95_ms=2.335, p99_ms=2.646, worst_ms=2.646
+pipeline=true, bounded_lock_wait=false, records=60, changed=60, repeats=0, no_updates=0, native_samples=60, overlapping_captures=17, elapsed_s=1.272, records_fps=47.16, changed_fps=47.16, capture_ms=540.550, encode_ms=616.495, media_bytes=10512048
+stage=planned_wait, samples=60, p50_ms=16.586, p95_ms=16.643, p99_ms=16.661, worst_ms=16.661
+stage=start_lateness, samples=60, p50_ms=2.468, p95_ms=7.831, p99_ms=60.689, worst_ms=60.689
+stage=actual_capture_cadence, samples=59, p50_ms=19.158, p95_ms=24.641, p99_ms=47.018, worst_ms=47.018
+stage=native_capture, samples=60, p50_ms=7.911, p95_ms=14.761, p99_ms=37.955, worst_ms=37.955
+stage=encoder_queue, samples=60, p50_ms=0.066, p95_ms=0.139, p99_ms=0.193, worst_ms=0.193
+stage=encode, samples=60, p50_ms=10.280, p95_ms=12.420, p99_ms=13.546, worst_ms=13.546
+stage=publication_delay, samples=60, p50_ms=0.081, p95_ms=8.303, p99_ms=10.898, worst_ms=10.898
+stage=local_delivery, samples=60, p50_ms=1.036, p95_ms=1.407, p99_ms=3.009, worst_ms=3.009
+stage=viewer_decode, samples=60, p50_ms=8.146, p95_ms=9.730, p99_ms=10.968, worst_ms=10.968
+capture_contention_polls=0, affected_attempts=0
+stage=generation_notification_wait, samples=60, p50_ms=0.000, p95_ms=5.688, p99_ms=14.253, worst_ms=14.253
+stage=callback_contention_wait, samples=60, p50_ms=0.000, p95_ms=0.000, p99_ms=0.000, worst_ms=0.000
+stage=native_consume, samples=60, p50_ms=7.886, p95_ms=11.584, p99_ms=23.616, worst_ms=23.616
+stage=scale_submission, samples=60, p50_ms=0.342, p95_ms=0.704, p99_ms=1.875, worst_ms=1.875
+stage=copy_submission, samples=60, p50_ms=0.004, p95_ms=0.010, p99_ms=0.153, worst_ms=0.153
+stage=map_wait, samples=60, p50_ms=6.621, p95_ms=9.012, p99_ms=10.318, worst_ms=10.318
+stage=cpu_row_copy_unmap, samples=60, p50_ms=0.831, p95_ms=2.285, p99_ms=3.373, worst_ms=3.373
+pipeline=false, bounded_lock_wait=false, records=60, changed=59, repeats=1, no_updates=0, native_samples=60, overlapping_captures=0, elapsed_s=1.302, records_fps=46.07, changed_fps=45.30, capture_ms=500.868, encode_ms=561.950, media_bytes=10337207
+stage=planned_wait, samples=60, p50_ms=0.000, p95_ms=0.000, p99_ms=0.000, worst_ms=0.000
+stage=start_lateness, samples=60, p50_ms=0.017, p95_ms=0.114, p99_ms=62.182, worst_ms=62.182
+stage=actual_capture_cadence, samples=59, p50_ms=18.871, p95_ms=25.532, p99_ms=53.079, worst_ms=53.079
+stage=native_capture, samples=60, p50_ms=8.272, p95_ms=10.447, p99_ms=43.065, worst_ms=43.065
+stage=encoder_queue, samples=60, p50_ms=0.054, p95_ms=0.142, p99_ms=0.152, worst_ms=0.152
+stage=encode, samples=60, p50_ms=9.394, p95_ms=11.345, p99_ms=12.998, worst_ms=12.998
+stage=publication_delay, samples=60, p50_ms=0.035, p95_ms=0.106, p99_ms=0.147, worst_ms=0.147
+stage=local_delivery, samples=59, p50_ms=0.994, p95_ms=1.273, p99_ms=1.323, worst_ms=1.323
+stage=viewer_decode, samples=59, p50_ms=7.824, p95_ms=8.815, p99_ms=8.919, worst_ms=8.919
+capture_contention_polls=0, affected_attempts=0
+stage=generation_notification_wait, samples=60, p50_ms=0.000, p95_ms=1.188, p99_ms=12.390, worst_ms=12.390
+stage=callback_contention_wait, samples=60, p50_ms=0.000, p95_ms=0.000, p99_ms=0.000, worst_ms=0.000
+stage=native_consume, samples=60, p50_ms=8.184, p95_ms=9.820, p99_ms=30.638, worst_ms=30.638
+stage=scale_submission, samples=60, p50_ms=0.331, p95_ms=0.768, p99_ms=2.200, worst_ms=2.200
+stage=copy_submission, samples=60, p50_ms=0.004, p95_ms=0.008, p99_ms=0.211, worst_ms=0.211
+stage=map_wait, samples=60, p50_ms=6.996, p95_ms=8.832, p99_ms=11.238, worst_ms=11.238
+stage=cpu_row_copy_unmap, samples=60, p50_ms=0.816, p95_ms=1.124, p99_ms=2.271, worst_ms=2.271
+pipeline_check=passed; generated owned window and authenticated QUIC loopback only.
+EXIT pipeline 0
+START visual
+Local labeled visual test window only. No real monitor capture. Focus window and press ESC to cancel.
+visual_fidelity pipeline=false, bounded_lock_wait=false, frames=56, pixels=116121600, lossless_frames=0, max_channel_mae=1.1538, max_block_mae=5.2227, max_large_error_fraction=0.000000
+visual_fidelity pipeline=true, bounded_lock_wait=false, frames=59, pixels=122342400, lossless_frames=0, max_channel_mae=1.1546, max_block_mae=5.2227, max_large_error_fraction=0.000000
+visual_check=passed; generated owned window and authenticated QUIC loopback only.
+EXIT visual 0
+START capture-lock
+Local labeled visual test window only. No real monitor capture. Focus window and press ESC to cancel.
+pipeline=true, bounded_lock_wait=false, records=60, changed=57, repeats=2, no_updates=1, native_samples=59, overlapping_captures=24, elapsed_s=1.318, records_fps=45.52, changed_fps=43.25, capture_ms=496.396, encode_ms=789.872, media_bytes=9980355
+stage=planned_wait, samples=60, p50_ms=11.014, p95_ms=16.637, p99_ms=16.659, worst_ms=16.659
+stage=start_lateness, samples=60, p50_ms=2.350, p95_ms=8.400, p99_ms=91.561, worst_ms=91.561
+stage=actual_capture_cadence, samples=59, p50_ms=19.859, p95_ms=25.515, p99_ms=45.944, worst_ms=45.944
+stage=native_capture, samples=60, p50_ms=6.323, p95_ms=19.652, p99_ms=35.072, worst_ms=35.072
+stage=encoder_queue, samples=60, p50_ms=0.057, p95_ms=0.171, p99_ms=0.643, worst_ms=0.643
+stage=encode, samples=60, p50_ms=13.924, p95_ms=16.022, p99_ms=18.401, worst_ms=18.401
+stage=publication_delay, samples=60, p50_ms=0.281, p95_ms=7.394, p99_ms=19.525, worst_ms=19.525
+stage=local_delivery, samples=57, p50_ms=1.232, p95_ms=2.174, p99_ms=2.598, worst_ms=2.598
+stage=viewer_decode, samples=57, p50_ms=9.060, p95_ms=12.524, p99_ms=15.437, worst_ms=15.437
+capture_contention_polls=0, affected_attempts=0
+stage=generation_notification_wait, samples=60, p50_ms=0.000, p95_ms=10.212, p99_ms=23.627, worst_ms=23.627
+stage=callback_contention_wait, samples=60, p50_ms=0.000, p95_ms=0.000, p99_ms=0.000, worst_ms=0.000
+stage=native_consume, samples=60, p50_ms=6.298, p95_ms=8.825, p99_ms=24.812, worst_ms=24.812
+stage=scale_submission, samples=59, p50_ms=0.439, p95_ms=0.866, p99_ms=2.307, worst_ms=2.307
+stage=copy_submission, samples=59, p50_ms=0.005, p95_ms=0.013, p99_ms=0.134, worst_ms=0.134
+stage=map_wait, samples=59, p50_ms=4.726, p95_ms=6.005, p99_ms=6.249, worst_ms=6.249
+stage=cpu_row_copy_unmap, samples=59, p50_ms=0.863, p95_ms=3.154, p99_ms=3.837, worst_ms=3.837
+pipeline=true, bounded_lock_wait=true, records=60, changed=58, repeats=2, no_updates=0, native_samples=60, overlapping_captures=26, elapsed_s=1.345, records_fps=44.61, changed_fps=43.13, capture_ms=568.529, encode_ms=747.528, media_bytes=10157243
+stage=planned_wait, samples=60, p50_ms=16.483, p95_ms=16.641, p99_ms=16.656, worst_ms=16.656
+stage=start_lateness, samples=60, p50_ms=2.126, p95_ms=10.185, p99_ms=89.723, worst_ms=89.723
+stage=actual_capture_cadence, samples=59, p50_ms=19.326, p95_ms=28.178, p99_ms=67.132, worst_ms=67.132
+stage=native_capture, samples=60, p50_ms=7.358, p95_ms=19.640, p99_ms=47.482, worst_ms=47.482
+stage=encoder_queue, samples=60, p50_ms=0.058, p95_ms=0.176, p99_ms=0.951, worst_ms=0.951
+stage=encode, samples=60, p50_ms=12.572, p95_ms=17.395, p99_ms=19.330, worst_ms=19.330
+stage=publication_delay, samples=60, p50_ms=0.212, p95_ms=6.599, p99_ms=11.875, worst_ms=11.875
+stage=local_delivery, samples=58, p50_ms=1.166, p95_ms=2.270, p99_ms=2.657, worst_ms=2.657
+stage=viewer_decode, samples=58, p50_ms=8.979, p95_ms=14.096, p99_ms=17.626, worst_ms=17.626
+capture_contention_polls=0, affected_attempts=0
+stage=generation_notification_wait, samples=60, p50_ms=0.000, p95_ms=11.468, p99_ms=15.087, worst_ms=15.087
+stage=callback_contention_wait, samples=60, p50_ms=0.000, p95_ms=0.000, p99_ms=0.000, worst_ms=0.000
+stage=native_consume, samples=60, p50_ms=6.817, p95_ms=11.138, p99_ms=35.946, worst_ms=35.946
+stage=scale_submission, samples=60, p50_ms=0.435, p95_ms=1.035, p99_ms=2.374, worst_ms=2.374
+stage=copy_submission, samples=60, p50_ms=0.005, p95_ms=0.010, p99_ms=0.012, worst_ms=0.012
+stage=map_wait, samples=60, p50_ms=5.168, p95_ms=8.358, p99_ms=9.806, worst_ms=9.806
+stage=cpu_row_copy_unmap, samples=60, p50_ms=0.878, p95_ms=3.411, p99_ms=3.949, worst_ms=3.949
+pipeline=true, bounded_lock_wait=true, records=60, changed=59, repeats=1, no_updates=0, native_samples=60, overlapping_captures=7, elapsed_s=1.236, records_fps=48.56, changed_fps=47.75, capture_ms=399.226, encode_ms=687.400, media_bytes=10334234
+stage=planned_wait, samples=60, p50_ms=16.623, p95_ms=16.653, p99_ms=16.658, worst_ms=16.658
+stage=start_lateness, samples=60, p50_ms=1.314, p95_ms=8.459, p99_ms=67.219, worst_ms=67.219
+stage=actual_capture_cadence, samples=59, p50_ms=18.302, p95_ms=25.359, p99_ms=54.456, worst_ms=54.456
+stage=native_capture, samples=60, p50_ms=5.800, p95_ms=8.134, p99_ms=43.091, worst_ms=43.091
+stage=encoder_queue, samples=60, p50_ms=0.052, p95_ms=0.165, p99_ms=0.182, worst_ms=0.182
+stage=encode, samples=60, p50_ms=11.256, p95_ms=14.445, p99_ms=15.848, worst_ms=15.848
+stage=publication_delay, samples=60, p50_ms=0.038, p95_ms=5.885, p99_ms=8.260, worst_ms=8.260
+stage=local_delivery, samples=59, p50_ms=1.092, p95_ms=1.599, p99_ms=1.778, worst_ms=1.778
+stage=viewer_decode, samples=59, p50_ms=8.793, p95_ms=14.174, p99_ms=14.623, worst_ms=14.623
+capture_contention_polls=0, affected_attempts=0
+stage=generation_notification_wait, samples=60, p50_ms=0.000, p95_ms=0.000, p99_ms=14.274, worst_ms=14.274
+stage=callback_contention_wait, samples=60, p50_ms=0.000, p95_ms=0.000, p99_ms=0.000, worst_ms=0.000
+stage=native_consume, samples=60, p50_ms=5.776, p95_ms=8.035, p99_ms=28.768, worst_ms=28.768
+stage=scale_submission, samples=60, p50_ms=0.363, p95_ms=0.761, p99_ms=2.353, worst_ms=2.353
+stage=copy_submission, samples=60, p50_ms=0.004, p95_ms=0.011, p99_ms=0.013, worst_ms=0.013
+stage=map_wait, samples=60, p50_ms=4.386, p95_ms=5.553, p99_ms=8.589, worst_ms=8.589
+stage=cpu_row_copy_unmap, samples=60, p50_ms=0.829, p95_ms=2.652, p99_ms=3.520, worst_ms=3.520
+pipeline=true, bounded_lock_wait=false, records=60, changed=59, repeats=1, no_updates=0, native_samples=60, overlapping_captures=10, elapsed_s=1.291, records_fps=46.48, changed_fps=45.71, capture_ms=373.114, encode_ms=706.973, media_bytes=10334725
+stage=planned_wait, samples=60, p50_ms=16.624, p95_ms=16.653, p99_ms=16.658, worst_ms=16.658
+stage=start_lateness, samples=60, p50_ms=1.882, p95_ms=9.195, p99_ms=67.863, worst_ms=67.863
+stage=actual_capture_cadence, samples=59, p50_ms=18.731, p95_ms=29.715, p99_ms=47.842, worst_ms=47.842
+stage=native_capture, samples=60, p50_ms=5.407, p95_ms=8.062, p99_ms=36.936, worst_ms=36.936
+stage=encoder_queue, samples=60, p50_ms=0.056, p95_ms=0.135, p99_ms=0.195, worst_ms=0.195
+stage=encode, samples=60, p50_ms=11.520, p95_ms=15.471, p99_ms=17.217, worst_ms=17.217
+stage=publication_delay, samples=60, p50_ms=0.037, p95_ms=4.949, p99_ms=8.554, worst_ms=8.554
+stage=local_delivery, samples=59, p50_ms=1.127, p95_ms=2.012, p99_ms=2.207, worst_ms=2.207
+stage=viewer_decode, samples=59, p50_ms=8.741, p95_ms=14.646, p99_ms=15.271, worst_ms=15.271
+capture_contention_polls=0, affected_attempts=0
+stage=generation_notification_wait, samples=60, p50_ms=0.000, p95_ms=0.000, p99_ms=10.998, worst_ms=10.998
+stage=callback_contention_wait, samples=60, p50_ms=0.000, p95_ms=0.000, p99_ms=0.000, worst_ms=0.000
+stage=native_consume, samples=60, p50_ms=5.360, p95_ms=8.044, p99_ms=25.893, worst_ms=25.893
+stage=scale_submission, samples=60, p50_ms=0.362, p95_ms=0.591, p99_ms=1.941, worst_ms=1.941
+stage=copy_submission, samples=60, p50_ms=0.004, p95_ms=0.009, p99_ms=0.015, worst_ms=0.015
+stage=map_wait, samples=60, p50_ms=4.042, p95_ms=6.054, p99_ms=7.991, worst_ms=7.991
+stage=cpu_row_copy_unmap, samples=60, p50_ms=0.847, p95_ms=2.442, p99_ms=3.462, worst_ms=3.462
+visual_fidelity pipeline=true, bounded_lock_wait=true, frames=59, pixels=122342400, lossless_frames=0, max_channel_mae=1.1545, max_block_mae=5.2227, max_large_error_fraction=0.000000
+capture_lock_check=passed; generated owned window and authenticated QUIC loopback only.
+EXIT capture-lock 0
+START retarget
+retarget_height=1080, native=(3336, 1878), scaled=(1918, 1080), samples=6, readback_bytes=49714560, processors=1, staging=1
+retarget_height=720, native=(3336, 1878), scaled=(1279, 720), samples=6, readback_bytes=22101120, processors=2, staging=2
+retarget_height=540, native=(3336, 1878), scaled=(959, 540), samples=6, readback_bytes=12428640, processors=3, staging=3
+retarget_height=720, native=(3336, 1878), scaled=(1279, 720), samples=6, readback_bytes=22101120, processors=4, staging=4
+retarget_height=1080, native=(3336, 1878), scaled=(1918, 1080), samples=6, readback_bytes=49714560, processors=5, staging=5
+wgc_retarget_check=passed, samples=30, processors=5, staging=5, rgba_allocations=1, total_readback_bytes=156060000
+EXIT retarget 0
+START geometry
+native_device_context_texture_and_geometry_rejection=passed
+geometry_check: passed, original=1656x933, failure=WGC source geometry or device changed, elapsed_ms=70, readback_frames=1
+EXIT geometry 0
+START diff-check
+warning: in the working copy of 'apps/intralink/src/desktop/calibration.rs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/intralink/src/desktop/pipeline_check.rs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/intralink/src/desktop/wgc_check.rs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'crates/intralink-d3d11/src/lib.rs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'crates/intralink-d3d11/src/readback.rs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'crates/intralink-d3d11/src/scale.rs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/ARCHITECTURE.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/BUILD-VALIDATION.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/SECURITY.md', LF will be replaced by CRLF the next time Git touches it
+EXIT diff-check 0
+START lockfile-unchanged
+EXIT lockfile-unchanged 0
+ALL GATES PASSED

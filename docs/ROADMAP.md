@@ -157,3 +157,8 @@ Explicit fixed-v8/fixed-quality pipeline implemented, using two reserved local d
 ### Capture-start scheduling checkpoint
 
 Fixed-v8 pipeline now reserves local demands with one actual-start-clock deadline; retain opt-in fixed-quality and geometry. Measure native readiness/readback separately, receiver acceptance vs true ACK and presentation, and precise local timers only where supported without global changes. Adaptive pipeline transition barriers and physical authorized multi-device qualification remain separate gates. See [CAPTURE-GRANTS.md](CAPTURE-GRANTS.md).
+
+
+### WGC capture timing qualification (2026-11-27)
+
+WGC timing instrumentation and explicit lock experiment locally qualified at a303d03; no reproducible lock-policy speedup, so do not promote it. Next: prioritize D3D11 Map synchronization and bounded authorized staging/copy overlap (no speculative readback, no extra demand credit, preserve exact source generation, cancellation and ordered publication), plus a CUDA-independent optional absolute-deadline timer. Existing TimerWorker uses a shared response receiver; design request-specific replies and cancellation-safe shutdown before using it in a select loop. Keep Tokio portable default and compare both under identical scenes with longer runs. Separate actual ACK arrival and presentation from current local delivery. Adaptive transition barriers, physical device sessions and decoder containment remain unqualified. See WGC-CAPTURE-TIMING.md.
