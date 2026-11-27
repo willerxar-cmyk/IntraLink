@@ -1,0 +1,39 @@
+2026-11-27, actual physical TB373FU API36 ARM64, Windows graphical viewer and real OS MediaProjection, owner assisted; private endpoint identities/addresses and credentials omitted. Input via separately authorized ADB only, not IntraLink remote input. Test content: generated local MP4 1920x1080 H.264 60fps, 20 seconds, no audio; native player, offline WebView, real Android calculator. Logical display measured 2944x1840 landscape, portable output negotiated 1920x1080 ceiling.
+Main preview.11 normal build PID 11752 exit 0: strict Android Release/Clippy both ABIs, Gradle debug/test/Release/APK/AAB/lint and host JVM checks passed. Existing Gradle version advisory only. Actual physical native JNI/SPS/software decoder and Surface JPEG tests passed. Viewer strict Clippy/Release PID 21612 exit 0. No Cargo.lock or actual runtime dependency artifact/POM changes. Fixture opt-in module has only SDK-target advisory.
+Fixture MP4 SHA256 82360ba5a6a2a5dd481e8fa9fae9b4acd2af23e959b9a05c8bc1523042a45fe4; native playback confirmed PID 16328: PREPARED 1920x1080 duration_ms=20000 / VIDEO_RENDERING_STARTED.
+First navigation run PID 26228 exit 1 (test Activity return check):
+PHASE video duration_ms=21245 actions=0 frames=906 presented=906 bytes=216010036 jpeg=494 tiles=408 lossless=4 decode_us=7399749
+NATIVE_VIDEO: prepared and rendering.
+PHASE web_scroll duration_ms=16109 actions=9 frames=15 presented=15 bytes=16081 jpeg=0 tiles=15 lossless=0 decode_us=231
+PHASE calculator duration_ms=14096 actions=12 frames=77 presented=77 bytes=1281514 jpeg=0 tiles=77 lossless=0 decode_us=6709
+Actual calculator current result 46 verified PID 15908. Scroll coordinates were based on unrotated physical size, not logical landscape. Corrected to logical geometry. Android task return did not immediately resume requested test Activity; added fixture-only CLEAR_TOP and bounded top check.
+Second run PID 36400 exit 1 (overstrict MediaPlayer restart event requirement):
+PHASE video duration_ms=21439 actions=0 frames=562 presented=562 bytes=168471049 jpeg=230 tiles=329 lossless=3 decode_us=10016796
+NATIVE_VIDEO: starts=1
+PHASE web_scroll duration_ms=16235 actions=9 frames=316 presented=316 bytes=11610413 jpeg=208 tiles=108 lossless=0 decode_us=7104063
+WEB_SCROLL_VERIFIED: max_scroll_y=5903 events=23
+PHASE calculator duration_ms=12088 actions=7 frames=94 presented=94 bytes=4467410 jpeg=0 tiles=94 lossless=0 decode_us=63685
+CALCULATOR_VERIFIED: 12 + 34 = 46
+PHASE video_return duration_ms=13284 actions=0 frames=251 presented=251 bytes=43356834 jpeg=175 tiles=75 lossless=1 decode_us=5842918
+Native rendering-start event count did not increase; added actual playback position sampling instead of requiring a new event.
+Third run PID 34428 exit 1 (overstrict previous process log continuity requirement):
+PHASE video duration_ms=21539 actions=0 frames=624 presented=624 bytes=181447905 jpeg=267 tiles=354 lossless=3 decode_us=10006199
+NATIVE_VIDEO: 1920x1080 / 20s fixture prepared and rendering; playing_samples=22
+PHASE web_scroll duration_ms=15366 actions=9 frames=322 presented=322 bytes=12445854 jpeg=222 tiles=100 lossless=0 decode_us=6244850
+WEB_SCROLL_VERIFIED: max_scroll_y=5895 events=23
+PHASE calculator duration_ms=12093 actions=7 frames=74 presented=74 bytes=1136034 jpeg=0 tiles=74 lossless=0 decode_us=5510
+CALCULATOR_VERIFIED: 12 + 34 = 46
+PHASE video_return duration_ms=13065 actions=0 frames=665 presented=665 bytes=104009084 jpeg=491 tiles=172 lossless=2 decode_us=3913738
+NATIVE_VIDEO: 1920x1080 / 20s fixture prepared and rendering; playing_samples=14
+Actual video playback advancing in both video phases; test failed due process log prefix not retained after return. Fixed verifier to compare device log timestamps across either Activity resume or process recreation.
+Resource point sample PID 33872: app TOTAL PSS 124242 KiB, TOTAL RSS 290436 KiB; viewer Windows WorkingSet64=43372544, PrivateMemorySize64=28282880, CPU accumulated 9.390625 seconds. Not peak, not sustained CPU usage.
+All three attempts had actual local owner consent and successful initial preview, distinct physical phase measurements. Partial failures are not full 90-second completion passes. No screen recording. Exact Android normal candidate dist/android-navigation-preview11-20261127, version 220011, 13 JNI exports, five unchanged permissions, 16 KiB alignment, both ABIs, 10 verified manifest hashes. Debug SHA 8cf7d8230525db5ff92daab8fff97970f48c97adc9062704e6c08cfc88088b64; test e9a0a163159409a7bc75f2bfdec157e1b77c88f9b647916a1a7b8dc7dd8917e7; unsigned APK ae1a1d3fe3c8608db0199257237ed6c106ba2c19d81206a93d9d382f6a68b408; unsigned AAB 6f24b10f6ec4ef03fdf4a2f4ba2532f3ecb08756386afa918e924321f2d8d60f.
+Viewer SHA256 9c713394da56e0fe1c083702b6a6a6c6ebc1702986e3e88a91aa3c3603e4f454. Final fixture APK SHA256 9eb43bdd8c27b363ccc06cb8827e88c9f069f02e1062d683c6848eda3803f0cf. All local fixture files development-only, no public release.
+
+Fourth physical attempt PID 24864 exit 1 (calculator automation timing only five of seven key events dispatched):
+PHASE video duration_ms=21417 actions=0 frames=498 presented=498 bytes=142813687 jpeg=217 tiles=278 lossless=3 decode_us=7781295
+NATIVE_VIDEO: playing_samples=22
+PHASE web_scroll duration_ms=16077 actions=10 frames=465 presented=465 bytes=20009447 jpeg=340 tiles=125 lossless=0 decode_us=2231085
+WEB_SCROLL_VERIFIED: max_scroll_y=6657 events=26
+PHASE calculator duration_ms=12048 actions=5 frames=28 presented=28 bytes=158713 jpeg=0 tiles=28 lossless=0 decode_us=997
+Final harness now sends all seven keys in one ADB command. PID 30804 exit 0: batched calculator 12+34=46 PASS independently (no active projection). Preserved fixture/MP4/viewer in dist/navigation-fixture-local-20261127, uninstalled only the standalone fixture, normal preview.11 retained and opened. PID 26344 confirmed projection null/services empty/app files no profile. Full integrated updated harness not rerun; no 90-second gate claim.
