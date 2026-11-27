@@ -27,6 +27,20 @@ class OnboardingInstrumentation : Instrumentation() {
             LanProbeFixture.run(this, testArguments)
             return
         }
+        if (testArguments.getString("encoderFixture") == "true") {
+            val result = Bundle()
+            try {
+                result.putString("stream", "\n" + AvcEncoderSurfaceFixture.run() + "\n")
+                finish(Activity.RESULT_OK, result)
+            } catch (error: Exception) {
+                result.putString("stream", "\nSurface encoder FAILED: ${error.message}\n")
+                finish(Activity.RESULT_CANCELED, result)
+            } catch (_: LinkageError) {
+                result.putString("stream", "\nSurface encoder native library unavailable\n")
+                finish(Activity.RESULT_CANCELED, result)
+            }
+            return
+        }
         val results = Bundle()
         var directory: File? = null
         var resultCode = Activity.RESULT_CANCELED
@@ -154,7 +168,8 @@ class OnboardingInstrumentation : Instrumentation() {
             check(observed.sps == SpsMetadata(1920, 1080, 100, 42, 0, 3, 2))
             check(NativeBridge.inspectAvcSps(direct.slice(), avc.size, 0) == -1L)
             val decoded = AvcDecoderFixture.run(context)
-            results.putString("stream", "\nIntraLink JNI onboarding: PASSED\nIntraLink AVC buffer boundary: PASSED\nIntraLink SPS metadata boundary: PASSED\n$decoded\n")
+            PortableSurfaceFixture.checkJpeg()
+            results.putString("stream", "\nIntraLink JNI onboarding: PASSED\nIntraLink AVC buffer boundary: PASSED\nIntraLink SPS metadata boundary: PASSED\n$decoded\nIntraLink Android Surface RGBA/JPEG: PASSED\n")
             resultCode = Activity.RESULT_OK
         } catch (error: Exception) {
             results.putString("stream", "\nIntraLink JNI onboarding: FAILED: " + error.javaClass.simpleName + "\n")

@@ -288,6 +288,117 @@ pub(crate) fn run(
     ))
 }
 
+/// A separate, ephemeral screen-only approval. A saved diagnostic grant is
+/// necessary but not sufficient; the Activity reviews the exact identity and
+/// obtains fresh OS consent before the worker invokes this entry point.
+#[cfg(target_os = "android")]
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct ScreenRequest {
+    pub name: String,
+    pub peer_id: String,
+    pub host: String,
+    pub port: u16,
+    pub height: u16,
+    pub fps: u32,
+}
+
+#[cfg(target_os = "android")]
+pub(crate) fn run_screen(
+    mut lease: Lease<'_>,
+    path: &Path,
+    password: zeroize::Zeroizing<Vec<u8>>,
+    request: ScreenRequest,
+    mut capture: impl FnMut(
+        intralink_core::desktop::VideoConfig,
+        intralink_core::quality::ReceiptPressure,
+        Vec<u8>,
+    ) -> Result<intralink_transport::desktop::Capture>,
+) -> Result<(Profile, u64, intralink_transport::desktop::Stats)> {
+    use intralink_core::{
+        adaptive::ViewProtocol,
+        desktop::{CodecMode, VideoConfig},
+    };
+    use intralink_transport::desktop::{
+        CaptureRequest, bind_view_with_protocol, serve_view_with_protocol,
+    };
+    use tokio::sync::mpsc;
+
+    ensure!(!*lease.stop.borrow(), "Screen approval canceled");
+    let vault = Vault::lock(path)?;
+    let profile = vault.load(&password)?;
+    drop(password);
+    ensure!(profile.role().can_receive(), "CLIENT role required");
+    let peer = profile
+        .peer(&request.name, Direction::Inbound)?
+        .identity()?;
+    ensure!(
+        request.peer_id == peer.to_string(),
+        "Approved identity changed"
+    );
+    let local = private_address(&request.host, request.port)?;
+    let config = VideoConfig::new(request.height, request.fps, 75, 15)
+        .context("Invalid local screen limits")?
+        .with_mode(CodecMode::Compact);
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(2)
+        .enable_all()
+        .build()?;
+    let started = Instant::now();
+    let stats = runtime.block_on(async {
+        let endpoint = tokio::select! {
+            biased;
+            _ = canceled(&mut lease.stop) => bail!("Screen approval canceled"),
+            result = timeout(Duration::from_secs(10),
+                bind_view_with_protocol(profile.secret_key(), local, ViewProtocol::Bounded)) =>
+                    result.context("Screen endpoint bind deadline")??,
+        };
+        let (tx, mut rx) = mpsc::channel::<CaptureRequest>(1);
+        let mut stop = lease.stop.clone();
+        // Only one demand exists. The synchronous local adapter runs on the
+        // attached JNI owner, never on a spawned Rust worker. Stop is checked
+        // around every capture; an acquired image cannot escape that call.
+        let source = async {
+            while let Some(mut req) = rx.recv().await {
+                ensure!(!*stop.borrow(), "Screen approval canceled");
+                req.begin_capture()?;
+                let chosen = req
+                    .desktop_config
+                    .context("Missing approved screen configuration")?;
+                let result = capture(chosen, req.receipt_pressure, req.buffer);
+                ensure!(!*stop.borrow_and_update(), "Screen approval canceled");
+                let end = matches!(&result, Ok(intralink_transport::desktop::Capture::End));
+                let failed = result.is_err();
+                ensure!(req.reply.send(result).is_ok(), "Screen demand canceled");
+                if failed {
+                    bail!("Local screen source failed");
+                }
+                if end {
+                    break;
+                }
+            }
+            Ok::<(), anyhow::Error>(())
+        };
+        let result = tokio::select! {
+            biased;
+            _ = canceled(&mut lease.stop) => Err(anyhow::anyhow!("Screen approval canceled")),
+            result = timeout(Duration::from_secs(35), async {
+                tokio::try_join!(
+                    serve_view_with_protocol(&endpoint, peer, config, tx, ViewProtocol::Bounded),
+                    source
+                ).map(|(stats, ())| stats)
+            }) => result.context("Screen session deadline").and_then(|result| result),
+        };
+        endpoint.close().await;
+        result
+    })?;
+    Ok((
+        profile,
+        started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64,
+        stats,
+    ))
+}
+
 #[cfg(all(target_os = "android", feature = "lan-fixture"))]
 pub(crate) fn run_media_fixture(
     mut lease: Lease<'_>,

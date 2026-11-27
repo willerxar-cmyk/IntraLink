@@ -17,7 +17,7 @@ from build_android_native import ndk_bin
 
 ABIS = {"arm64-v8a": 183, "x86_64": 62}
 EXPORTS = {"createProfile", "openProfile", "changeRole", "renameDevice", "pairDevice", "revokeDevice",
-           "initializeNetwork", "reserveProbe", "cancelProbe", "runProbe", "inspectAvc", "inspectAvcSps"}
+           "initializeNetwork", "reserveProbe", "cancelProbe", "runProbe", "inspectAvc", "inspectAvcSps", "runScreen"}
 PERMISSIONS = {
     "android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE",
     "android.permission.FOREGROUND_SERVICE",
@@ -148,7 +148,8 @@ def main():
             if permissions != PERMISSIONS:
                 raise ValueError(f"Unexpected Android permission set: {permissions}")
             xml = run(aapt, "dump", "xmltree", apk, "AndroidManifest.xml")
-            for component, kind in ((".CaptureActivity", "activity"), (".CaptureService", "service")):
+            for component, kind in ((".CaptureActivity", "activity"), (".CaptureService", "service"),
+                                    (".ScreenShareActivity", "activity"), (".ScreenShareService", "service")):
                 blocks = re.split(r"(?m)^\s*E: (?:activity|service|receiver|provider) \(line=\d+\)", xml)
                 matching = [block for block in blocks
                             if re.search(r'android:name[^=]*="(?:org\.intralink\.android)?' + re.escape(component) + '"', block)]
@@ -195,7 +196,7 @@ def main():
         shutil.copy2(source, args.output / name)
     info = {
         "version": version, "version_code": version_code,
-        "scope": "encrypted onboarding, manual pairing, foreground private IPv4 diagnostics and local consented AVC encoder diagnostic only", "abis": list(ABIS),
+        "scope": "encrypted onboarding, manual pairing, foreground private IPv4 diagnostics, local AVC diagnostic, experimental separately consented v12 read-only screen preview (Android 12L+); no remote input", "abis": list(ABIS),
         "permissions": sorted(PERMISSIONS),
         "debug_and_test_signed": True, "release_signed": release_signed,
         "lint_diagnostics": issues, "physical_runtime_qualified": False,

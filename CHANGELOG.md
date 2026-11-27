@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - Android preview.10 read-only screen preview
+
+- Implement an independently approved, foreground-only Android 12L+ MediaProjection source for the existing v12 Compact/JPEG viewer, with bounded direct RGBA buffers, reusable Rust canvases, peer identity recheck and local cancellation.
+- Qualify actual physical Surface/ImageReader, JNI/Compact/QUIC integration, local JPEG colors and MediaTek 1080p60 configured encoder on generated pixels. Real MediaProjection and graphical presentation still require operator acceptance.
+- Retain exact normal APK/AAB candidates and unchanged permissions/dependencies; no remote input or release signing.
+
 ## Unreleased - physical Android/Windows LAN acceptance
 
 - Add owner-selected ADB instrumentation and a Windows peer example for actual private-LAN JNI/QUIC probes with fresh identities, temporary encrypted vault, revocation and lease cleanup.

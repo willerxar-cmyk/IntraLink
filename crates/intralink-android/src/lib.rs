@@ -6,6 +6,8 @@
 mod avc_bridge;
 #[cfg(target_os = "android")]
 mod bridge;
+#[cfg(target_os = "android")]
+mod portable_bridge;
 
 #[cfg(any(target_os = "android", test))]
 mod session;

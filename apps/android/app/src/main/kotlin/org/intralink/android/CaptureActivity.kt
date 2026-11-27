@@ -165,6 +165,8 @@ class CaptureActivity : Activity() {
 
     private fun busy(): Boolean = CaptureRun.snapshot().phase in setOf(
         CaptureRun.Phase.STARTING, CaptureRun.Phase.RUNNING, CaptureRun.Phase.STOPPING
+    ) || ScreenShareRun.snapshot().phase in setOf(
+        ScreenShareRun.Phase.WAITING, ScreenShareRun.Phase.STOPPING
     )
 
     private fun cancel() {

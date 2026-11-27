@@ -301,6 +301,13 @@ class MainActivity : Activity() {
                     label(getString(R.string.saved_route, route.getString("host"), route.getInt("port")), 14)
                 }
                 action(getString(if (outbound) R.string.run_probe else R.string.listen_probe)) { showProbe(peer) }
+                if (!outbound && Build.VERSION.SDK_INT >= 32) {
+                    action(getString(R.string.screen_share_title)) {
+                        startActivity(android.content.Intent(this, ScreenShareActivity::class.java)
+                            .putExtra(ScreenShareActivity.EXTRA_NAME, name)
+                            .putExtra(ScreenShareActivity.EXTRA_IDENTITY, peer.getString("identity")))
+                    }
+                }
                 action(getString(R.string.revoke_peer)) { showRevoke(name) }
             }
         }

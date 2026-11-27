@@ -156,3 +156,7 @@ The independent negotiation protocol is loopback-only and has no media or comman
 ## Physical LAN acceptance fixture isolation
 
 The explicit owner-selected ADB instrumentation operates only on temporary app-private encrypted test profiles, never a user vault. The generated Compact media test is compiled only with the opt-in lan-fixture feature; Gradle disables Release variants and uses a separate JNI output directory, and distribution validation rejects its symbol. It transmits deterministic generated pixels and reconstructs them with safe Rust, not user display content or an arbitrary native decoder. Existing normal app permissions, capture consent and remote screen/input restrictions remain unchanged. See ANDROID-LAN-ACCEPTANCE.md. No ADB address or private credentials are committed.
+
+## Preview.10 screen-only approval
+
+A separately reviewed exact inbound peer and fresh Android MediaProjection consent are required. Password input remains FLAG_SECURE, is cleared/hidden before capture, held in memory only and wiped at JNI transfer; vault recheck/lock and the shared native reservation span the session. The non-exported service has visible Stop and bounded lifetime; focus/pause, OS stop, resize and failure cancel. Only after authenticated v12 capture demand is the virtual-display surface created. No automatic acceptance, remote input, background listener, arbitrary native AVC decode or persistent screen permission. Physical MediaProjection lifecycle still needs explicit local owner acceptance. See ANDROID-SCREEN-PREVIEW.md.

@@ -26,10 +26,11 @@ fn private_socket(value: &str) -> Result<SocketAddr> {
 async fn main() -> Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
     ensure!(
-        args.len() == 3 || (args.len() == 4 && args[3] == "media"),
-        "Usage: lan_probe_acceptance <host|base> <local IPv4:port> <remote IPv4:port> [media]"
+        args.len() == 3 || (args.len() == 4 && matches!(args[3].as_str(), "media" | "surface")),
+        "Usage: lan_probe_acceptance <host|base> <local IPv4:port> <remote IPv4:port> [media|surface]"
     );
     let media = args.len() == 4;
+    let surface = args.get(3).is_some_and(|a| a == "surface");
     ensure!(
         !media || cfg!(feature = "lan-fixture"),
         "Media requires the explicit lan-fixture feature"
@@ -45,6 +46,7 @@ async fn main() -> Result<()> {
         "base" => false,
         _ => anyhow::bail!("Invalid role"),
     };
+    ensure!(!surface || !host, "Surface fixture is Android source only");
     let mut profile = Profile::new(if host { Role::Host } else { Role::Controller });
     let endpoint = if host {
         #[cfg(feature = "lan-fixture")]
@@ -95,6 +97,13 @@ async fn main() -> Result<()> {
         let result = tokio::time::timeout(Duration::from_secs(35), async {
             if host {
                 intralink_transport::media_fixture::serve(&endpoint, grant.identity()?).await
+            } else if surface {
+                intralink_transport::media_fixture::view_surface(
+                    &endpoint,
+                    grant.identity()?,
+                    remote,
+                )
+                .await
             } else {
                 intralink_transport::media_fixture::view(&endpoint, grant.identity()?, remote).await
             }

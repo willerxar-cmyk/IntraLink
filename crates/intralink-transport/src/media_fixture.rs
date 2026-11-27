@@ -118,7 +118,26 @@ pub async fn serve(endpoint: &Endpoint, approved: EndpointId) -> Result<Stats> {
 /// Reconstruct and compare every RGB pixel on the real receiver. No native
 /// decoder or display path is used. Reject a different negotiated profile.
 pub async fn view(endpoint: &Endpoint, expected: EndpointId, remote: SocketAddr) -> Result<Stats> {
-    let config = config();
+    view_config(endpoint, expected, remote, config()).await
+}
+
+pub async fn view_surface(
+    endpoint: &Endpoint,
+    expected: EndpointId,
+    remote: SocketAddr,
+) -> Result<Stats> {
+    let config = VideoConfig::new(HEIGHT, FPS, 75, 15)
+        .expect("Surface fixture config")
+        .with_mode(CodecMode::Compact);
+    view_config(endpoint, expected, remote, config).await
+}
+
+async fn view_config(
+    endpoint: &Endpoint,
+    expected: EndpointId,
+    remote: SocketAddr,
+    config: VideoConfig,
+) -> Result<Stats> {
     let mode = ViewMode::new(CodecMode::Compact, PROTOCOL)
         .with_limits(ReceiverLimits::new(HEIGHT, FPS).unwrap());
     let mut canvas = Vec::new();

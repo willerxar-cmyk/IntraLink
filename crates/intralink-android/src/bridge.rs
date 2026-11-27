@@ -58,7 +58,10 @@ fn inputs(
     Ok((path, Zeroizing::new(env.convert_byte_array(password)?)))
 }
 
-fn reply(env: &mut JNIEnv, operation: impl FnOnce(&mut JNIEnv) -> Result<Value>) -> jstring {
+fn reply<'local>(
+    env: &mut JNIEnv<'local>,
+    operation: impl FnOnce(&mut JNIEnv<'local>) -> Result<Value>,
+) -> jstring {
     let result = match catch_unwind(AssertUnwindSafe(|| operation(env))) {
         Ok(Ok(value)) => value,
         Ok(Err(error)) => json!({"ok": false, "error": error.to_string()}),
@@ -284,6 +287,49 @@ pub extern "system" fn Java_org_intralink_android_NativeFixtureBridge_runMediaFi
         let mut result = summary(&profile);
         result["probe_elapsed_ms"] = json!(elapsed_ms);
         result["frames"] = json!(stats.frames);
+        result["media_bytes"] = json!(stats.media_bytes);
+        Ok(result)
+    })
+}
+
+/// A normal foreground-only screen worker, called after explicit local peer
+/// review and the Android MediaProjection consent result. No input authority.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_org_intralink_android_NativeBridge_runScreen<'local>(
+    mut env: JNIEnv<'local>,
+    _receiver: JObject<'local>,
+    path: JString<'local>,
+    request: JString<'local>,
+    id: jlong,
+    password: JByteArray<'local>,
+    source: JObject<'local>,
+) -> jstring {
+    reply(&mut env, |env| {
+        let lease = SESSIONS.claim(id)?;
+        ensure!(
+            APPLICATION_CONTEXT
+                .lock()
+                .map_err(|_| anyhow::anyhow!("Network context unavailable"))?
+                .is_some(),
+            "Android network context was not initialized"
+        );
+        let (path, secret) = inputs(env, &path, &password)?;
+        env.set_byte_array_region(&password, 0, &vec![0i8; secret.len()])?;
+        let password = secret;
+        let request: String = env.get_string(&request)?.into();
+        let mut source = crate::portable_bridge::Source::new(env, source);
+        let (profile, elapsed_ms, stats) = session::run_screen(
+            lease,
+            Path::new(&path),
+            password,
+            session::decode(&request)?,
+            |config, pressure, buffer| source.capture(config, pressure, buffer),
+        )?;
+        let mut result = summary(&profile);
+        result["screen_elapsed_ms"] = json!(elapsed_ms);
+        result["frames"] = json!(stats.frames);
+        result["repeats"] = json!(stats.repeats);
+        result["no_updates"] = json!(stats.no_updates);
         result["media_bytes"] = json!(stats.media_bytes);
         Ok(result)
     })

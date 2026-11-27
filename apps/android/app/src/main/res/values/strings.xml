@@ -33,7 +33,14 @@
     <string name="public_identity">Public identity</string>
     <string name="saved_grants">Saved directional grants: %1$d</string>
     <string name="revoked_grants">Role updated. Revoked incompatible grants: %1$d</string>
-    <string name="preview_scope">Manual pairing and foreground authenticated diagnostics are enabled. Local capture testing is available on CLIENT. Remote screen sharing and input are not enabled.</string>
+    <string name="preview_scope">Manual pairing and foreground authenticated diagnostics are enabled. CLIENT can explicitly approve a bounded screen-only preview on Android 12L or later. Remote input is not enabled.</string>
+    <string name="screen_share_title">Share screen preview</string>
+    <string name="screen_share_review">One read-only preview with %1$s. Verify the complete BASE identity: %2$s. The approved display, including visible overlays, will be sent to this peer after fresh Android consent. Keep private content hidden. Stay on this screen; leaving or Stop cancels sharing. Up to 15 seconds of video. No input access or app recording.</string>
+    <string name="screen_share_approve">Approve peer and request screen consent</string>
+    <string name="screen_share_waiting">Waiting for the approved BASE or sharing screen. Stop ends the session.</string>
+    <string name="screen_share_notification">Approved read-only screen preview. Tap Stop to end.</string>
+    <string name="screen_share_failed">Screen preview failed or expired. Check the paired identity, address, port and BASE viewer.</string>
+    <string name="screen_share_result">Preview completed. Changed frames: %1$d. Encoded bytes: %2$d. Session duration (ms): %3$d.</string>
     <string name="change_role">Change role</string>
     <string name="rename_device">Rename device</string>
     <string name="lock">Lock</string>

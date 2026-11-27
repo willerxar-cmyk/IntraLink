@@ -20,4 +20,5 @@ internal object NativeBridge {
     external fun reserveProbe(): Long
     external fun cancelProbe(id: Long)
     external fun runProbe(path: String, request: String, id: Long, password: ByteArray): String
+    external fun runScreen(path: String, request: String, id: Long, password: ByteArray, source: PortableFrameSource): String
 }

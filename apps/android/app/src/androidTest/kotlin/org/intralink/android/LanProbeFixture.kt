@@ -48,13 +48,24 @@ internal object LanProbeFixture {
             instrumentation.sendStatus(1, Bundle().apply {
                 putString("stream", "\nLAN_ANDROID_ID $identity\n")
             })
-            val media = args.getString("lanMediaFixture") == "true"
-            fun execute(reservation: Long): String = if (media) {
+            val surface = args.getString("lanMediaFixture") == "surface"
+            val media = surface || args.getString("lanMediaFixture") == "true"
+            check(!surface || direction == "inbound")
+            fun execute(reservation: Long): String = if (surface) {
+                val screenRequest = JSONObject().put("name", "windows-test").put("peer_id", peer)
+                    .put("host", host).put("port", port).put("height", 1080).put("fps", 30)
+                val secret = password.copyOf()
+                try {
+                    PortableFrameSource(PortableSurfaceFixture(), 1_000) { true }.use { source ->
+                        NativeBridge.runScreen(path, screenRequest.toString(), reservation, secret, source)
+                    }
+                } finally { secret.fill(0) }
+            } else if (media) {
                 NativeFixtureBridge.runMediaFixture(path, request.toString(), reservation, password)
             } else NativeBridge.runProbe(path, request.toString(), reservation, password)
             val response = success(execute(id))
             reservation = 0L
-            val elapsed = response.getLong("probe_elapsed_ms")
+            val elapsed = response.getLong(if (surface) "screen_elapsed_ms" else "probe_elapsed_ms")
             val detail = if (media) {
                 check(response.getInt("frames") == 60 && response.getLong("media_bytes") > 0)
                 " frames=${response.getInt("frames")} bytes=${response.getLong("media_bytes")}"

@@ -69,10 +69,12 @@ def private_ip(value):
     return str(ip)
 
 
-def run_direction(adb, serial, executable, windows, android, windows_port, android_port, direction, media):
+def run_direction(adb, serial, executable, windows, android, windows_port, android_port, direction, media, surface):
     role = "host" if direction == "outbound" else "base"
     command = [str(executable), role, f"{windows}:{windows_port}", f"{android}:{android_port}"]
-    if media:
+    if surface:
+        command.append("surface")
+    elif media:
         command.append("media")
     wp = Process(command)
     ap = None
@@ -83,7 +85,7 @@ def run_direction(adb, serial, executable, windows, android, windows_port, andro
         ap = Process([str(adb), "-s", serial, "shell", "am", "instrument", "-w", "-r",
                       "-e", "lanProbe", direction, "-e", "host", target,
                       "-e", "port", str(port), "-e", "peerId", wid,
-                      "-e", "lanMediaFixture", "true" if media else "false", RUNNER])
+                      "-e", "lanMediaFixture", "surface" if surface else ("true" if media else "false"), RUNNER])
         aid = ap.until(r"LAN_ANDROID_ID ([a-zA-Z0-9]+)$", time.monotonic() + 30, "Android")[1]
         wp.proc.stdin.write(aid + "\n")
         wp.proc.stdin.flush()
@@ -118,7 +120,10 @@ def main():
     parser.add_argument("--executable", type=Path, required=True)
     parser.add_argument("--direction", choices=("outbound", "inbound", "both"), default="both")
     parser.add_argument("--media", action="store_true", help="Requires explicit lan-fixture debug builds; generated pixels only")
+    parser.add_argument("--surface", action="store_true", help="Normal Android native screen path with generated Surface; no projection")
     args = parser.parse_args()
+    if args.surface and (args.media or args.direction != "inbound"):
+        parser.error("--surface requires --direction inbound, without --media")
     windows, android = private_ip(args.windows_ip), private_ip(args.android_ip)
     if windows == android or not all(1024 <= p <= 65535 for p in (args.windows_port, args.android_port)):
         parser.error("Distinct private addresses and unprivileged ports required")
@@ -135,7 +140,7 @@ def main():
         parser.error("Selected device and built example are required")
     for direction in (("outbound", "inbound") if args.direction == "both" else (args.direction,)):
         run_direction(adb, args.serial, args.executable.resolve(), windows, android,
-                      args.windows_port, args.android_port, direction, args.media)
+                      args.windows_port, args.android_port, direction, args.media or args.surface, args.surface)
 
 
 if __name__ == "__main__":
