@@ -2,6 +2,7 @@
 use std::{
     panic::{AssertUnwindSafe, catch_unwind},
     path::Path,
+    sync::Mutex,
 };
 
 use anyhow::{Result, bail, ensure};
@@ -9,11 +10,16 @@ use intralink_core::Role;
 use intralink_vault::{Profile, Vault};
 use jni::{
     JNIEnv,
-    objects::{JByteArray, JObject, JString},
-    sys::{jint, jstring},
+    objects::{GlobalRef, JByteArray, JObject, JString},
+    sys::{jboolean, jint, jlong, jstring},
 };
 use serde_json::{Value, json};
 use zeroize::Zeroizing;
+
+use crate::session::{self, Registry};
+
+static SESSIONS: Registry = Registry::new();
+static APPLICATION_CONTEXT: Mutex<Option<GlobalRef>> = Mutex::new(None);
 
 fn role(value: jint) -> Result<Role> {
     match value {
@@ -34,6 +40,7 @@ fn summary(profile: &Profile) -> Value {
         "name": profile.device_name().unwrap_or("Local device"),
         "public_id": profile.public_id().to_string(),
         "peer_count": profile.peers().len(),
+        "peers": profile.peers(),
     })
 }
 
@@ -129,5 +136,118 @@ pub extern "system" fn Java_org_intralink_android_NativeBridge_renameDevice(
         let vault = Vault::lock(Path::new(&path))?;
         vault.rename_device(&password, &name)?;
         Ok(summary(&vault.load(&password)?))
+    })
+}
+
+// This is called with Android's applicationContext, not an Activity. The
+// global reference keeps the object valid until the process exits. Serialize
+// the one-time installation before any Iroh endpoint may be constructed.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_org_intralink_android_NativeBridge_initializeNetwork(
+    env: JNIEnv,
+    _receiver: JObject,
+    context: JObject,
+) -> jboolean {
+    let result = catch_unwind(AssertUnwindSafe(|| -> Result<()> {
+        let mut stored = APPLICATION_CONTEXT
+            .lock()
+            .map_err(|_| anyhow::anyhow!("Network context unavailable"))?;
+        if stored.is_none() {
+            ensure!(!context.is_null(), "Missing Android application context");
+            let vm = env.get_java_vm()?;
+            let global = env.new_global_ref(context)?;
+            // SAFETY: JavaVM is process-owned and the GlobalRef is retained in
+            // this process-lifetime static. Installation is serialized once.
+            unsafe {
+                iroh::dns::install_android_jni_context(
+                    vm.get_java_vm_pointer().cast(),
+                    global.as_obj().as_raw().cast(),
+                );
+            }
+            *stored = Some(global);
+        }
+        Ok(())
+    }));
+    u8::from(matches!(result, Ok(Ok(()))))
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_org_intralink_android_NativeBridge_pairDevice(
+    mut env: JNIEnv,
+    _receiver: JObject,
+    path: JString,
+    request: JString,
+    password: JByteArray,
+) -> jstring {
+    reply(&mut env, |env| {
+        let (path, password) = inputs(env, &path, &password)?;
+        let request: String = env.get_string(&request)?.into();
+        let profile = session::pair(Path::new(&path), &password, session::decode(&request)?)?;
+        Ok(summary(&profile))
+    })
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_org_intralink_android_NativeBridge_revokeDevice(
+    mut env: JNIEnv,
+    _receiver: JObject,
+    path: JString,
+    name: JString,
+    password: JByteArray,
+) -> jstring {
+    reply(&mut env, |env| {
+        let (path, password) = inputs(env, &path, &password)?;
+        let name: String = env.get_string(&name)?.into();
+        let profile = session::revoke(Path::new(&path), &password, &name)?;
+        Ok(summary(&profile))
+    })
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_org_intralink_android_NativeBridge_reserveProbe(
+    _env: JNIEnv,
+    _receiver: JObject,
+) -> jlong {
+    SESSIONS.reserve().unwrap_or(0)
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_org_intralink_android_NativeBridge_cancelProbe(
+    _env: JNIEnv,
+    _receiver: JObject,
+    id: jlong,
+) {
+    SESSIONS.cancel(id);
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_org_intralink_android_NativeBridge_runProbe(
+    mut env: JNIEnv,
+    _receiver: JObject,
+    path: JString,
+    request: JString,
+    id: jlong,
+    password: JByteArray,
+) -> jstring {
+    reply(&mut env, |env| {
+        let lease = SESSIONS.claim(id)?;
+        ensure!(
+            APPLICATION_CONTEXT
+                .lock()
+                .map_err(|_| anyhow::anyhow!("Network context unavailable"))?
+                .is_some(),
+            "Android network context was not initialized"
+        );
+        let (path, password) = inputs(env, &path, &password)?;
+        let request: String = env.get_string(&request)?.into();
+        let (profile, elapsed_ms) = session::run(
+            lease,
+            Path::new(&path),
+            password,
+            session::decode(&request)?,
+        )?;
+        let mut result = summary(&profile);
+        result["probe_elapsed_ms"] = json!(elapsed_ms);
+        Ok(result)
     })
 }

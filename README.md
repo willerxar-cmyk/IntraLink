@@ -35,9 +35,9 @@ Preview.4 adds a graphical first-run BASE/CLIENT selector, named encrypted ident
 |---|---|
 | Windows x64 | Preview 4 portable ZIP; local native diagnostics passed, physical KVM pending |
 | Linux x86_64 | Preview 4 TAR.GZ; native Ubuntu 24.04 CI build/tests passed; physical capture and input adapter pending |
-| Android | Local onboarding APK/AAB candidate built; no qualified Android remote session or signed distribution yet |
+| Android | Local onboarding candidate built; manual pairing and authenticated diagnostic source under qualification; no signed distribution yet |
 
-Android source and candidate build/validation instructions: [ANDROID.md](docs/ANDROID.md). The Android app currently implements local identity setup only; it does not expose a remote session.
+Android source and candidate build/validation instructions: [ANDROID.md](docs/ANDROID.md). The next Android candidate extends local identity setup with manual pairing and a foreground authenticated diagnostic. Screen sharing and remote input are not enabled.
 
 ## Install on Linux (experimental)
 

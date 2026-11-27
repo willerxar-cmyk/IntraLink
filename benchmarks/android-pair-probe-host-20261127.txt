@@ -1,0 +1,21 @@
+START host-clippy
+    Checking intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+    Checking intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+    Checking intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+    Checking intralink-android v0.22.0 (D:\IntraLink\crates\intralink-android)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.49s
+EXIT host-clippy 0
+START host-tests
+   Compiling intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+   Compiling intralink-android v0.22.0 (D:\IntraLink\crates\intralink-android)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 31.51s
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_android-62a98eb01f6d6c56.exe)
+
+running 3 tests
+test session::tests::reservations_are_single_use_and_stale_cancellation_is_isolated ... ok
+test session::tests::real_authenticated_quic_and_canceled_listener ... ok
+test session::tests::manual_pairing_checks_route_direction_and_identity_and_persists ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 41.81s
+
+EXIT host-tests 0

@@ -8,10 +8,19 @@ publish.workspace = true
 [lib]
 crate-type = ["cdylib"]
 
-[target.'cfg(target_os = "android")'.dependencies]
+[dependencies]
 anyhow.workspace = true
 intralink-core.workspace = true
 intralink-vault.workspace = true
-jni = "=0.21.1"
 serde_json.workspace = true
 zeroize.workspace = true
+intralink-transport.workspace = true
+iroh.workspace = true
+tokio.workspace = true
+serde.workspace = true
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "=0.21.1"
+
+[dev-dependencies]
+tempfile.workspace = true

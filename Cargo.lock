@@ -1750,9 +1750,14 @@ version = "0.22.0"
 dependencies = [
  "anyhow",
  "intralink-core",
+ "intralink-transport",
  "intralink-vault",
+ "iroh",
  "jni 0.21.1",
+ "serde",
  "serde_json",
+ "tempfile",
+ "tokio",
  "zeroize",
 ]
 

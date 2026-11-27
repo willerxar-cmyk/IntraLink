@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - Android diagnostic pairing
+
+- Add explicit Android directional pairing, saved peer dashboard, revocation and one-shot private IPv4 QUIC diagnostic using the existing pinned-identity transport.
+- Add process-wide single-use reservations, activity-pause cancellation and local Stop. No screen or input authorization, public routing, automatic discovery or reconnect.
+- Extend host-side real QUIC tests and JNI instrumentation; enforce exact APK permissions and packaged JNI exports. Repair Android CI SDK provisioning.
+
 ## Unreleased - Android local onboarding
 
 - Add Kotlin Android app with the shared Rust encrypted identity, role and naming operations, ABI-specific JNI builds and explicit no-backup policy.

@@ -1,10 +1,12 @@
-"""Validate and retain an Android local-onboarding candidate, not a public release."""
+"""Validate and retain an Android diagnostic candidate, not a public release."""
 import argparse
 import hashlib
 import json
 import os
 from pathlib import Path
 import platform
+import re
+import tempfile
 import shutil
 import struct
 import subprocess
@@ -14,7 +16,9 @@ import zipfile
 from build_android_native import ndk_bin
 
 ABIS = {"arm64-v8a": 183, "x86_64": 62}
-EXPORTS = {"createProfile", "openProfile", "changeRole", "renameDevice"}
+EXPORTS = {"createProfile", "openProfile", "changeRole", "renameDevice", "pairDevice", "revokeDevice",
+           "initializeNetwork", "reserveProbe", "cancelProbe", "runProbe"}
+PERMISSIONS = {"android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE"}
 ROOT = Path(__file__).resolve().parent.parent
 BUILD = ROOT / "apps/android/app/build"
 
@@ -59,6 +63,14 @@ def verify_elf(data, abi):
     return min(alignments)
 
 
+def check_exports(path):
+    suffix = ".exe" if platform.system() == "Windows" else ""
+    symbols = run(ndk_bin() / f"llvm-readelf{suffix}", "--dyn-syms", "--wide", path)
+    actual = set(re.findall(r"Java_org_intralink_android_NativeBridge_([A-Za-z0-9_]+)\b", symbols))
+    if actual != EXPORTS:
+        raise ValueError(f"Unexpected JNI export set: {path.name}: {actual}")
+
+
 def verify_archive(path, prefix):
     with zipfile.ZipFile(path) as z:
         if z.testzip() is not None or len(z.namelist()) != len(set(z.namelist())):
@@ -71,20 +83,19 @@ def verify_archive(path, prefix):
             name = f"{prefix}lib/{abi}/libintralink_android.so"
             data = z.read(name)
             align = verify_elf(data, abi)
+            with tempfile.TemporaryDirectory() as directory:
+                library = Path(directory) / "libintralink_android.so"
+                library.write_bytes(data)
+                check_exports(library)
             print(f"{path.name}: {abi} {len(data)} bytes, ELF LOAD alignment {align}, SHA256 {sha(data)}")
         return any(n.startswith("META-INF/") and n.upper().endswith((".RSA", ".DSA", ".EC")) for n in z.namelist())
 
 
 def verify_exports():
-    suffix = ".exe" if platform.system() == "Windows" else ""
-    readelf = ndk_bin() / f"llvm-readelf{suffix}"
     for abi in ABIS:
         native = BUILD / "generated/jniLibs" / abi / "libintralink_android.so"
         verify_elf(native.read_bytes(), abi)
-        symbols = run(readelf, "--dyn-syms", "--wide", native)
-        for method in EXPORTS:
-            if f"Java_org_intralink_android_NativeBridge_{method}" not in symbols:
-                raise ValueError(f"Missing JNI export {method}: {abi}")
+        check_exports(native)
 
 
 def main():
@@ -94,6 +105,9 @@ def main():
     parser.add_argument("--require-signed", action="store_true")
     args = parser.parse_args()
     aapt, zipalign, apksigner = sdk_tools()
+    gradle = (ROOT / "apps/android/app/build.gradle").read_text(encoding="utf-8")
+    version_code = int(re.search(r"\bversionCode\s*=\s*(\d+)", gradle).group(1))
+    version = re.search(r"\bversionName\s*=\s*'([^']+)'", gradle).group(1)
     apk_dir = BUILD / "outputs/apk"
     debug = apk_dir / "debug/app-debug.apk"
     test = apk_dir / "androidTest/debug/app-debug-androidTest.apk"
@@ -111,10 +125,11 @@ def main():
         if "org.intralink.android" not in badging:
             raise ValueError("Unexpected Android application identity")
         if apk != test:
-            if "versionCode='220004'" not in badging or "sdkVersion:'26'" not in badging or "targetSdkVersion:'36'" not in badging:
+            if f"versionCode='{version_code}'" not in badging or f"versionName='{version}'" not in badging or "sdkVersion:'26'" not in badging or "targetSdkVersion:'36'" not in badging:
                 raise ValueError("Unexpected application version or SDK")
-            if "uses-permission:" in run(aapt, "dump", "permissions", apk):
-                raise ValueError("Local onboarding unexpectedly requests Android permissions")
+            permissions = set(re.findall(r"uses-permission:\s+name='([^']+)'", run(aapt, "dump", "permissions", apk)))
+            if permissions != PERMISSIONS:
+                raise ValueError(f"Unexpected Android permission set: {permissions}")
     run("java", "-jar", apksigner, "verify", "--verbose", debug)
     run("java", "-jar", apksigner, "verify", "--verbose", test)
     release_signed = subprocess.run(
@@ -138,10 +153,10 @@ def main():
                 raise ValueError("Invalid notice archive")
     args.output.mkdir(parents=True, exist_ok=False)
     files = {
-        "intralink-android-onboarding-debug.apk": debug,
-        "intralink-android-onboarding-instrumentation.apk": test,
-        "intralink-android-onboarding-release" + (".apk" if release_signed else "-unsigned.apk"): release,
-        "intralink-android-onboarding-release" + (".aab" if bundle_signed else "-unsigned.aab"): aab,
+        "intralink-android-pairing-debug.apk": debug,
+        "intralink-android-pairing-instrumentation.apk": test,
+        "intralink-android-pairing-release" + (".apk" if release_signed else "-unsigned.apk"): release,
+        "intralink-android-pairing-release" + (".aab" if bundle_signed else "-unsigned.aab"): aab,
         "LICENSE": ROOT / "LICENSE",
         "ANDROID.md": ROOT / "docs/ANDROID.md",
     }
@@ -150,8 +165,9 @@ def main():
     for name, source in files.items():
         shutil.copy2(source, args.output / name)
     info = {
-        "version": "0.22.0-preview.4", "version_code": 220004,
-        "scope": "local encrypted onboarding only", "abis": list(ABIS),
+        "version": version, "version_code": version_code,
+        "scope": "encrypted onboarding, manual pairing, foreground private IPv4 diagnostic only", "abis": list(ABIS),
+        "permissions": sorted(PERMISSIONS),
         "debug_and_test_signed": True, "release_signed": release_signed,
         "lint_diagnostics": issues, "physical_runtime_qualified": False,
         "public_release": False,

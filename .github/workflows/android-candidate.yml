@@ -1,4 +1,4 @@
-name: Android onboarding candidate
+name: Android pairing candidate
 on:
   workflow_dispatch:
 permissions:
@@ -16,6 +16,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
       - name: Verify SDK and native toolchain
         shell: bash
         run: |
@@ -23,6 +24,10 @@ jobs:
           sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358"
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> "$GITHUB_ENV"
           cargo fmt --all -- --check
+      - name: Host diagnostic engine tests
+        run: |
+          cargo clippy --locked -p intralink-android --all-targets -- -D warnings
+          cargo test --locked -p intralink-android
       - name: Strict native Clippy and Release, both ABIs
         run: python3 tools/build_android_native.py apps/android/app/build/generated/jniLibs --clippy
       - name: Build application and actual JNI instrumentation APK
@@ -40,10 +45,10 @@ jobs:
           python3 tools/android_jvm_notices.py apps/android/app/build/reports/runtime-dependencies.json dist/android-jvm-notices.zip
       - name: Validate candidate without pretending to sign a release
         run: |
-          python3 -B tools/validate_android_candidate.py dist/android-onboarding-candidate --notices dist/android-arm64-notices.zip dist/android-x86_64-notices.zip dist/android-jvm-notices.zip
+          python3 -B tools/validate_android_candidate.py dist/android-pairing-candidate --notices dist/android-arm64-notices.zip dist/android-x86_64-notices.zip dist/android-jvm-notices.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: intralink-android-onboarding-${{ github.sha }}
-          path: dist/android-onboarding-candidate/
+          name: intralink-android-pairing-${{ github.sha }}
+          path: dist/android-pairing-candidate/
           if-no-files-found: error
       # No production keys or automatic public release. Device tests are separate.

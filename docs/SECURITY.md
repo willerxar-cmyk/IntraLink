@@ -121,3 +121,8 @@ Interactive queue and acceptance deadlines now fail closed on age or nonreplacea
 ## First-run and role settings
 
 The graphical chooser is local and focused, starts no listener and creates no grants. Setup requires interactive name/passphrase entry and explicit approval; initialization cannot overwrite an existing vault. Role changes require authenticated vault access, the exclusive lock and explicit local approval of the impact. Incompatible grants and pending invitations are revoked, not converted or resurrected. The private key, compatible grants and replay receipts persist. Never use role selection as a substitute for per-capability session consent.
+
+
+## Android one-shot diagnostic boundary
+
+The Android preview.5 source accepts a locally approved directional peer label and canonical public identity; outbound routes are restricted to numeric private IPv4 and nonzero UDP ports. Existing vault role/duplicate/self-pair checks remain. Pairing and revoke are encrypted local operations, not live session grants. Each probe requires a fresh UI approval and vault passphrase; one process-wide reservation, unique identifier and cooperative cancellation prevent stale work or two simultaneous diagnostics. Pause cancels reserved/running work, and the approved endpoint is explicitly closed before releasing its lease and vault lock. No public relay, background listener, discovery, screen capture, accessibility or OS input is enabled. The only new Android permissions are INTERNET and ACCESS_NETWORK_STATE. Host loopback/compile tests are not proof of Android runtime, local-network egress isolation or physical control. See ANDROID.md.
