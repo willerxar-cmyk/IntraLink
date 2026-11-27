@@ -1,0 +1,84 @@
+﻿Local labeled visual test window only. No real monitor capture. Focus window and press ESC to cancel.
+pipeline=true, bounded_lock_wait=false, staged_readback=false, records=180, changed=178, repeats=2, no_updates=0, native_samples=180, overlapping_captures=0, elapsed_s=3.701, records_fps=48.64, changed_fps=48.10, capture_ms=1188.875, encode_ms=1453.144, media_bytes=31219074
+stage=planned_wait, samples=180, p50_ms=16.642, p95_ms=16.656, p99_ms=16.660, worst_ms=16.663
+stage=start_lateness, samples=180, p50_ms=3.524, p95_ms=7.182, p99_ms=14.988, worst_ms=68.287
+stage=actual_capture_cadence, samples=179, p50_ms=20.234, p95_ms=23.979, p99_ms=31.655, worst_ms=46.876
+stage=native_capture, samples=180, p50_ms=5.460, p95_ms=9.584, p99_ms=13.691, worst_ms=37.803
+stage=encoder_queue, samples=180, p50_ms=0.049, p95_ms=0.132, p99_ms=0.158, worst_ms=0.197
+stage=encode, samples=180, p50_ms=8.086, p95_ms=9.029, p99_ms=9.530, worst_ms=9.731
+stage=publication_delay, samples=180, p50_ms=0.029, p95_ms=0.089, p99_ms=0.102, worst_ms=0.114
+stage=local_delivery, samples=178, p50_ms=0.915, p95_ms=1.176, p99_ms=1.358, worst_ms=1.372
+stage=viewer_decode, samples=178, p50_ms=6.994, p95_ms=7.989, p99_ms=9.346, worst_ms=9.365
+capture_contention_polls=0, affected_attempts=0
+staged_map_polls=0, staged_wait_ms=0.000
+stage=staged_interpoll_wait, samples=180, p50_ms=0.000, p95_ms=0.000, p99_ms=0.000, worst_ms=0.000
+stage=generation_notification_wait, samples=180, p50_ms=0.000, p95_ms=0.000, p99_ms=5.663, worst_ms=11.858
+stage=callback_contention_wait, samples=180, p50_ms=0.000, p95_ms=0.000, p99_ms=0.000, worst_ms=0.000
+stage=native_consume, samples=180, p50_ms=5.414, p95_ms=9.512, p99_ms=13.669, worst_ms=25.888
+stage=scale_submission, samples=180, p50_ms=0.282, p95_ms=0.532, p99_ms=0.651, worst_ms=2.147
+stage=copy_submission, samples=180, p50_ms=0.004, p95_ms=0.007, p99_ms=0.013, worst_ms=0.035
+stage=map_wait, samples=180, p50_ms=4.425, p95_ms=8.313, p99_ms=8.883, worst_ms=12.819
+stage=cpu_row_copy_unmap, samples=180, p50_ms=0.680, p95_ms=0.995, p99_ms=1.242, worst_ms=2.200
+pipeline=true, bounded_lock_wait=false, staged_readback=true, records=180, changed=178, repeats=1, no_updates=1, native_samples=179, overlapping_captures=33, elapsed_s=3.701, records_fps=48.63, changed_fps=48.09, capture_ms=1964.223, encode_ms=1572.395, media_bytes=31217643
+stage=planned_wait, samples=180, p50_ms=16.625, p95_ms=16.647, p99_ms=16.659, worst_ms=16.659
+stage=start_lateness, samples=180, p50_ms=2.625, p95_ms=8.440, p99_ms=14.896, worst_ms=51.781
+stage=actual_capture_cadence, samples=179, p50_ms=19.353, p95_ms=25.288, p99_ms=31.562, worst_ms=66.270
+stage=native_capture, samples=180, p50_ms=9.589, p95_ms=17.076, p99_ms=31.552, worst_ms=56.619
+stage=encoder_queue, samples=180, p50_ms=0.048, p95_ms=0.133, p99_ms=0.193, worst_ms=0.208
+stage=encode, samples=180, p50_ms=8.622, p95_ms=11.107, p99_ms=12.285, worst_ms=14.918
+stage=publication_delay, samples=180, p50_ms=0.031, p95_ms=0.081, p99_ms=0.374, worst_ms=0.423
+stage=local_delivery, samples=178, p50_ms=0.965, p95_ms=1.291, p99_ms=1.490, worst_ms=1.621
+stage=viewer_decode, samples=178, p50_ms=7.634, p95_ms=8.878, p99_ms=10.014, worst_ms=10.213
+capture_contention_polls=1, affected_attempts=1
+staged_map_polls=219, staged_wait_ms=1585.512
+stage=staged_interpoll_wait, samples=180, p50_ms=8.041, p95_ms=15.225, p99_ms=18.949, worst_ms=23.342
+stage=generation_notification_wait, samples=180, p50_ms=0.000, p95_ms=0.000, p99_ms=24.031, worst_ms=31.506
+stage=callback_contention_wait, samples=180, p50_ms=0.000, p95_ms=0.000, p99_ms=0.000, worst_ms=8.013
+stage=native_consume, samples=180, p50_ms=1.427, p95_ms=2.293, p99_ms=3.066, worst_ms=19.085
+stage=scale_submission, samples=179, p50_ms=0.302, p95_ms=0.575, p99_ms=0.802, worst_ms=2.126
+stage=copy_submission, samples=179, p50_ms=0.102, p95_ms=0.278, p99_ms=0.318, worst_ms=0.318
+stage=map_wait, samples=179, p50_ms=0.043, p95_ms=0.178, p99_ms=0.275, worst_ms=0.921
+stage=cpu_row_copy_unmap, samples=179, p50_ms=0.910, p95_ms=1.720, p99_ms=2.068, worst_ms=2.513
+pipeline=true, bounded_lock_wait=false, staged_readback=true, records=180, changed=178, repeats=2, no_updates=0, native_samples=180, overlapping_captures=25, elapsed_s=3.577, records_fps=50.32, changed_fps=49.76, capture_ms=1893.108, encode_ms=1487.787, media_bytes=31217962
+stage=planned_wait, samples=180, p50_ms=16.631, p95_ms=16.657, p99_ms=16.661, worst_ms=16.663
+stage=start_lateness, samples=180, p50_ms=0.846, p95_ms=8.303, p99_ms=14.185, worst_ms=59.691
+stage=actual_capture_cadence, samples=179, p50_ms=17.620, p95_ms=25.517, p99_ms=36.983, worst_ms=63.954
+stage=native_capture, samples=180, p50_ms=9.107, p95_ms=17.152, p99_ms=30.083, worst_ms=54.792
+stage=encoder_queue, samples=180, p50_ms=0.049, p95_ms=0.132, p99_ms=0.173, worst_ms=0.179
+stage=encode, samples=180, p50_ms=7.970, p95_ms=10.164, p99_ms=17.411, worst_ms=17.964
+stage=publication_delay, samples=180, p50_ms=0.029, p95_ms=0.100, p99_ms=0.205, worst_ms=0.331
+stage=local_delivery, samples=178, p50_ms=0.900, p95_ms=1.243, p99_ms=1.540, worst_ms=1.728
+stage=viewer_decode, samples=178, p50_ms=7.321, p95_ms=8.689, p99_ms=9.663, worst_ms=9.688
+capture_contention_polls=1, affected_attempts=1
+staged_map_polls=203, staged_wait_ms=1557.274
+stage=staged_interpoll_wait, samples=180, p50_ms=7.690, p95_ms=15.503, p99_ms=18.986, worst_ms=19.520
+stage=generation_notification_wait, samples=180, p50_ms=0.000, p95_ms=0.000, p99_ms=8.889, worst_ms=21.692
+stage=callback_contention_wait, samples=180, p50_ms=0.000, p95_ms=0.000, p99_ms=0.000, worst_ms=8.219
+stage=native_consume, samples=180, p50_ms=1.381, p95_ms=2.367, p99_ms=3.921, worst_ms=17.070
+stage=scale_submission, samples=180, p50_ms=0.297, p95_ms=0.608, p99_ms=0.723, worst_ms=1.850
+stage=copy_submission, samples=180, p50_ms=0.108, p95_ms=0.271, p99_ms=0.330, worst_ms=0.410
+stage=map_wait, samples=180, p50_ms=0.032, p95_ms=0.139, p99_ms=0.220, worst_ms=0.232
+stage=cpu_row_copy_unmap, samples=180, p50_ms=0.860, p95_ms=1.823, p99_ms=2.617, worst_ms=3.533
+pipeline=true, bounded_lock_wait=false, staged_readback=false, records=180, changed=176, repeats=4, no_updates=0, native_samples=180, overlapping_captures=9, elapsed_s=3.899, records_fps=46.16, changed_fps=45.14, capture_ms=1079.783, encode_ms=1665.329, media_bytes=30882870
+stage=planned_wait, samples=180, p50_ms=16.630, p95_ms=16.654, p99_ms=16.661, worst_ms=16.662
+stage=start_lateness, samples=180, p50_ms=4.876, p95_ms=8.120, p99_ms=14.454, worst_ms=54.094
+stage=actual_capture_cadence, samples=179, p50_ms=21.554, p95_ms=25.224, p99_ms=31.121, worst_ms=49.090
+stage=native_capture, samples=180, p50_ms=5.264, p95_ms=9.517, p99_ms=15.282, worst_ms=38.851
+stage=encoder_queue, samples=180, p50_ms=0.060, p95_ms=0.149, p99_ms=0.175, worst_ms=0.388
+stage=encode, samples=180, p50_ms=8.773, p95_ms=13.545, p99_ms=18.922, worst_ms=21.201
+stage=publication_delay, samples=180, p50_ms=0.037, p95_ms=0.553, p99_ms=8.057, worst_ms=8.166
+stage=local_delivery, samples=176, p50_ms=0.994, p95_ms=1.597, p99_ms=2.023, worst_ms=2.194
+stage=viewer_decode, samples=176, p50_ms=7.513, p95_ms=10.049, p99_ms=12.220, worst_ms=14.033
+capture_contention_polls=2, affected_attempts=1
+staged_map_polls=0, staged_wait_ms=0.000
+stage=staged_interpoll_wait, samples=180, p50_ms=0.000, p95_ms=0.000, p99_ms=0.000, worst_ms=0.000
+stage=generation_notification_wait, samples=180, p50_ms=0.000, p95_ms=0.000, p99_ms=4.882, worst_ms=13.192
+stage=callback_contention_wait, samples=180, p50_ms=0.000, p95_ms=0.000, p99_ms=0.000, worst_ms=0.070
+stage=native_consume, samples=180, p50_ms=5.214, p95_ms=8.648, p99_ms=13.367, worst_ms=25.599
+stage=scale_submission, samples=180, p50_ms=0.335, p95_ms=0.728, p99_ms=1.279, worst_ms=2.272
+stage=copy_submission, samples=180, p50_ms=0.004, p95_ms=0.016, p99_ms=0.093, worst_ms=0.157
+stage=map_wait, samples=180, p50_ms=3.973, p95_ms=7.393, p99_ms=10.616, worst_ms=12.168
+stage=cpu_row_copy_unmap, samples=180, p50_ms=0.710, p95_ms=1.500, p99_ms=3.306, worst_ms=3.316
+visual_fidelity pipeline=true, bounded_lock_wait=false, staged_readback=true, frames=56, pixels=116121600, lossless_frames=0, max_channel_mae=1.1542, max_block_mae=5.2227, max_large_error_fraction=0.000000
+staged_readback_check=passed; generated owned window and authenticated QUIC loopback only.
+EXIT staged-repeat 0
