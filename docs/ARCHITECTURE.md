@@ -128,3 +128,8 @@ Explicit two-demand scheduling reserves existing receipt credit before capture. 
 ### Start-clock ownership
 
 In fixed-v8 pipeline mode, the transport reserves at most two FIFO demands against existing credit; a single-use local capture-start grant supplies a monotonic earliest start and expiry. The foreground gate waits until due, independently enforces maximum FPS and reports the actual start. Future grants use that actual timestamp. An unstarted response fails closed. No wire change. See [CAPTURE-GRANTS.md](CAPTURE-GRANTS.md).
+
+
+### Local WGC timing boundary
+
+Capture timing remains local to the app and native adapter. The native readback reports disjoint CPU wall times for scale submission, staging copy, Map synchronization and row copy; no native handle or timing is passed to the transport or peer. An explicit owned-window diagnostic compares bounded callback-lock waiting against the existing policy. Host locking, consent and protocol remain unchanged. See [WGC-CAPTURE-TIMING.md](WGC-CAPTURE-TIMING.md).

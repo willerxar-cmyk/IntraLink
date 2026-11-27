@@ -22,7 +22,7 @@ use super::{
     resize::CanvasResizer,
     visual_fidelity::{Fidelity, Reference},
     visual_fixture,
-    wgc_check::CaptureSession,
+    wgc_check::{CaptureSession, CaptureTiming},
 };
 
 const SAMPLES: usize = 60;
@@ -41,6 +41,7 @@ struct Observations {
     late: Vec<Duration>,
     cadence: Vec<Duration>,
     native_times: Vec<Duration>,
+    capture_breakdown: Vec<CaptureTiming>,
     queue: Vec<Duration>,
     encode_times: Vec<Duration>,
     publication: Vec<Duration>,
@@ -49,6 +50,11 @@ struct Observations {
 struct DeliveryTrace {
     sequence: usize,
     published_at: Instant,
+}
+
+struct TraceChannels {
+    references: Option<mpsc::Sender<Reference>>,
+    traces: mpsc::Sender<DeliveryTrace>,
 }
 
 #[derive(Default)]
@@ -65,10 +71,11 @@ fn timing(label: &str, values: &[Duration]) {
     sorted.sort_unstable();
     let ms = |rank: usize| sorted[(sorted.len() * rank).div_ceil(100) - 1].as_secs_f64() * 1000.0;
     println!(
-        "stage={label}, samples={}, p50_ms={:.3}, p95_ms={:.3}, worst_ms={:.3}",
+        "stage={label}, samples={}, p50_ms={:.3}, p95_ms={:.3}, p99_ms={:.3}, worst_ms={:.3}",
         sorted.len(),
         ms(50),
         ms(95),
+        ms(99),
         ms(100)
     );
 }
@@ -94,9 +101,10 @@ async fn produce(
     target: &xcap::Window,
     mut requests: mpsc::Receiver<CaptureRequest>,
     server: &JoinHandle<Result<Stats>>,
-    references: Option<mpsc::Sender<Reference>>,
-    traces: mpsc::Sender<DeliveryTrace>,
+    channels: TraceChannels,
+    bounded_lock_wait: bool,
 ) -> Result<Observations> {
+    let TraceChannels { references, traces } = channels;
     let started = Instant::now();
     let pid = child.0.id();
     let mut session = None::<CaptureSession>;
@@ -176,11 +184,13 @@ async fn produce(
                     stats.late.push(began.saturating_duration_since(due.max(request.issued_at)));
                     if let Some(previous) = last_capture { stats.cadence.push(began.duration_since(previous)); }
                     last_capture = Some(began);
-                    let frame = source.capture(|| {
+                    let (frame, breakdown) = source.capture_profiled(|| {
                         check_source(child,target,started)?;
                         ensure!(!request.reply.is_closed() && !server.is_finished(), "Diagnostic demand canceled");
                         Ok(())
-                    })?;
+                    }, bounded_lock_wait)?;
+                    ensure!(frame.is_some() == breakdown.readback.is_some(), "Native timing/readback mismatch");
+                    stats.capture_breakdown.push(breakdown);
                     let elapsed = began.elapsed();
                     stats.capture += elapsed;
                     stats.native_times.push(elapsed);
@@ -210,7 +220,7 @@ async fn produce(
     Ok(stats)
 }
 
-async fn run_one(overlap: bool, verify: bool) -> Result<()> {
+async fn run_one(overlap: bool, verify: bool, bounded_lock_wait: bool) -> Result<()> {
     let config = VideoConfig::new(1080, 60, 75, 12)
         .unwrap()
         .with_mode(CodecMode::Compact);
@@ -311,8 +321,11 @@ async fn run_one(overlap: bool, verify: bool) -> Result<()> {
         &target,
         requests,
         &server,
-        verify.then_some(reference_tx),
-        trace_tx,
+        TraceChannels {
+            references: verify.then_some(reference_tx),
+            traces: trace_tx,
+        },
+        bounded_lock_wait,
     )
     .await;
     if observations.is_err() {
@@ -337,13 +350,39 @@ async fn run_one(overlap: bool, verify: bool) -> Result<()> {
         overlap || local.overlapping == 0,
         "Serial diagnostic overlapped capture"
     );
+    let breakdown = &local.capture_breakdown;
+    ensure!(
+        breakdown.len() == SAMPLES && local.native_times.len() == SAMPLES,
+        "Missing capture timing samples"
+    );
+    let reads: Vec<_> = breakdown
+        .iter()
+        .filter_map(|sample| sample.readback)
+        .collect();
+    ensure!(
+        reads.len() == local.native,
+        "Native readback timing count differs"
+    );
+    for (sample, elapsed) in breakdown.iter().zip(&local.native_times) {
+        ensure!(
+            sample.generation_wait + sample.contention_wait + sample.consume <= *elapsed,
+            "Overlapping native timing intervals"
+        );
+        if let Some(read) = sample.readback {
+            ensure!(
+                sample.scale_submit + read.copy_submit + read.map_wait + read.cpu_copy
+                    <= sample.consume,
+                "Overlapping readback timing intervals"
+            );
+        }
+    }
     if verify {
         ensure!(
             fidelity.frames == viewed.frames,
             "Not every changed frame was compared"
         );
         println!(
-            "visual_fidelity pipeline={overlap}, frames={}, pixels={}, lossless_frames={}, max_channel_mae={:.4}, max_block_mae={:.4}, max_large_error_fraction={:.6}",
+            "visual_fidelity pipeline={overlap}, bounded_lock_wait={bounded_lock_wait}, frames={}, pixels={}, lossless_frames={}, max_channel_mae={:.4}, max_block_mae={:.4}, max_large_error_fraction={:.6}",
             fidelity.frames,
             fidelity.pixels,
             fidelity.lossless_frames,
@@ -354,7 +393,7 @@ async fn run_one(overlap: bool, verify: bool) -> Result<()> {
         return Ok(());
     }
     println!(
-        "pipeline={overlap}, records={SAMPLES}, changed={}, repeats={}, no_updates={}, native_samples={}, overlapping_captures={}, elapsed_s={:.3}, records_fps={:.2}, changed_fps={:.2}, capture_ms={:.3}, encode_ms={:.3}, media_bytes={}",
+        "pipeline={overlap}, bounded_lock_wait={bounded_lock_wait}, records={SAMPLES}, changed={}, repeats={}, no_updates={}, native_samples={}, overlapping_captures={}, elapsed_s={:.3}, records_fps={:.2}, changed_fps={:.2}, capture_ms={:.3}, encode_ms={:.3}, media_bytes={}",
         served.frames,
         served.repeats,
         served.no_updates,
@@ -385,24 +424,82 @@ async fn run_one(overlap: bool, verify: bool) -> Result<()> {
     ] {
         timing(label, values);
     }
+    println!(
+        "capture_contention_polls={}, affected_attempts={}",
+        breakdown
+            .iter()
+            .map(|sample| sample.contention_polls)
+            .sum::<usize>(),
+        breakdown
+            .iter()
+            .filter(|sample| sample.contention_polls > 0)
+            .count()
+    );
+    for (label, values) in [
+        (
+            "generation_notification_wait",
+            breakdown
+                .iter()
+                .map(|s| s.generation_wait)
+                .collect::<Vec<_>>(),
+        ),
+        (
+            "callback_contention_wait",
+            breakdown.iter().map(|s| s.contention_wait).collect(),
+        ),
+        (
+            "native_consume",
+            breakdown.iter().map(|s| s.consume).collect(),
+        ),
+        (
+            "scale_submission",
+            breakdown
+                .iter()
+                .filter(|s| s.readback.is_some())
+                .map(|s| s.scale_submit)
+                .collect(),
+        ),
+        (
+            "copy_submission",
+            reads.iter().map(|s| s.copy_submit).collect(),
+        ),
+        ("map_wait", reads.iter().map(|s| s.map_wait).collect()),
+        (
+            "cpu_row_copy_unmap",
+            reads.iter().map(|s| s.cpu_copy).collect(),
+        ),
+    ] {
+        timing(label, &values);
+    }
     Ok(())
 }
 
-pub(super) async fn run(verify: bool) -> Result<()> {
+pub(super) async fn run(verify: bool, compare_lock: bool) -> Result<()> {
     super::require_graphical_environment()?;
     println!(
         "Local labeled visual test window only. No real monitor capture. Focus window and press ESC to cancel."
     );
-    run_one(false, verify).await?;
-    run_one(true, verify).await?;
-    if !verify {
-        // Alternate order to expose warm-up and load variation.
-        run_one(true, false).await?;
-        run_one(false, false).await?;
+    if compare_lock {
+        // Keep transport, scene and quality fixed while comparing only the
+        // callback lock policy. Validate every changed pixel separately.
+        for bounded in [false, true, true, false] {
+            run_one(true, false, bounded).await?;
+        }
+        run_one(true, true, true).await?;
+    } else {
+        run_one(false, verify, false).await?;
+        run_one(true, verify, false).await?;
+        if !verify {
+            // Alternate order to expose warm-up and load variation.
+            run_one(true, false, false).await?;
+            run_one(false, false, false).await?;
+        }
     }
     println!(
         "{}=passed; generated owned window and authenticated QUIC loopback only.",
-        if verify {
+        if compare_lock {
+            "capture_lock_check"
+        } else if verify {
             "visual_check"
         } else {
             "pipeline_check"

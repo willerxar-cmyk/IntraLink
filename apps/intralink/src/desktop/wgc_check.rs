@@ -7,7 +7,7 @@ use std::{
 
 use anyhow::{Context as _, Result, anyhow, ensure};
 use image::RgbaImage;
-use intralink_d3d11::{GpuScaler, LatestSurface, Readback};
+use intralink_d3d11::{GpuScaler, LatestSurface, Readback, ReadbackTiming};
 use windows_capture::{
     capture::{CaptureControl, Context, GraphicsCaptureApiHandler},
     frame::Frame,
@@ -23,6 +23,16 @@ use windows_capture::{
 use super::codec::validate_source_size;
 
 pub(super) type Captured = (RgbaImage, (u32, u32));
+
+#[derive(Default)]
+pub(super) struct CaptureTiming {
+    pub generation_wait: Duration,
+    pub contention_wait: Duration,
+    pub contention_polls: usize,
+    pub consume: Duration,
+    pub scale_submit: Duration,
+    pub readback: Option<ReadbackTiming>,
+}
 
 struct Flags {
     wake: SyncSender<()>,
@@ -78,6 +88,7 @@ impl Handler {
         after: u64,
         rgba: &mut Vec<u8>,
         gpu_target: Option<(u32, u32)>,
+        timing: &mut CaptureTiming,
     ) -> Result<Option<(u64, Captured)>> {
         ensure!(!self.closed, "WGC source closed");
         if let Some(error) = &self.failed {
@@ -118,10 +129,11 @@ impl Handler {
             self.stats.rgba_allocations += 1;
         }
         if let Some(scaler) = &mut self.scaler {
-            scaler.scale_and_read(surface, &mut self.readback, rgba)?;
+            timing.scale_submit = scaler.scale_and_read(surface, &mut self.readback, rgba)?;
         } else {
             surface.read(&mut self.readback, rgba)?;
         }
+        timing.readback = Some(self.readback.last_timing());
         self.stats.staging_allocations = self.readback.allocations();
         self.stats.readback_bytes += rgba.len() as u64;
         self.stats.readback_frames += 1;
@@ -279,8 +291,19 @@ impl CaptureSession {
     /// Native GPU readback itself is synchronous and may still block.
     pub(super) fn capture(
         &mut self,
-        mut check: impl FnMut() -> Result<()>,
+        check: impl FnMut() -> Result<()>,
     ) -> Result<Option<Captured>> {
+        self.capture_profiled(check, false).map(|(frame, _)| frame)
+    }
+
+    /// A local diagnostic may compare a bounded mutex wait against the
+    /// original wake-queue behavior. Actual Host policy stays unchanged.
+    pub(super) fn capture_profiled(
+        &mut self,
+        mut check: impl FnMut() -> Result<()>,
+        bounded_lock_wait: bool,
+    ) -> Result<(Option<Captured>, CaptureTiming)> {
+        let mut timing = CaptureTiming::default();
         let control = self.control.as_ref().context("WGC session ended")?;
         let callback = control.callback();
         let halt = control.halt_handle();
@@ -297,23 +320,57 @@ impl CaptureSession {
                 !control.is_finished() && !halt.load(std::sync::atomic::Ordering::Acquire),
                 "Persistent WGC session ended"
             );
-            if let Some(mut handler) = callback.try_lock()
-                && let Some((generation, frame)) =
-                    handler.consume(self.delivered, &mut self.rgba, self.gpu_target)?
-            {
-                check()?;
-                ensure!(
-                    !halt.load(std::sync::atomic::Ordering::Acquire),
-                    "WGC stopped during readback"
-                );
-                self.delivered = generation;
-                return Ok(Some(frame));
+            let mut guard = callback.try_lock();
+            if guard.is_none() {
+                timing.contention_polls += 1;
+                if bounded_lock_wait {
+                    let remaining = limit.saturating_sub(started.elapsed());
+                    if !remaining.is_zero() {
+                        let wait = Instant::now();
+                        // The callback can signal while it still owns the lock.
+                        // Wait for the actual lock, not a second frame notification.
+                        guard = callback.try_lock_for(remaining.min(Duration::from_millis(1)));
+                        timing.contention_wait += wait.elapsed();
+                        check()?;
+                        ensure!(
+                            !control.is_finished()
+                                && !halt.load(std::sync::atomic::Ordering::Acquire),
+                            "Persistent WGC session ended"
+                        );
+                    }
+                }
+            }
+            let contended = guard.is_none();
+            if let Some(mut handler) = guard {
+                let consuming = Instant::now();
+                let frame = handler.consume(
+                    self.delivered,
+                    &mut self.rgba,
+                    self.gpu_target,
+                    &mut timing,
+                )?;
+                timing.consume += consuming.elapsed();
+                if let Some((generation, frame)) = frame {
+                    check()?;
+                    ensure!(
+                        !halt.load(std::sync::atomic::Ordering::Acquire),
+                        "WGC stopped during readback"
+                    );
+                    self.delivered = generation;
+                    return Ok((Some(frame), timing));
+                }
             }
             let remaining = limit.saturating_sub(started.elapsed());
             if remaining.is_zero() {
                 ensure!(!first, "WGC first-frame deadline exceeded");
-                return Ok(None);
+                return Ok((None, timing));
             }
+            if bounded_lock_wait && contended {
+                // Retry only after the bounded blocking mutex wait. Local
+                // cancellation and the original deadline are checked again.
+                continue;
+            }
+            let wait = Instant::now();
             match self
                 .wake
                 .recv_timeout(remaining.min(Duration::from_millis(8)))
@@ -322,6 +379,11 @@ impl CaptureSession {
                 Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
                     anyhow::bail!("WGC callback disconnected")
                 }
+            }
+            if contended {
+                timing.contention_wait += wait.elapsed();
+            } else {
+                timing.generation_wait += wait.elapsed();
             }
         }
     }

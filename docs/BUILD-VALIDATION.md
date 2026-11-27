@@ -74,3 +74,8 @@ Run generated visual scene/marker, deliberate RGB swap/local block corruption/lo
 ### Capture-start grant gate
 
 Test early, duplicate, canceled and missing capture-start reports, actual delayed start driving the next absolute deadline, one pending local grant, independent FPS cap, FIFO ordering and saturated credit. Qualify locked CPU/NVENC workspaces, independent scalar application, strict four Clippy configurations, portable WGC Release. Compare preserved baseline and new calm-scene runs, new ABBA stage traces and separate full-pixel visual/retarget/geometry diagnostics. See [CAPTURE-GRANTS.md](CAPTURE-GRANTS.md).
+
+
+### WGC capture timing and lock experiment gate
+
+Retain every capture-start grant gate. Add `desktop-profile-check --capture-lock` to run the controlled same-pipeline ABBA lock-policy comparison and separate full-pixel regression of the experimental policy. Verify the command is explicit and conflicts with other diagnostic selectors, timing counts agree with actual attempts/readbacks, and disjoint timing intervals fit inside their enclosing stage. Native `Map` timings include synchronization; no isolated GPU execution claim. Do not adopt the experimental wait automatically. See [WGC-CAPTURE-TIMING.md](WGC-CAPTURE-TIMING.md).

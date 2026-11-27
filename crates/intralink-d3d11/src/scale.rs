@@ -1,5 +1,8 @@
 //! Shared D3D11 video processor, with explicit SDR color metadata.
-use std::mem::ManuallyDrop;
+use std::{
+    mem::ManuallyDrop,
+    time::{Duration, Instant},
+};
 
 use crate::{
     LatestSurface,
@@ -264,15 +267,18 @@ impl GpuScaler {
         surface: &LatestSurface,
         readback: &mut Readback,
         rgba: &mut Vec<u8>,
-    ) -> Result<()> {
+    ) -> Result<Duration> {
+        let started = Instant::now();
         self.processor.validate_source(surface)?;
         self.processor.process()?;
+        let scale_submit = started.elapsed();
         readback.copy_texture(
             surface.device(),
             surface.context(),
             self.processor.output(),
             rgba,
-        )
+        )?;
+        Ok(scale_submit)
     }
 }
 

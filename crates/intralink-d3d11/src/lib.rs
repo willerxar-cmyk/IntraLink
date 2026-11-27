@@ -8,7 +8,7 @@ mod readback;
 #[cfg(all(target_os = "windows", feature = "readback"))]
 pub use latest::LatestSurface;
 #[cfg(all(target_os = "windows", feature = "readback"))]
-pub use readback::Readback;
+pub use readback::{Readback, ReadbackTiming};
 
 #[cfg(all(target_os = "windows", feature = "readback"))]
 mod scale;

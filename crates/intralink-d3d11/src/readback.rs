@@ -1,6 +1,9 @@
 //! Reuse a staging texture across frames from one WGC capture device.
 //! The mapped resource is never exposed to the caller.
-use std::slice;
+use std::{
+    slice,
+    time::{Duration, Instant},
+};
 
 use anyhow::{Context, Result, ensure};
 use windows::Win32::Graphics::{
@@ -14,11 +17,20 @@ use windows_capture::{d3d11::StagingTexture, frame::Frame, settings::ColorFormat
 
 const MAX_PIXELS: u64 = 33_177_600;
 
+/// Local CPU wall-clock measurements, not GPU execution timestamps.
+#[derive(Clone, Copy, Default)]
+pub struct ReadbackTiming {
+    pub copy_submit: Duration,
+    pub map_wait: Duration,
+    pub cpu_copy: Duration,
+}
+
 #[derive(Default)]
 pub struct Readback {
     staging: Option<StagingTexture>,
     device: Option<ID3D11Device>,
     allocations: u64,
+    last_timing: ReadbackTiming,
 }
 
 impl Readback {
@@ -30,6 +42,10 @@ impl Readback {
 
     pub fn allocations(&self) -> u64 {
         self.allocations
+    }
+
+    pub fn last_timing(&self) -> ReadbackTiming {
+        self.last_timing
     }
 
     pub fn copy_rgba(&mut self, frame: &Frame<'_>, output: &mut Vec<u8>) -> Result<()> {
@@ -102,13 +118,17 @@ impl Readback {
         }
         let staging = self.staging.as_ref().context("Missing staging texture")?;
         let mut mapped = D3D11_MAPPED_SUBRESOURCE::default();
+        let copy_started = Instant::now();
         // SAFETY: both resources are alive, owned by the same D3D11 device,
         // and have identical dimensions, format, array/mip and sample layout.
         // This callback serializes access; the previous map has been unmapped.
         unsafe {
             context.CopyResource(staging.texture(), texture);
-            context.Map(staging.texture(), 0, D3D11_MAP_READ, 0, Some(&mut mapped))?;
         }
+        let map_started = Instant::now();
+        // SAFETY: the validated staging resource remains live and is not mapped.
+        unsafe { context.Map(staging.texture(), 0, D3D11_MAP_READ, 0, Some(&mut mapped))? };
+        let copy_rows_started = Instant::now();
         let _unmap = Unmap { context, staging };
         let pitch = mapped.RowPitch as usize;
         ensure!(!mapped.pData.is_null(), "Null D3D11 mapped pointer");
@@ -129,6 +149,11 @@ impl Readback {
         // SAFETY: the live device is queried after the copy and unmap; a
         // removed device must not publish the just-read pixels.
         unsafe { device.GetDeviceRemovedReason()? };
+        self.last_timing = ReadbackTiming {
+            copy_submit: map_started.duration_since(copy_started),
+            map_wait: copy_rows_started.duration_since(map_started),
+            cpu_copy: copy_rows_started.elapsed(),
+        };
         Ok(())
     }
 }

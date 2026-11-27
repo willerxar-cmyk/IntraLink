@@ -98,3 +98,8 @@ The optional presentation sink is now decoupled from the headless decoder; exist
 
 
 Release evidence update (2026-11-26): the headless reduced-token helper passed actual startup, CUDA/CUVID capabilities, and all six exact embedded 1080p native decode callbacks. Full workspace and native regressions passed. This does not prove arbitrary AVC safety, cross-process surface exchange, or OS-enforced read/network denial; graphical reduced-token mode remains unqualified. See APP-VALIDATION.md and restricted-headless-native-release-20261126.txt.
+
+
+### Local WGC timing diagnostic
+
+The explicit `desktop-profile-check --capture-lock` experiment creates only an owned labeled fixture and ephemeral authenticated loopback identities. The bounded mutex wait does not widen capture, session credit or remote authority, and rechecks local cancellation and source liveness before consuming a generation. Readback timings are local elapsed durations, not captured pixels or remotely supplied timestamps. Normal Host locking policy remains unchanged; native synchronous calls are still not forcibly preemptible. See [WGC-CAPTURE-TIMING.md](WGC-CAPTURE-TIMING.md).

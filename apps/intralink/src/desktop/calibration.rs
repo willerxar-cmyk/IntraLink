@@ -41,13 +41,16 @@ pub struct ProfileCheckArgs {
     /// Compare every decoded pixel against an owned local captured reference (not a benchmark).
     #[arg(long, conflicts_with_all = ["host", "encoder", "hardware", "slots", "pipeline"])]
     visual: bool,
+    /// Compare bounded WGC callback locking against the existing wake policy.
+    #[arg(long, conflicts_with_all = ["host", "encoder", "hardware", "slots", "pipeline", "visual"])]
+    capture_lock: bool,
 }
 
 impl ProfileCheckArgs {
     pub fn run(self) -> Result<()> {
-        if self.pipeline || self.visual {
+        if self.pipeline || self.visual || self.capture_lock {
             #[cfg(all(target_os = "windows", feature = "wgc-preview"))]
-            return crate::run_async(|| super::pipeline_check::run(self.visual));
+            return crate::run_async(|| super::pipeline_check::run(self.visual, self.capture_lock));
             #[cfg(not(all(target_os = "windows", feature = "wgc-preview")))]
             anyhow::bail!("Native pipeline diagnostic requires Windows wgc-preview");
         }
@@ -346,6 +349,31 @@ pub(super) fn measure(mode: CodecMode, ceilings: &[ReceiverLimits]) -> Result<Ve
 #[cfg(test)]
 mod tests {
     use super::*;
+    use clap::Parser;
+
+    #[derive(Parser)]
+    struct DiagnosticCli {
+        #[command(flatten)]
+        args: ProfileCheckArgs,
+    }
+
+    #[test]
+    fn capture_lock_diagnostic_is_explicit_and_exclusive() {
+        let default = DiagnosticCli::try_parse_from(["test"]).unwrap();
+        assert!(!default.args.capture_lock);
+        let selected = DiagnosticCli::try_parse_from(["test", "--capture-lock"]).unwrap();
+        assert!(selected.args.capture_lock);
+        for option in [
+            "--host",
+            "--encoder",
+            "--hardware",
+            "--pipeline",
+            "--visual",
+        ] {
+            assert!(DiagnosticCli::try_parse_from(["test", "--capture-lock", option]).is_err());
+        }
+        assert!(DiagnosticCli::try_parse_from(["test", "--capture-lock", "--slots", "1"]).is_err());
+    }
 
     #[test]
     fn real_software_fixtures_round_trip_without_timing_assumptions() -> Result<()> {
