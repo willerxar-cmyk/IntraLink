@@ -15,7 +15,7 @@ desktop-preview = ["dep:xcap", "dep:image", "dep:minifb", "dep:fast_image_resize
 wgc-preview = ["desktop-preview", "dep:windows-capture", "dep:intralink-d3d11"]
 nvenc-preview = ["wgc-preview", "intralink-d3d11/nvenc-preview"]
 # Opt-in foreground Windows input sharing, independent of WGC and CUDA.
-input-preview = ["desktop-preview", "dep:intralink-input-win"]
+input-preview = ["desktop-preview", "dep:intralink-input-win", "dep:tempfile"]
 # Explicit X11 receiving host and focused controller pad; independent of video capture and GPU.
 input-x11-preview = ["dep:intralink-input-x11"]
 vaapi-probe = ["dep:libva"]
@@ -51,6 +51,7 @@ minifb = { workspace = true, optional = true }
 windows-capture = { workspace = true, optional = true }
 intralink-d3d11 = { workspace = true, optional = true, features = ["readback"] }
 intralink-input-win = { workspace = true, optional = true }
+tempfile = { workspace = true, optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 intralink-input-x11 = { path = "../../crates/intralink-input-x11", optional = true }

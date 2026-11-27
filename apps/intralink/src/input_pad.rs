@@ -22,6 +22,7 @@ const OFFLINE: u32 = 0x35404e;
 pub enum LocalControl {
     Arm,
     Portal,
+    Reset,
 }
 
 pub fn pointer(window: &Window) -> Option<(usize, usize)> {
@@ -39,10 +40,10 @@ pub fn pointer_zone(window: &Window, layout: Layout) -> Option<Zone> {
     layout.zone(x, y, width, height)
 }
 
-fn controls(layout: Layout) -> Option<[(LocalControl, Rect); 2]> {
+fn controls(layout: Layout) -> Option<[(LocalControl, Rect); 3]> {
     let local = layout.cell_of(None)?;
     let (l, t, r, b) = layout.bounds(local, WIDTH, HEIGHT)?;
-    let width = (r - l - 36) / 2;
+    let width = (r - l - 40) / 3;
     let y = b - 51;
     if y < t + 100 {
         return None;
@@ -60,7 +61,16 @@ fn controls(layout: Layout) -> Option<[(LocalControl, Rect); 2]> {
         (
             LocalControl::Portal,
             Rect {
-                x: l + 24 + width,
+                x: l + 20 + width,
+                y,
+                w: width,
+                h: 37,
+            },
+        ),
+        (
+            LocalControl::Reset,
+            Rect {
+                x: l + 28 + width * 2,
                 y,
                 w: width,
                 h: 37,
@@ -106,6 +116,7 @@ pub struct View<'a> {
     pub active: Option<usize>,
     pub armed: bool,
     pub portal: &'a str,
+    pub layout_status: &'a str,
 }
 
 pub fn render(layout: Layout, buffer: &mut [u32], view: View<'_>) {
@@ -181,7 +192,7 @@ pub fn render(layout: Layout, buffer: &mut [u32], view: View<'_>) {
                 if view.armed {
                     "MOVE TO A READY SCREEN"
                 } else {
-                    "START FROM THIS DEVICE"
+                    view.layout_status
                 },
                 1,
                 (r - l - 32) / 6,
@@ -206,13 +217,19 @@ pub fn render(layout: Layout, buffer: &mut [u32], view: View<'_>) {
                 LocalControl::Arm => button(
                     buffer,
                     rect,
-                    if view.armed { "F12 STOP" } else { "START" },
+                    if view.armed { "STOP" } else { "START" },
                     if view.armed { 0x6e3443 } else { 0x08685c },
                 ),
                 LocalControl::Portal => button(
                     buffer,
                     rect,
                     view.portal,
+                    if view.armed { LOCAL } else { SURFACE },
+                ),
+                LocalControl::Reset => button(
+                    buffer,
+                    rect,
+                    "RESET",
                     if view.armed { LOCAL } else { SURFACE },
                 ),
             }
@@ -247,6 +264,7 @@ mod tests {
                 active: Some(7),
                 armed: true,
                 portal: "FULL",
+                layout_status: "LAYOUT RESTORED",
             },
         );
         let (l, t, _, _) = layout
@@ -282,6 +300,7 @@ mod tests {
                 active: None,
                 armed: false,
                 portal: "OFF",
+                layout_status: "NEW LAYOUT",
             },
         );
         let (l, t, _, _) = layout

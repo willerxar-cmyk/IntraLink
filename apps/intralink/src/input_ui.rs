@@ -21,6 +21,8 @@ use crate::{
 
 #[path = "input_keys.rs"]
 mod keys;
+#[path = "input_layout_store.rs"]
+mod layout_store;
 #[path = "input_pad.rs"]
 mod pad;
 #[path = "input_portal.rs"]
@@ -226,12 +228,23 @@ struct Spatial {
     effect: Option<((usize, usize), Instant, bool)>,
     portal_mode: portal::Mode,
     portal_patch: portal::Patch,
+    layout_store: layout_store::Store,
+    layout_status: &'static str,
+    layout_blocked: bool,
 }
 
 impl Spatial {
-    fn new(slots: usize) -> Result<Self> {
-        Ok(Self {
-            layout: Layout::arranged(slots).context("Invalid spatial input layout")?,
+    fn new(store: layout_store::Store) -> Self {
+        let (preference, layout_status, layout_blocked) = match store.load() {
+            Ok(Some(preference)) => (preference, "LAYOUT RESTORED", false),
+            Ok(None) => (store.defaults(), "NEW LAYOUT", false),
+            Err(error) => {
+                eprintln!("Saved KVM layout could not be read: {error:#}. Reset to replace it.");
+                (store.defaults(), "LAYOUT UNREADABLE - RESET", true)
+            }
+        };
+        Self {
+            layout: preference.layout,
             armed: false,
             hover: None,
             canvas: vec![0; pad::WIDTH * pad::HEIGHT],
@@ -241,9 +254,30 @@ impl Spatial {
             pressed_control: None,
             last_cell: None,
             effect: None,
-            portal_mode: portal::Mode::default(),
+            portal_mode: preference.portal,
             portal_patch: portal::Patch::default(),
-        })
+            layout_store: store,
+            layout_status,
+            layout_blocked,
+        }
+    }
+
+    fn persist_layout(&mut self) {
+        if self.armed || self.layout_blocked {
+            return;
+        }
+        let preference = layout_store::Preference {
+            layout: self.layout,
+            portal: self.portal_mode,
+        };
+        self.layout_status = match self.layout_store.save(preference) {
+            Ok(()) => "LAYOUT SAVED",
+            Err(error) => {
+                eprintln!("KVM layout not saved: {error:#}");
+                "LAYOUT NOT SAVED"
+            }
+        };
+        self.painted = None;
     }
 
     async fn step(
@@ -257,7 +291,7 @@ impl Spatial {
             self.armed = false;
             self.hover = None;
             self.drag = None;
-            self.was_down = window.get_mouse_down(MouseButton::Left);
+            self.was_down = true;
             self.pressed_control = None;
             self.last_cell = None;
             self.effect = None;
@@ -280,7 +314,12 @@ impl Spatial {
             self.effect = None;
             return Ok(());
         }
-        if toggle && local_keys(window).is_empty() && local_buttons(window).is_empty() {
+        if toggle
+            && self.painted.is_some()
+            && cell.is_some_and(|c| self.layout.label(c) == Some(0))
+            && local_keys(window).is_empty()
+            && local_buttons(window).is_empty()
+        {
             self.armed = true;
             self.hover = None;
             self.drag = None;
@@ -288,6 +327,8 @@ impl Spatial {
             self.last_cell = cell;
         }
         if !self.armed {
+            let before = (self.layout, self.portal_mode);
+            let mut reset = false;
             // F10 is a local visual preference only in SAFE. When armed,
             // F10 remains a normal forwarded key for the active client.
             if focus.active().is_none()
@@ -302,7 +343,7 @@ impl Spatial {
             let down = window.get_mouse_down(MouseButton::Left);
             let control = point.and_then(|p| pad::local_control(self.layout, p));
             if down && !self.was_down {
-                self.pressed_control = control;
+                self.pressed_control = control.filter(|_| self.painted.is_some());
                 self.drag = if control.is_none() {
                     cell.filter(|c| self.layout.label(*c).is_some())
                 } else {
@@ -324,6 +365,14 @@ impl Spatial {
                         self.portal_mode = self.portal_mode.next();
                         self.effect = None;
                     }
+                    Some(pad::LocalControl::Reset) => {
+                        let preference = self.layout_store.defaults();
+                        self.layout = preference.layout;
+                        self.portal_mode = preference.portal;
+                        self.layout_blocked = false;
+                        self.effect = None;
+                        reset = true;
+                    }
                     _ => {
                         if let (Some(from), Some(to)) = (self.drag.take(), cell)
                             && self.layout.relocate(from, to)
@@ -335,6 +384,9 @@ impl Spatial {
                 self.drag = None;
             }
             self.was_down = down;
+            if reset || before != (self.layout, self.portal_mode) {
+                self.persist_layout();
+            }
             return Ok(());
         }
         // The armed local stop button never receives clicks from a remote
@@ -488,6 +540,7 @@ impl Spatial {
                     active: focus.active(),
                     armed: self.armed,
                     portal: self.portal_mode.label(),
+                    layout_status: self.layout_status,
                 },
             );
             self.painted = Some(state);
@@ -516,7 +569,11 @@ fn title(slots: &[Slot], focus: &Focus, spatial: Option<&Spatial>) -> String {
         None => "F1-F8 select, F12 local, ESC close",
     };
     let portal = spatial.map_or(String::new(), |pad| {
-        format!(" | Portal: {}", pad.portal_mode.label())
+        format!(
+            " | Portal: {} | {}",
+            pad.portal_mode.label(),
+            pad.layout_status
+        )
     });
     format!(
         "IntraLink INPUT | {target} | {connected}/{} connected | {controls}{portal}",
@@ -527,10 +584,17 @@ fn title(slots: &[Slot], focus: &Focus, spatial: Option<&Spatial>) -> String {
 pub(super) async fn workspace(path: &Path, names: &[String], spatial: bool) -> Result<()> {
     let (_vault, secret, targets) = load_targets(path, names)?;
     approve(if spatial {
-        "Open the visible spatial input pad? F9 explicitly arms automatic switching between numbered zones; F12 disarms and releases input. No global hook or screen stream."
+        "Open the visible spatial input pad? Review the arrangement and start from the local BASE card. START or F9 arms switching; F12 disarms and releases input. No global hook or screen stream."
     } else {
         "Open the visible input-only pad for these paired hosts? F1-F8 explicitly activate a ready host; F12 returns to local. No global hook, screen stream or unattended control."
     })?;
+    let mut spatial = if spatial {
+        let peers = targets.iter().map(|(_, identity, _)| *identity).collect();
+        let store = layout_store::Store::new(path, secret.public(), peers)?;
+        Some(Spatial::new(store))
+    } else {
+        None
+    };
     let mut window = window(
         "IntraLink INPUT | LOCAL | connecting",
         960,
@@ -552,10 +616,9 @@ pub(super) async fn workspace(path: &Path, names: &[String], spatial: bool) -> R
     let mut focus = Focus::default();
     let mut previous = Snapshot::default();
     let mut last_title = String::new();
-    let mut spatial = spatial.then(|| Spatial::new(slots.len())).transpose()?;
     if spatial.is_some() {
         println!(
-            "Spatial pad: 0 is LOCAL; drag numbered screens while SAFE to arrange the layout. Press F9 to arm; cross inside the pad with keys/buttons released. F12 disarms. F10 while SAFE cycles the local portal effect (full, reduced, off)."
+            "Spatial pad: drag named devices while SAFE. Changes save locally for this BASE and exact CLIENT set. Review the layout, click START or press F9 in the BASE card, cross with keys/buttons released. F12 disarms. F10 or the portal button changes intensity; RESET restores defaults."
         );
     }
     let local = async {

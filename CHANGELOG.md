@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - persistent spatial KVM and Preview.14 UX
+
+- Add named Windows spatial device cards, local START/STOP, portal intensity and RESET; save and restore the arrangement by authenticated identity set in SAFE.
+- Add Android native dashboard, card-first pairing, collapsed connection details and independent screen/input actions. Corrected Preview.14 passes dedicated emulator acceptance; physical runtime and signing remain open.
+- Validate bounded canonical layout files and exact slot coverage; preserve all input authorization and ordered release barriers.
+
 ## Unreleased - Android preview.12 portable motion
 
 - Adapt dense-motion JPEG quality using measured encoded payload and existing receipt pressure, with bounded recovery and a soft nominal target. Preserve exact lossless eligibility for sparse UI.

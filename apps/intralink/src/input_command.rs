@@ -22,7 +22,7 @@ pub enum Action {
         #[arg(long, required = true)]
         device: Vec<String>,
         #[cfg(target_os = "windows")]
-        /// Numbered spatial pad; F9 explicitly arms automatic zone switching.
+        /// Named spatial pad with saved arrangement; START or F9 arms switching.
         #[arg(long)]
         spatial: bool,
     },

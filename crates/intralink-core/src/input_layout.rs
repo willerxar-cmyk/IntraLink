@@ -55,6 +55,28 @@ impl Layout {
         Some(layout)
     }
 
+    /// Restore a 3x3 arrangement only when every selected slot and the
+    /// local card occur exactly once. No identity or authority is inferred.
+    pub fn from_arrangement(slots: usize, cells: [Option<usize>; 9]) -> Option<Self> {
+        let mut layout = Self::arranged(slots)?;
+        let mut seen = 0u16;
+        for (cell, label) in cells.into_iter().enumerate() {
+            layout.order[cell] = match label {
+                None => EMPTY,
+                Some(label) if label <= slots => {
+                    let bit = 1u16 << label;
+                    if seen & bit != 0 {
+                        return None;
+                    }
+                    seen |= bit;
+                    label as u8
+                }
+                Some(_) => return None,
+            };
+        }
+        (seen == (1u16 << (slots + 1)) - 1).then_some(layout)
+    }
+
     pub fn cells(self) -> usize {
         self.columns * self.rows
     }
@@ -165,6 +187,37 @@ mod tests {
         let layout = Layout::new(4).unwrap();
         assert_eq!(layout.zone(899, 599, 900, 600).unwrap().target, None);
         assert!(layout.zone(0, 0, 1, 1).is_none());
+    }
+
+    #[test]
+    fn restored_layout_requires_each_slot_exactly_once() {
+        let cells = [
+            Some(8),
+            Some(3),
+            Some(2),
+            Some(4),
+            Some(0),
+            Some(5),
+            Some(6),
+            Some(7),
+            Some(1),
+        ];
+        let layout = Layout::from_arrangement(8, cells).unwrap();
+        for (cell, label) in cells.into_iter().enumerate() {
+            assert_eq!(layout.label(cell), label);
+        }
+        assert_eq!(layout.cell_of(Some(7)), Some(0));
+        let mut duplicate = cells;
+        duplicate[0] = Some(1);
+        assert!(Layout::from_arrangement(8, duplicate).is_none());
+        let mut missing = cells;
+        missing[4] = None;
+        assert!(Layout::from_arrangement(8, missing).is_none());
+        let mut invalid = cells;
+        invalid[0] = Some(usize::MAX);
+        assert!(Layout::from_arrangement(8, invalid).is_none());
+        assert!(Layout::from_arrangement(0, [None; 9]).is_none());
+        assert!(Layout::from_arrangement(9, [None; 9]).is_none());
     }
 
     #[test]

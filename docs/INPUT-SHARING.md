@@ -32,7 +32,7 @@ Optional spatial mode:
 .\intralink.exe input workspace --device workstation --device notebook --spatial
 ```
 
-The numbered grid displays zone 0 (local/safe) and zones 1–8 (command order). Ready hosts are blue; active green; unavailable gray. Press F9 to arm. A target must remain under the pointer for 80 ms with all local keys/buttons released. Crossing to a new zone releases the preceding host before any new activation; moving a held chord or drag across a zone disarms the pad, requiring explicit F9 again. F12 disarms and releases; zone 0 is local; leaving the pad disarms. Escape closes. This is a spatial *in-window* KVM, not yet movement across the physical edges of the controller's real desktop. No global hooks are installed.
+The named grid displays the local BASE and selected CLIENTs. Current source saves the last arrangement and portal mode for the same identity set. Ready hosts are blue; active green; unavailable gray. Review the layout and click START or press F9 in the local BASE card to arm. RESET restores defaults while SAFE. A target must remain under the pointer for 80 ms with all local keys/buttons released. Crossing to a new zone releases the preceding host before any new activation; moving a held chord or drag across a zone disarms the pad, requiring explicit F9 again. F12 disarms and releases; zone 0 is local; leaving the pad disarms. Escape closes. This is a spatial *in-window* KVM, not yet movement across the physical edges of the controller's real desktop. No global hooks are installed.
 
 ## Wire and ownership
 
