@@ -132,8 +132,8 @@
     <string name="your_devices">Your devices</string>
     <string name="no_devices">No paired devices yet</string>
     <string name="no_devices_description">Use Connect a device above to add your first device. Pairing does not start a session.</string>
-    <string name="paired_base">Paired BASE ? Not connected</string>
-    <string name="paired_client">Paired CLIENT ? Not connected</string>
+    <string name="paired_base">Paired BASE &#183; Not connected</string>
+    <string name="paired_client">Paired CLIENT &#183; Not connected</string>
     <string name="choose_access">Choose what to share</string>
     <string name="scope_separate">Each session needs your approval. Screen and input are separate in this preview.</string>
     <string name="base_preview_scope">Test the connection here. Use a desktop BASE for screen viewing or mouse and keyboard control.</string>
