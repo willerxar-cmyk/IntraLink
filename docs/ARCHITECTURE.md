@@ -133,3 +133,8 @@ In fixed-v8 pipeline mode, the transport reserves at most two FIFO demands again
 ### Local WGC timing boundary
 
 Capture timing remains local to the app and native adapter. The native readback reports disjoint CPU wall times for scale submission, staging copy, Map synchronization and row copy; no native handle or timing is passed to the transport or peer. An explicit owned-window diagnostic compares bounded callback-lock waiting against the existing policy. Host locking, consent and protocol remain unchanged. See [WGC-CAPTURE-TIMING.md](WGC-CAPTURE-TIMING.md).
+
+
+### Bounded staged readback experiment (2026-11-27)
+
+Staged D3D11 copy completion is an explicit owned-window experiment. One retained staging copy is tied to a single already-started capture grant. The native adapter checks the exact context/device and output geometry; the foreground scheduler can publish an earlier result between nonblocking Map polls. The normal Host remains synchronous. No additional protocol credit, native codec or remote permission. See [STAGED-READBACK.md](STAGED-READBACK.md).

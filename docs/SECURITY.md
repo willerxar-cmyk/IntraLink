@@ -103,3 +103,8 @@ Release evidence update (2026-11-26): the headless reduced-token helper passed a
 ### Local WGC timing diagnostic
 
 The explicit `desktop-profile-check --capture-lock` experiment creates only an owned labeled fixture and ephemeral authenticated loopback identities. The bounded mutex wait does not widen capture, session credit or remote authority, and rechecks local cancellation and source liveness before consuming a generation. Readback timings are local elapsed durations, not captured pixels or remotely supplied timestamps. Normal Host locking policy remains unchanged; native synchronous calls are still not forcibly preemptible. See [WGC-CAPTURE-TIMING.md](WGC-CAPTURE-TIMING.md).
+
+
+### Bounded staged readback experiment (2026-11-27)
+
+The diagnostic-only staged readback path rejects pending staging replacement, retarget and duplicate completion. Cancellation and known native source failure are checked each poll; a submitted-copy timeout fails closed instead of emitting NoUpdate. No staging surface or handle is exported; the approved source, context and geometry remain local. D3D11 driver calls and capture stop are not guaranteed hard-preemptible. See [STAGED-READBACK.md](STAGED-READBACK.md).

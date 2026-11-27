@@ -44,13 +44,18 @@ pub struct ProfileCheckArgs {
     /// Compare bounded WGC callback locking against the existing wake policy.
     #[arg(long, conflicts_with_all = ["host", "encoder", "hardware", "slots", "pipeline", "visual"])]
     capture_lock: bool,
+    /// Compare nonblocking staged D3D11 readback with synchronous capture.
+    #[arg(long, conflicts_with_all = ["host", "encoder", "hardware", "slots", "pipeline", "visual", "capture_lock"])]
+    staged_readback: bool,
 }
 
 impl ProfileCheckArgs {
     pub fn run(self) -> Result<()> {
-        if self.pipeline || self.visual || self.capture_lock {
+        if self.pipeline || self.visual || self.capture_lock || self.staged_readback {
             #[cfg(all(target_os = "windows", feature = "wgc-preview"))]
-            return crate::run_async(|| super::pipeline_check::run(self.visual, self.capture_lock));
+            return crate::run_async(|| {
+                super::pipeline_check::run(self.visual, self.capture_lock, self.staged_readback)
+            });
             #[cfg(not(all(target_os = "windows", feature = "wgc-preview")))]
             anyhow::bail!("Native pipeline diagnostic requires Windows wgc-preview");
         }
@@ -373,6 +378,27 @@ mod tests {
             assert!(DiagnosticCli::try_parse_from(["test", "--capture-lock", option]).is_err());
         }
         assert!(DiagnosticCli::try_parse_from(["test", "--capture-lock", "--slots", "1"]).is_err());
+    }
+
+    #[test]
+    fn staged_readback_diagnostic_is_explicit_and_exclusive() {
+        let default = DiagnosticCli::try_parse_from(["test"]).unwrap();
+        assert!(!default.args.staged_readback);
+        let selected = DiagnosticCli::try_parse_from(["test", "--staged-readback"]).unwrap();
+        assert!(selected.args.staged_readback);
+        for option in [
+            "--host",
+            "--encoder",
+            "--hardware",
+            "--pipeline",
+            "--visual",
+            "--capture-lock",
+        ] {
+            assert!(DiagnosticCli::try_parse_from(["test", "--staged-readback", option]).is_err());
+        }
+        assert!(
+            DiagnosticCli::try_parse_from(["test", "--staged-readback", "--slots", "1"]).is_err()
+        );
     }
 
     #[test]

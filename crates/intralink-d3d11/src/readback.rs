@@ -8,10 +8,13 @@ use std::{
 use anyhow::{Context, Result, ensure};
 use windows::Win32::Graphics::{
     Direct3D11::{
-        D3D11_MAP_READ, D3D11_MAPPED_SUBRESOURCE, D3D11_TEXTURE2D_DESC, ID3D11Device,
-        ID3D11DeviceContext, ID3D11Texture2D,
+        D3D11_MAP_FLAG_DO_NOT_WAIT, D3D11_MAP_READ, D3D11_MAPPED_SUBRESOURCE, D3D11_TEXTURE2D_DESC,
+        ID3D11Device, ID3D11DeviceContext, ID3D11Texture2D,
     },
-    Dxgi::Common::{DXGI_FORMAT, DXGI_FORMAT_NV12, DXGI_FORMAT_R8G8B8A8_UNORM},
+    Dxgi::{
+        Common::{DXGI_FORMAT, DXGI_FORMAT_NV12, DXGI_FORMAT_R8G8B8A8_UNORM},
+        DXGI_ERROR_WAS_STILL_DRAWING,
+    },
 };
 use windows_capture::{d3d11::StagingTexture, frame::Frame, settings::ColorFormat};
 
@@ -25,19 +28,35 @@ pub struct ReadbackTiming {
     pub cpu_copy: Duration,
 }
 
+// A single copy retains the exact source context until its staging is consumed.
+struct PendingCopy {
+    context: ID3D11DeviceContext,
+    row: usize,
+    rows: usize,
+    length: usize,
+    timing: ReadbackTiming,
+}
+
 #[derive(Default)]
 pub struct Readback {
     staging: Option<StagingTexture>,
     device: Option<ID3D11Device>,
     allocations: u64,
     last_timing: ReadbackTiming,
+    pending: Option<PendingCopy>,
 }
 
 impl Readback {
     /// Explicit local output retargeting only; retain device identity and counters.
     /// Ordinary readbacks still reject unexpected resource geometry changes.
-    pub fn reset_output_staging(&mut self) {
+    pub fn reset_output_staging(&mut self) -> Result<()> {
+        ensure!(self.pending.is_none(), "Cannot retarget a pending readback");
         self.staging = None;
+        Ok(())
+    }
+
+    pub fn is_pending(&self) -> bool {
+        self.pending.is_some()
     }
 
     pub fn allocations(&self) -> u64 {
@@ -89,6 +108,32 @@ impl Readback {
         format: DXGI_FORMAT,
         output: &mut Vec<u8>,
     ) -> Result<()> {
+        self.begin_formatted(device, context, texture, format, false)?;
+        ensure!(
+            self.finish_copy(output, false)?,
+            "Blocking readback did not complete"
+        );
+        Ok(())
+    }
+
+    pub(crate) fn begin_texture(
+        &mut self,
+        device: &ID3D11Device,
+        context: &ID3D11DeviceContext,
+        texture: &ID3D11Texture2D,
+    ) -> Result<()> {
+        self.begin_formatted(device, context, texture, DXGI_FORMAT_R8G8B8A8_UNORM, true)
+    }
+
+    fn begin_formatted(
+        &mut self,
+        device: &ID3D11Device,
+        context: &ID3D11DeviceContext,
+        texture: &ID3D11Texture2D,
+        format: DXGI_FORMAT,
+        flush: bool,
+    ) -> Result<()> {
+        ensure!(self.pending.is_none(), "Readback already pending");
         // SAFETY: the live context and device are queried without mutating resources.
         unsafe {
             ensure!(
@@ -117,18 +162,75 @@ impl Readback {
             self.allocations += 1;
         }
         let staging = self.staging.as_ref().context("Missing staging texture")?;
-        let mut mapped = D3D11_MAPPED_SUBRESOURCE::default();
         let copy_started = Instant::now();
         // SAFETY: both resources are alive, owned by the same D3D11 device,
         // and have identical dimensions, format, array/mip and sample layout.
         // This callback serializes access; the previous map has been unmapped.
         unsafe {
             context.CopyResource(staging.texture(), texture);
+            // The nonblocking path must submit queued work without relying
+            // on a later blocking Map to force submission.
+            if flush {
+                context.Flush();
+            }
         }
+        self.pending = Some(PendingCopy {
+            context: context.clone(),
+            row,
+            rows,
+            length,
+            timing: ReadbackTiming {
+                copy_submit: copy_started.elapsed(),
+                ..Default::default()
+            },
+        });
+        Ok(())
+    }
+
+    /// Poll the exact submitted staging copy. A not-ready response never
+    /// maps, mutates output, or permits reuse of the staging resource.
+    pub fn try_finish(&mut self, output: &mut Vec<u8>) -> Result<bool> {
+        self.finish_copy(output, true)
+    }
+
+    fn finish_copy(&mut self, output: &mut Vec<u8>, nonblocking: bool) -> Result<bool> {
+        let pending = self.pending.as_mut().context("No pending readback")?;
+        let device = self.device.as_ref().context("Missing staging device")?;
+        let staging = self.staging.as_ref().context("Missing staging texture")?;
+        let context = &pending.context;
+        // SAFETY: this is the retained live device of the submitted copy.
+        unsafe {
+            device.GetDeviceRemovedReason()?;
+        }
+        let mut mapped = D3D11_MAPPED_SUBRESOURCE::default();
+        let flags = if nonblocking {
+            D3D11_MAP_FLAG_DO_NOT_WAIT.0 as u32
+        } else {
+            0
+        };
         let map_started = Instant::now();
-        // SAFETY: the validated staging resource remains live and is not mapped.
-        unsafe { context.Map(staging.texture(), 0, D3D11_MAP_READ, 0, Some(&mut mapped))? };
+        // SAFETY: the validated staging resource remains live and unmapped;
+        // the same retained immediate context submitted its copy.
+        let mapped_result = unsafe {
+            context.Map(
+                staging.texture(),
+                0,
+                D3D11_MAP_READ,
+                flags,
+                Some(&mut mapped),
+            )
+        };
         let copy_rows_started = Instant::now();
+        pending.timing.map_wait += copy_rows_started.duration_since(map_started);
+        if let Err(error) = mapped_result {
+            if nonblocking && error.code() == DXGI_ERROR_WAS_STILL_DRAWING {
+                return Ok(false);
+            }
+            return Err(error.into());
+        }
+        let row = pending.row;
+        let rows = pending.rows;
+        let length = pending.length;
         let _unmap = Unmap { context, staging };
         let pitch = mapped.RowPitch as usize;
         ensure!(!mapped.pData.is_null(), "Null D3D11 mapped pointer");
@@ -149,12 +251,10 @@ impl Readback {
         // SAFETY: the live device is queried after the copy and unmap; a
         // removed device must not publish the just-read pixels.
         unsafe { device.GetDeviceRemovedReason()? };
-        self.last_timing = ReadbackTiming {
-            copy_submit: map_started.duration_since(copy_started),
-            map_wait: copy_rows_started.duration_since(map_started),
-            cpu_copy: copy_rows_started.elapsed(),
-        };
-        Ok(())
+        pending.timing.cpu_copy = copy_rows_started.elapsed();
+        self.last_timing = pending.timing;
+        self.pending = None;
+        Ok(true)
     }
 }
 

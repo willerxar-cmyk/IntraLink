@@ -11,6 +11,7 @@ use std::{
     future::ready,
     net::SocketAddr,
     process::Command,
+    task::Poll,
     time::{Duration, Instant},
 };
 use tokio::{sync::mpsc, task::JoinHandle};
@@ -26,7 +27,23 @@ use super::{
 };
 
 const SAMPLES: usize = 60;
+const STAGED_SAMPLES: usize = 180;
 const LIMIT: Duration = Duration::from_secs(18);
+const STAGED_POLL: Duration = Duration::from_millis(1);
+
+#[derive(Clone, Copy)]
+struct CapturePolicy {
+    bounded_lock_wait: bool,
+    staged_readback: bool,
+    samples: usize,
+}
+
+struct CaptureAttempt {
+    request: CaptureRequest,
+    began: Instant,
+    overlapping: bool,
+    next_poll: Instant,
+}
 
 #[derive(Default)]
 struct Observations {
@@ -45,6 +62,33 @@ struct Observations {
     queue: Vec<Duration>,
     encode_times: Vec<Duration>,
     publication: Vec<Duration>,
+}
+
+impl Observations {
+    fn submit_capture(
+        &mut self,
+        attempt: CaptureAttempt,
+        frame: Option<super::wgc_check::Captured>,
+        breakdown: CaptureTiming,
+        lane: &mut EncodeLane,
+    ) -> Result<()> {
+        ensure!(
+            frame.is_some() == breakdown.readback.is_some(),
+            "Native timing/readback mismatch"
+        );
+        let elapsed = attempt.began.elapsed();
+        self.capture += elapsed;
+        self.native_times.push(elapsed);
+        self.capture_breakdown.push(breakdown);
+        if let Some((ref image, _)) = frame {
+            visual_fixture::verify_native(image)?;
+            self.native += 1;
+            self.overlapping += usize::from(attempt.overlapping);
+        }
+        lane.submit(frame.map(|(image, _)| image), attempt.request)?;
+        self.submitted += 1;
+        Ok(())
+    }
 }
 
 struct DeliveryTrace {
@@ -102,8 +146,9 @@ async fn produce(
     mut requests: mpsc::Receiver<CaptureRequest>,
     server: &JoinHandle<Result<Stats>>,
     channels: TraceChannels,
-    bounded_lock_wait: bool,
+    policy: CapturePolicy,
 ) -> Result<Observations> {
+    let samples = policy.samples;
     let TraceChannels { references, traces } = channels;
     let started = Instant::now();
     let pid = child.0.id();
@@ -114,13 +159,15 @@ async fn produce(
     let mut first_demand = None::<Instant>;
     let mut gate = DemandGate::new(config);
     let mut last_capture = None::<Instant>;
+    let mut pending = None::<CaptureAttempt>;
     let result = async {
         loop {
             check_source(child, target, started)?;
             if server.is_finished() { break; }
             let busy = lane.busy();
-            let available = lane.can_accept() && (stats.submitted < SAMPLES || !busy);
+            let available = pending.is_none() && lane.can_accept() && (stats.submitted < samples || !busy);
             let due = gate.due();
+            let staged_due = pending.as_ref().map(|attempt| attempt.next_poll);
             tokio::select! {
                 biased;
                 done = lane.complete(), if busy => {
@@ -162,11 +209,28 @@ async fn produce(
                     let Some(request) = request else { break; };
                     gate.offer(request)?;
                 }
+                _ = super::host_pipeline::wait_due(staged_due), if staged_due.is_some() => {
+                    let source = session.as_mut().context("Missing staged capture session")?;
+                    let attempt = pending.as_mut().context("Missing staged demand")?;
+                    let polled = source.poll_staged(|| {
+                        check_source(child, target, started)?;
+                        ensure!(!attempt.request.reply.is_closed() && !server.is_finished(), "Staged diagnostic demand canceled");
+                        Ok(())
+                    })?;
+                    match polled {
+                        Poll::Pending => attempt.next_poll = Instant::now() + STAGED_POLL,
+                        Poll::Ready((frame, breakdown)) => {
+                            check_source(child, target, started)?;
+                            source.check_health()?;
+                            stats.submit_capture(pending.take().context("Missing completed staging demand")?, frame, breakdown, &mut lane)?;
+                        }
+                    }
+                }
                 _ = super::host_pipeline::wait_due(due), if available && due.is_some() => {
                     let mut request = gate.take()?;
                     ensure!(!request.reply.is_closed() && request.desktop_config == Some(config), "Invalid local diagnostic demand");
-                    if stats.submitted == SAMPLES {
-                        ensure!(stats.completed == SAMPLES && !lane.busy(), "Unfinished diagnostic encoder");
+                    if stats.submitted == samples {
+                        ensure!(stats.completed == samples && !lane.busy(), "Unfinished diagnostic encoder");
                         gate.begin(&mut request)?;
                         ensure!(request.reply.send(Ok(Capture::End)).is_ok(), "Diagnostic end dropped");
                         stats.elapsed = first_demand.context("No diagnostic demand")?.elapsed();
@@ -184,34 +248,30 @@ async fn produce(
                     stats.late.push(began.saturating_duration_since(due.max(request.issued_at)));
                     if let Some(previous) = last_capture { stats.cadence.push(began.duration_since(previous)); }
                     last_capture = Some(began);
-                    let (frame, breakdown) = source.capture_profiled(|| {
+                    let attempt = CaptureAttempt { request, began, overlapping, next_poll: Instant::now() };
+                    if policy.staged_readback {
+                        source.start_staged()?;
+                        pending = Some(attempt);
+                    } else {
+                        let (frame, breakdown) = source.capture_profiled(|| {
+                            check_source(child,target,started)?;
+                            ensure!(!attempt.request.reply.is_closed() && !server.is_finished(), "Diagnostic demand canceled");
+                            Ok(())
+                        }, policy.bounded_lock_wait)?;
                         check_source(child,target,started)?;
-                        ensure!(!request.reply.is_closed() && !server.is_finished(), "Diagnostic demand canceled");
-                        Ok(())
-                    }, bounded_lock_wait)?;
-                    ensure!(frame.is_some() == breakdown.readback.is_some(), "Native timing/readback mismatch");
-                    stats.capture_breakdown.push(breakdown);
-                    let elapsed = began.elapsed();
-                    stats.capture += elapsed;
-                    stats.native_times.push(elapsed);
-                    check_source(child,target,started)?;
-                    source.check_health()?;
-                    if let Some((ref image, _)) = frame {
-                        visual_fixture::verify_native(image)?;
-                        stats.native += 1;
-                        stats.overlapping += usize::from(overlapping);
+                        source.check_health()?;
+                        stats.submit_capture(attempt, frame, breakdown, &mut lane)?;
                     }
-                    lane.submit(frame.map(|(image,_)|image),request)?;
-                    stats.submitted += 1;
                 }
                 _ = tokio::time::sleep(Duration::from_millis(8)) => {}
             }
         }
-        ensure!(stats.submitted == SAMPLES && stats.completed == SAMPLES && !stats.elapsed.is_zero(), "Incomplete local diagnostic run");
+        ensure!(stats.submitted == samples && stats.completed == samples && !stats.elapsed.is_zero(), "Incomplete local diagnostic run");
         Ok::<(),anyhow::Error>(())
     }.await;
     // Drop all pending demand handles and join CPU/native work on every exit.
     gate.cancel();
+    pending.take();
     let native = session.as_mut().map_or(Ok(()), CaptureSession::stop);
     let joined = lane.stop().await;
     result?;
@@ -220,7 +280,12 @@ async fn produce(
     Ok(stats)
 }
 
-async fn run_one(overlap: bool, verify: bool, bounded_lock_wait: bool) -> Result<()> {
+async fn run_one(overlap: bool, verify: bool, policy: CapturePolicy) -> Result<()> {
+    let CapturePolicy {
+        bounded_lock_wait,
+        staged_readback,
+        samples,
+    } = policy;
     let config = VideoConfig::new(1080, 60, 75, 12)
         .unwrap()
         .with_mode(CodecMode::Compact);
@@ -325,7 +390,7 @@ async fn run_one(overlap: bool, verify: bool, bounded_lock_wait: bool) -> Result
             references: verify.then_some(reference_tx),
             traces: trace_tx,
         },
-        bounded_lock_wait,
+        policy,
     )
     .await;
     if observations.is_err() {
@@ -339,7 +404,7 @@ async fn run_one(overlap: bool, verify: bool, bounded_lock_wait: bool) -> Result
     let served = served??;
     let (viewed, fidelity, viewer_timing) = viewed??;
     ensure!(
-        served == viewed && served.frames + served.repeats + served.no_updates == SAMPLES,
+        served == viewed && served.frames + served.repeats + served.no_updates == samples,
         "Local pipeline transfer/receipt counts differ"
     );
     ensure!(
@@ -352,7 +417,7 @@ async fn run_one(overlap: bool, verify: bool, bounded_lock_wait: bool) -> Result
     );
     let breakdown = &local.capture_breakdown;
     ensure!(
-        breakdown.len() == SAMPLES && local.native_times.len() == SAMPLES,
+        breakdown.len() == samples && local.native_times.len() == samples,
         "Missing capture timing samples"
     );
     let reads: Vec<_> = breakdown
@@ -365,7 +430,8 @@ async fn run_one(overlap: bool, verify: bool, bounded_lock_wait: bool) -> Result
     );
     for (sample, elapsed) in breakdown.iter().zip(&local.native_times) {
         ensure!(
-            sample.generation_wait + sample.contention_wait + sample.consume <= *elapsed,
+            sample.generation_wait + sample.contention_wait + sample.staged_wait + sample.consume
+                <= *elapsed,
             "Overlapping native timing intervals"
         );
         if let Some(read) = sample.readback {
@@ -382,7 +448,7 @@ async fn run_one(overlap: bool, verify: bool, bounded_lock_wait: bool) -> Result
             "Not every changed frame was compared"
         );
         println!(
-            "visual_fidelity pipeline={overlap}, bounded_lock_wait={bounded_lock_wait}, frames={}, pixels={}, lossless_frames={}, max_channel_mae={:.4}, max_block_mae={:.4}, max_large_error_fraction={:.6}",
+            "visual_fidelity pipeline={overlap}, bounded_lock_wait={bounded_lock_wait}, staged_readback={staged_readback}, frames={}, pixels={}, lossless_frames={}, max_channel_mae={:.4}, max_block_mae={:.4}, max_large_error_fraction={:.6}",
             fidelity.frames,
             fidelity.pixels,
             fidelity.lossless_frames,
@@ -393,14 +459,14 @@ async fn run_one(overlap: bool, verify: bool, bounded_lock_wait: bool) -> Result
         return Ok(());
     }
     println!(
-        "pipeline={overlap}, bounded_lock_wait={bounded_lock_wait}, records={SAMPLES}, changed={}, repeats={}, no_updates={}, native_samples={}, overlapping_captures={}, elapsed_s={:.3}, records_fps={:.2}, changed_fps={:.2}, capture_ms={:.3}, encode_ms={:.3}, media_bytes={}",
+        "pipeline={overlap}, bounded_lock_wait={bounded_lock_wait}, staged_readback={staged_readback}, records={samples}, changed={}, repeats={}, no_updates={}, native_samples={}, overlapping_captures={}, elapsed_s={:.3}, records_fps={:.2}, changed_fps={:.2}, capture_ms={:.3}, encode_ms={:.3}, media_bytes={}",
         served.frames,
         served.repeats,
         served.no_updates,
         local.native,
         local.overlapping,
         local.elapsed.as_secs_f64(),
-        SAMPLES as f64 / local.elapsed.as_secs_f64(),
+        samples as f64 / local.elapsed.as_secs_f64(),
         served.frames as f64 / local.elapsed.as_secs_f64(),
         local.capture.as_secs_f64() * 1000.0,
         local.encode.as_secs_f64() * 1000.0,
@@ -435,7 +501,21 @@ async fn run_one(overlap: bool, verify: bool, bounded_lock_wait: bool) -> Result
             .filter(|sample| sample.contention_polls > 0)
             .count()
     );
+    println!(
+        "staged_map_polls={}, staged_wait_ms={:.3}",
+        breakdown.iter().map(|s| s.staged_polls).sum::<usize>(),
+        breakdown
+            .iter()
+            .map(|s| s.staged_wait)
+            .sum::<Duration>()
+            .as_secs_f64()
+            * 1000.0
+    );
     for (label, values) in [
+        (
+            "staged_interpoll_wait",
+            breakdown.iter().map(|s| s.staged_wait).collect::<Vec<_>>(),
+        ),
         (
             "generation_notification_wait",
             breakdown
@@ -474,30 +554,75 @@ async fn run_one(overlap: bool, verify: bool, bounded_lock_wait: bool) -> Result
     Ok(())
 }
 
-pub(super) async fn run(verify: bool, compare_lock: bool) -> Result<()> {
+pub(super) async fn run(verify: bool, compare_lock: bool, compare_staged: bool) -> Result<()> {
     super::require_graphical_environment()?;
     println!(
         "Local labeled visual test window only. No real monitor capture. Focus window and press ESC to cancel."
     );
-    if compare_lock {
+    let baseline = CapturePolicy {
+        bounded_lock_wait: false,
+        staged_readback: false,
+        samples: SAMPLES,
+    };
+    if compare_staged {
+        for staged_readback in [false, true, true, false] {
+            run_one(
+                true,
+                false,
+                CapturePolicy {
+                    staged_readback,
+                    samples: STAGED_SAMPLES,
+                    ..baseline
+                },
+            )
+            .await?;
+        }
+        run_one(
+            true,
+            true,
+            CapturePolicy {
+                staged_readback: true,
+                ..baseline
+            },
+        )
+        .await?;
+    } else if compare_lock {
         // Keep transport, scene and quality fixed while comparing only the
         // callback lock policy. Validate every changed pixel separately.
-        for bounded in [false, true, true, false] {
-            run_one(true, false, bounded).await?;
+        for bounded_lock_wait in [false, true, true, false] {
+            run_one(
+                true,
+                false,
+                CapturePolicy {
+                    bounded_lock_wait,
+                    ..baseline
+                },
+            )
+            .await?;
         }
-        run_one(true, true, true).await?;
+        run_one(
+            true,
+            true,
+            CapturePolicy {
+                bounded_lock_wait: true,
+                ..baseline
+            },
+        )
+        .await?;
     } else {
-        run_one(false, verify, false).await?;
-        run_one(true, verify, false).await?;
+        run_one(false, verify, baseline).await?;
+        run_one(true, verify, baseline).await?;
         if !verify {
             // Alternate order to expose warm-up and load variation.
-            run_one(true, false, false).await?;
-            run_one(false, false, false).await?;
+            run_one(true, false, baseline).await?;
+            run_one(false, false, baseline).await?;
         }
     }
     println!(
         "{}=passed; generated owned window and authenticated QUIC loopback only.",
-        if compare_lock {
+        if compare_staged {
+            "staged_readback_check"
+        } else if compare_lock {
             "capture_lock_check"
         } else if verify {
             "visual_check"

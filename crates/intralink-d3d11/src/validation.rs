@@ -88,5 +88,59 @@ pub fn verify_native_boundary() -> Result<()> {
         output == bytes && readback.allocations() == 1,
         "Valid source did not recover"
     );
+    let distinct: [u8; 64] = std::array::from_fn(|index| (index * 37 + 11) as u8);
+    let second = texture(&device, 4, &distinct)?;
+    readback.begin_texture(&device, &context, &second)?;
+    ensure!(readback.is_pending(), "Staged copy not retained");
+    ensure!(
+        readback.begin_texture(&device, &context, &source).is_err(),
+        "Second pending copy accepted"
+    );
+    ensure!(
+        readback.reset_output_staging().is_err(),
+        "Pending staging reset accepted"
+    );
+    ensure!(
+        readback
+            .copy_texture(&device, &context, &source, &mut output)
+            .is_err(),
+        "Blocking copy replaced pending generation"
+    );
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(1);
+    loop {
+        if readback.try_finish(&mut output)? {
+            break;
+        }
+        ensure!(output == bytes, "Pending poll mutated output");
+        ensure!(
+            std::time::Instant::now() < deadline,
+            "Staged native validation timed out"
+        );
+        std::thread::sleep(std::time::Duration::from_millis(1));
+    }
+    ensure!(
+        !readback.is_pending() && output == distinct && readback.allocations() == 1,
+        "Staged native pixels or allocation mismatch"
+    );
+    ensure!(
+        readback.try_finish(&mut output).is_err(),
+        "Completed staging consumed twice"
+    );
+    readback.copy_texture(&device, &context, &source, &mut output)?;
+    ensure!(
+        output == bytes && readback.allocations() == 1,
+        "Blocking readback did not recover after staged completion"
+    );
+    readback.begin_texture(&device, &context, &second)?;
+    drop(readback);
+    let mut replacement = Readback::default();
+    replacement.copy_texture(&device, &context, &source, &mut output)?;
+    ensure!(
+        output == bytes,
+        "New readback after pending cancellation returned incorrect pixels"
+    );
+    println!(
+        "Native staged readback: exact RGBA, single pending generation, reset rejection, reuse and cancellation passed"
+    );
     Ok(())
 }

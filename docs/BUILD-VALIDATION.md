@@ -79,3 +79,8 @@ Test early, duplicate, canceled and missing capture-start reports, actual delaye
 ### WGC capture timing and lock experiment gate
 
 Retain every capture-start grant gate. Add `desktop-profile-check --capture-lock` to run the controlled same-pipeline ABBA lock-policy comparison and separate full-pixel regression of the experimental policy. Verify the command is explicit and conflicts with other diagnostic selectors, timing counts agree with actual attempts/readbacks, and disjoint timing intervals fit inside their enclosing stage. Native `Map` timings include synchronization; no isolated GPU execution claim. Do not adopt the experimental wait automatically. See [WGC-CAPTURE-TIMING.md](WGC-CAPTURE-TIMING.md).
+
+
+### Bounded staged readback experiment (2026-11-27)
+
+Run the full previous gate, including capture-lock, plus `desktop-profile-check --staged-readback`. The native geometry check now exercises staged exact RGBA, pending overwrite/reset rejection, duplicate completion, staging reuse and fresh readback after dropping a pending copy. The comparison uses four 180-record runs and separate staged full-pixel visual validation. Record nonblocking Map polling and interpoll delay separately. Keep the Host synchronous until experimental behavior is separately qualified. See [STAGED-READBACK.md](STAGED-READBACK.md).

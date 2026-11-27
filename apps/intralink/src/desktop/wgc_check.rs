@@ -2,6 +2,7 @@
 //! Host callers must enforce local display approval before construction.
 use std::{
     sync::mpsc::{Receiver, SyncSender, TrySendError, sync_channel},
+    task::Poll,
     time::{Duration, Instant},
 };
 
@@ -32,6 +33,8 @@ pub(super) struct CaptureTiming {
     pub consume: Duration,
     pub scale_submit: Duration,
     pub readback: Option<ReadbackTiming>,
+    pub staged_wait: Duration,
+    pub staged_polls: usize,
 }
 
 struct Flags {
@@ -81,15 +84,17 @@ impl Handler {
         Ok(())
     }
 
-    // Called under the same callback lock as update. Never publish an
-    // uninitialized frame, old generation, or frame from a failed source.
-    fn consume(
+    // Both paths prepare the same retained scaler and enforce the same
+    // generation and device checks while the callback mutex is held.
+    fn prepare(
         &mut self,
         after: u64,
-        rgba: &mut Vec<u8>,
         gpu_target: Option<(u32, u32)>,
-        timing: &mut CaptureTiming,
-    ) -> Result<Option<(u64, Captured)>> {
+    ) -> Result<Option<FrameGeometry>> {
+        ensure!(
+            !self.readback.is_pending(),
+            "Previous staging copy still pending"
+        );
         ensure!(!self.closed, "WGC source closed");
         if let Some(error) = &self.failed {
             anyhow::bail!("WGC source failed: {error}");
@@ -113,7 +118,7 @@ impl Handler {
                 // Release the old output staging only after construction succeeds.
                 let next = GpuScaler::new(surface, fit)?;
                 if self.scaler.is_some() {
-                    self.readback.reset_output_staging();
+                    self.readback.reset_output_staging()?;
                 }
                 self.scaler = Some(next);
                 self.stats.gpu_processors += 1;
@@ -121,11 +126,29 @@ impl Handler {
         } else {
             ensure!(self.scaler.is_none(), "GPU capture mode changed");
         }
-        let (width, height) = self
+        let output = self
             .scaler
             .as_ref()
             .map_or(native_size, GpuScaler::output_size);
-        if rgba.capacity() < width as usize * height as usize * 4 {
+        Ok(Some(FrameGeometry {
+            generation: self.stats.native_updates,
+            native: native_size,
+            output,
+        }))
+    }
+
+    fn consume(
+        &mut self,
+        after: u64,
+        rgba: &mut Vec<u8>,
+        gpu_target: Option<(u32, u32)>,
+        timing: &mut CaptureTiming,
+    ) -> Result<Option<(u64, Captured)>> {
+        let Some(geometry) = self.prepare(after, gpu_target)? else {
+            return Ok(None);
+        };
+        let surface = self.latest.as_ref().context("Missing prepared source")?;
+        if rgba.capacity() < geometry.output.0 as usize * geometry.output.1 as usize * 4 {
             self.stats.rgba_allocations += 1;
         }
         if let Some(scaler) = &mut self.scaler {
@@ -133,14 +156,80 @@ impl Handler {
         } else {
             surface.read(&mut self.readback, rgba)?;
         }
+        self.finish_image(geometry, rgba, timing).map(Some)
+    }
+
+    fn submit_staged(
+        &mut self,
+        after: u64,
+        target: (u32, u32),
+        timing: &mut CaptureTiming,
+    ) -> Result<Option<FrameGeometry>> {
+        let Some(geometry) = self.prepare(after, Some(target))? else {
+            return Ok(None);
+        };
+        let surface = self.latest.as_ref().context("Missing prepared source")?;
+        timing.scale_submit = self
+            .scaler
+            .as_mut()
+            .context("Missing staged scaler")?
+            .submit_readback(surface, &mut self.readback)?;
+        Ok(Some(geometry))
+    }
+
+    fn poll_staged(
+        &mut self,
+        geometry: FrameGeometry,
+        rgba: &mut Vec<u8>,
+        timing: &mut CaptureTiming,
+    ) -> Result<Option<(u64, Captured)>> {
+        ensure!(!self.closed, "WGC source closed");
+        if let Some(error) = &self.failed {
+            anyhow::bail!("WGC source failed: {error}");
+        }
+        let surface = self.latest.as_ref().context("Missing staged source")?;
+        surface.check_device()?;
+        ensure!(
+            surface.size() == geometry.native && self.stats.native_updates >= geometry.generation,
+            "Staged source geometry/generation changed"
+        );
+        ensure!(
+            self.scaler
+                .as_ref()
+                .is_some_and(|scaler| scaler.output_size() == geometry.output),
+            "Staged scaler changed"
+        );
+        let allocation =
+            rgba.capacity() < geometry.output.0 as usize * geometry.output.1 as usize * 4;
+        if !self.readback.try_finish(rgba)? {
+            return Ok(None);
+        }
+        self.stats.rgba_allocations += u64::from(allocation);
+        self.finish_image(geometry, rgba, timing).map(Some)
+    }
+
+    fn finish_image(
+        &mut self,
+        geometry: FrameGeometry,
+        rgba: &mut Vec<u8>,
+        timing: &mut CaptureTiming,
+    ) -> Result<(u64, Captured)> {
         timing.readback = Some(self.readback.last_timing());
         self.stats.staging_allocations = self.readback.allocations();
         self.stats.readback_bytes += rgba.len() as u64;
         self.stats.readback_frames += 1;
+        let (width, height) = geometry.output;
         let image = RgbaImage::from_raw(width, height, std::mem::take(rgba))
             .context("Invalid GPU readback geometry")?;
-        Ok(Some((self.stats.native_updates, (image, native_size))))
+        Ok((geometry.generation, (image, geometry.native)))
     }
+}
+
+#[derive(Clone, Copy)]
+struct FrameGeometry {
+    generation: u64,
+    native: (u32, u32),
+    output: (u32, u32),
 }
 
 impl GraphicsCaptureApiHandler for Handler {
@@ -185,6 +274,16 @@ impl GraphicsCaptureApiHandler for Handler {
     }
 }
 
+// At most one authorized generation can own staging. It is never retargeted
+// or replaced while the consumer is waiting for GPU completion.
+struct StagedCapture {
+    geometry: Option<FrameGeometry>,
+    deadline: Instant,
+    timing: CaptureTiming,
+    last_poll_end: Option<Instant>,
+    contended: bool,
+}
+
 pub(super) struct CaptureSession {
     control: Option<CaptureControl<Handler, String>>,
     wake: Receiver<()>,
@@ -192,6 +291,7 @@ pub(super) struct CaptureSession {
     rgba: Vec<u8>,
     gpu_ceiling: Option<(u32, u32)>,
     gpu_target: Option<(u32, u32)>,
+    staged: Option<StagedCapture>,
 }
 
 impl CaptureSession {
@@ -267,12 +367,17 @@ impl CaptureSession {
             rgba: Vec::new(),
             gpu_ceiling: gpu_target,
             gpu_target,
+            staged: None,
         })
     }
 
     /// Change only the output scaler target, never the capture item or device.
     /// Applied to the next new generation under the callback lock.
     pub(super) fn retarget(&mut self, target: (u32, u32)) -> Result<()> {
+        ensure!(
+            self.staged.is_none(),
+            "Cannot retarget during staged capture"
+        );
         self.check_health()?;
         if let Some(ceiling) = self.gpu_ceiling {
             ensure!(
@@ -303,6 +408,7 @@ impl CaptureSession {
         mut check: impl FnMut() -> Result<()>,
         bounded_lock_wait: bool,
     ) -> Result<(Option<Captured>, CaptureTiming)> {
+        ensure!(self.staged.is_none(), "Staged capture already active");
         let mut timing = CaptureTiming::default();
         let control = self.control.as_ref().context("WGC session ended")?;
         let callback = control.callback();
@@ -388,6 +494,112 @@ impl CaptureSession {
         }
     }
 
+    /// Diagnostic only: called after an authenticated capture demand has
+    /// begun. The caller owns the demand until this generation is complete.
+    pub(super) fn start_staged(&mut self) -> Result<()> {
+        ensure!(self.staged.is_none(), "Staged capture already active");
+        ensure!(
+            self.gpu_target.is_some(),
+            "Staged capture requires explicit GPU scale"
+        );
+        self.check_health()?;
+        let limit = if self.delivered == 0 {
+            Duration::from_secs(2)
+        } else {
+            Duration::from_millis(17)
+        };
+        self.staged = Some(StagedCapture {
+            geometry: None,
+            deadline: Instant::now() + limit,
+            timing: CaptureTiming::default(),
+            last_poll_end: None,
+            contended: false,
+        });
+        Ok(())
+    }
+
+    /// No native wait or busy spin: submit or poll once per caller wake.
+    /// The same foreground owner checks source identity and cancellation.
+    pub(super) fn poll_staged(
+        &mut self,
+        mut check: impl FnMut() -> Result<()>,
+    ) -> Result<Poll<(Option<Captured>, CaptureTiming)>> {
+        check()?;
+        let mut staged = self.staged.take().context("No staged capture")?;
+        let control = self.control.as_ref().context("WGC session ended")?;
+        let halt = control.halt_handle();
+        ensure!(
+            !control.is_finished() && !halt.load(std::sync::atomic::Ordering::Acquire),
+            "Persistent WGC session ended"
+        );
+        if let Some(end) = staged.last_poll_end {
+            let elapsed = end.elapsed();
+            if staged.geometry.is_some() {
+                staged.timing.staged_wait += elapsed;
+            } else if staged.contended {
+                staged.timing.contention_wait += elapsed;
+            } else {
+                staged.timing.generation_wait += elapsed;
+            }
+        }
+        // Never turn a failed or slow submitted copy into a no-update.
+        if Instant::now() >= staged.deadline {
+            ensure!(
+                staged.geometry.is_none(),
+                "Staged GPU readback deadline exceeded"
+            );
+            ensure!(self.delivered != 0, "WGC first-frame deadline exceeded");
+            return Ok(Poll::Ready((None, staged.timing)));
+        }
+        let callback = control.callback();
+        let mut completed = None;
+        if let Some(mut handler) = callback.try_lock() {
+            check()?;
+            ensure!(
+                !halt.load(std::sync::atomic::Ordering::Acquire),
+                "WGC stopped before staged readback"
+            );
+            let began = Instant::now();
+            staged.contended = false;
+            if let Some(geometry) = staged.geometry {
+                staged.timing.staged_polls += 1;
+                completed = handler.poll_staged(geometry, &mut self.rgba, &mut staged.timing)?;
+            } else if let Some(geometry) = handler.submit_staged(
+                self.delivered,
+                self.gpu_target.context("Missing staged scale target")?,
+                &mut staged.timing,
+            )? {
+                staged.geometry = Some(geometry);
+                // Bound a submitted GPU copy independently of generation search.
+                staged.deadline = Instant::now() + Duration::from_millis(100);
+            }
+            staged.timing.consume += began.elapsed();
+        } else {
+            staged.contended = true;
+            staged.timing.contention_polls += 1;
+        }
+        check()?;
+        ensure!(
+            !halt.load(std::sync::atomic::Ordering::Acquire),
+            "WGC stopped during staged readback"
+        );
+        if let Some((generation, frame)) = completed {
+            ensure!(
+                generation > self.delivered,
+                "Staged generation already delivered"
+            );
+            ensure!(
+                Instant::now() < staged.deadline,
+                "Staged GPU readback deadline exceeded"
+            );
+            self.delivered = generation;
+            return Ok(Poll::Ready((Some(frame), staged.timing)));
+        }
+        staged.last_poll_end = Some(Instant::now());
+        self.staged = Some(staged);
+        Ok(Poll::Pending)
+    }
+
     // A successful probe excludes known closure/device failure only. It
     // does not prove that the compositor is still producing fresh frames.
     pub(super) fn check_health(&self) -> Result<()> {
@@ -451,6 +663,7 @@ impl CaptureSession {
     }
 
     pub(super) fn stop(&mut self) -> Result<()> {
+        self.staged.take();
         if let Some(control) = self.control.take() {
             control
                 .stop()

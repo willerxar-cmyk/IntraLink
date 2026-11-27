@@ -262,12 +262,35 @@ impl GpuScaler {
         self.processor.output_size()
     }
 
+    /// Submit scale and copy under the source lock. The pending staging
+    /// resource is independent of later WGC updates on the same context.
+    pub fn submit_readback(
+        &mut self,
+        surface: &LatestSurface,
+        readback: &mut Readback,
+    ) -> Result<Duration> {
+        ensure!(
+            !readback.is_pending(),
+            "Cannot scale while readback is pending"
+        );
+        let started = Instant::now();
+        self.processor.validate_source(surface)?;
+        self.processor.process()?;
+        let scale_submit = started.elapsed();
+        readback.begin_texture(surface.device(), surface.context(), self.processor.output())?;
+        Ok(scale_submit)
+    }
+
     pub fn scale_and_read(
         &mut self,
         surface: &LatestSurface,
         readback: &mut Readback,
         rgba: &mut Vec<u8>,
     ) -> Result<Duration> {
+        ensure!(
+            !readback.is_pending(),
+            "Cannot scale while readback is pending"
+        );
         let started = Instant::now();
         self.processor.validate_source(surface)?;
         self.processor.process()?;
