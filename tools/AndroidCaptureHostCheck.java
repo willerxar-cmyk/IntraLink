@@ -1,3 +1,4 @@
+import org.intralink.android.AvcObservation;
 import org.intralink.android.CaptureProfiles;
 import org.intralink.android.CaptureRun;
 import org.intralink.android.CaptureSize;
@@ -21,10 +22,10 @@ class AndroidCaptureHostCheck {
         long first = gate.reserve();
         check(first > 0 && gate.reserve() == 0, "exclusive reservation");
         check(gate.claim(first) && !gate.claim(first), "single claim");
-        gate.update(new CaptureRun.Snapshot(first, CaptureRun.Phase.STARTING, "test", 1920, 1080, 60, 1, 100, 10));
+        gate.update(new CaptureRun.Snapshot(first, CaptureRun.Phase.STARTING, "test", 1920, 1080, 60, 1, 100, 10, new AvcObservation.Stats()));
         check(gate.snapshot().getPhase() == CaptureRun.Phase.RUNNING && gate.snapshot().getBuffers() == 1, "metrics");
         gate.cancel(first);
-        gate.update(new CaptureRun.Snapshot(first, CaptureRun.Phase.RUNNING, "test", 1920, 1080, 60, 99, 100, 20));
+        gate.update(new CaptureRun.Snapshot(first, CaptureRun.Phase.RUNNING, "test", 1920, 1080, 60, 99, 100, 20, new AvcObservation.Stats()));
         check(!gate.active(first) && gate.snapshot().getBuffers() == 1, "stop blocks stale update");
         check(gate.reserve() == 0, "no overlapping cleanup");
         gate.finish(first, CaptureRun.Phase.STOPPED, null);
@@ -35,6 +36,22 @@ class AndroidCaptureHostCheck {
         gate.cancel(second);
         check(!gate.claim(second), "cancel before claim");
         gate.finish(second, CaptureRun.Phase.STOPPED, null);
-        System.out.println("Capture policy: 6 geometry and 8 lifecycle checks PASSED (host JVM, no Android runtime).");
+        var avc = new AvcObservation();
+        avc.record((1 << 7) | (1 << 8), true, false, false, 0);
+        avc.record(1 << 5, false, false, true, 10);
+        avc.record(1 << 1, false, false, false, 20);
+        check(!avc.canInspect(true), "partial frame not inspected");
+        avc.record(-1, false, true, false, 30);
+        check(!avc.canInspect(false), "continuation not inspected");
+        avc.record(-1, false, false, false, 30);
+        check(avc.canInspect(false), "continuation ends");
+        avc.record(1 << 1, false, false, true, 20);
+        avc.record(-1, false, false, false, 40);
+        var stats = avc.snapshot();
+        check(stats.getPictureBuffers() == 3 && stats.getIdrBuffers() == 1, "observed picture types");
+        check(stats.getConfigBuffers() == 1 && stats.getParameterMask() == 384, "parameter observations");
+        check(stats.getPartialBuffers() == 2 && stats.getUnparsedBuffers() == 1, "partial/invalid distinction");
+        check(stats.getKeyFlagMismatches() == 1 && stats.getNonIncreasingPts() == 1, "key and timing observations");
+        System.out.println("Capture policy: geometry, lifecycle and AVC observation checks PASSED (host JVM, no Android runtime).");
     }
 }

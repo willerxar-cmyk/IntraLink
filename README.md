@@ -35,9 +35,9 @@ Preview.4 adds a graphical first-run BASE/CLIENT selector, named encrypted ident
 |---|---|
 | Windows x64 | Preview 4 portable ZIP; local native diagnostics passed, physical KVM pending |
 | Linux x86_64 | Preview 4 TAR.GZ; native Ubuntu 24.04 CI build/tests passed; optional X11 input host and BASE source under qualification |
-| Android | Preview.6 local AVC diagnostic candidate built and package-verified; physical acceptance and signing pending |
+| Android | Preview.7 local AVC observation candidate built and package-verified; API 36 x86_64 emulator capture/JNI tested; physical acceptance and signing pending |
 
-Android source and candidate build/validation instructions: [ANDROID.md](docs/ANDROID.md). Preview.6 CI passed local identity, manual pairing, foreground authenticated diagnostics and local consented AVC encoder build/package gates. The shared Rust [AVC packetizer](docs/AVC-PACKETIZER.md) has passed host and authenticated diagnostic loopback tests; remote Android screen sharing and input are not enabled.
+Android source and candidate build/validation instructions: [ANDROID.md](docs/ANDROID.md). Preview.6 CI passed local identity, manual pairing, foreground authenticated diagnostics and local consented AVC encoder build/package gates. The shared Rust [AVC packetizer](docs/AVC-PACKETIZER.md) passed host and authenticated diagnostic loopback tests. Preview.7 adds direct-buffer Rust NAL observation, with actual local encoder output tested on a dedicated emulator; remote Android screen sharing and input are not enabled.
 
 ## Install on Linux (experimental)
 

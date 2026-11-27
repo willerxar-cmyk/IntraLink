@@ -216,8 +216,14 @@ class CaptureActivity : Activity() {
             CaptureRun.Phase.NO_OUTPUT -> R.string.capture_no_output
             CaptureRun.Phase.ERROR -> R.string.capture_error
         })
-        metrics.text = getString(R.string.capture_metrics, result.codec, result.width, result.height,
-            result.fps, result.buffers, result.bytes, result.elapsedMs)
+        val avc = result.avc
+        val observedRate = if (result.elapsedMs > 0) avc.pictureBuffers * 1000.0 / result.elapsedMs else 0.0
+        metrics.text = getString(R.string.capture_metrics_combined,
+            getString(R.string.capture_metrics, result.codec, result.width, result.height,
+                result.fps, result.buffers, result.bytes, result.elapsedMs),
+            getString(R.string.capture_avc_metrics, avc.pictureBuffers, observedRate, avc.idrBuffers,
+                avc.configBuffers, avc.partialBuffers, avc.unparsedBuffers,
+                avc.keyFlagMismatches, avc.nonIncreasingPts))
     }
 
     private class Fixture(activity: Activity) : View(activity) {

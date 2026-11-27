@@ -3,6 +3,8 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 
 #[cfg(target_os = "android")]
+mod avc_bridge;
+#[cfg(target_os = "android")]
 mod bridge;
 
 #[cfg(any(target_os = "android", test))]

@@ -140,3 +140,7 @@ Preview.6 adds a non-exported generated-fixture Activity and non-exported mediaP
 ## AVC producer packetizer (2026-11-27)
 
 The v9 diagnostic adapter adds no permissions or listeners and preserves loopback-only restrictions. Explicit framing and exact parameter-set, sequence, size and GOP validation fail closed; invalid output is cleared. Structural validation is not native decoder containment. Android MediaProjection remains local metrics-only; paired diagnostic or input grants never imply screen authority. See [AVC-PACKETIZER.md](AVC-PACKETIZER.md).
+
+## Android direct AVC buffer observation (preview.7)
+
+The local consented diagnostic now reads the exact borrowed direct-buffer slice synchronously on its sole codec owner thread for a bounded NAL-type mask. The Rust JNI bridge rejects empty/oversized, non-direct/incorrect-capacity, malformed or unsupported framing; it never retains a pointer or coded bytes. The acquired codec buffer is released in finally. Partial chains are excluded, no decoder receives these data, and no remote permission/listener or wire change is added. This is a scoped native memory-safety boundary, not a complete decoder security audit. User-facing local disclosure was updated. See ANDROID.md and AVC-PACKETIZER.md.

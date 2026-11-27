@@ -6,7 +6,7 @@ use crate::desktop::{MAX_FPS, MAX_FRAME_BYTES, MAX_IN_FLIGHT_RECORDS, MAX_SECOND
 mod packetizer;
 #[path = "h264_parameters.rs"]
 mod parameters;
-pub use packetizer::{Framing, Packetizer};
+pub use packetizer::{Framing, Packetizer, inspect_nal_types};
 
 pub const ALPN: &[u8] = b"intralink/view/9-h264";
 pub const REQUEST: &[u8; 17] = b"INTRALINK/9 VIEW\x03";

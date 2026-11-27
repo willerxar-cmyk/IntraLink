@@ -72,6 +72,22 @@ fn nals(framing: Framing, data: &[u8]) -> Result<Nals<'_>, Error> {
     Ok(result)
 }
 
+/// Observe the NAL types in an explicitly framed local AVC buffer without
+/// allocating or copying its contents. This is not a complete AVC validator:
+/// it does not establish picture boundaries, decode safety or v9 compatibility.
+pub fn inspect_nal_types(framing: Framing, data: &[u8]) -> Result<u32, Error> {
+    let parsed = nals(framing, data)?;
+    let mut mask = 0u32;
+    for nal in parsed.as_slice() {
+        let kind = nal[0] & 31;
+        if !(1..=23).contains(&kind) {
+            return Err(Error::Nal);
+        }
+        mask |= 1 << kind;
+    }
+    Ok(mask)
+}
+
 fn append(output: &mut Vec<u8>, nal: &[u8]) -> Result<(), Error> {
     if output.len() + 3 + nal.len() > MAX_FRAME_BYTES {
         return Err(Error::Size);
@@ -390,5 +406,37 @@ mod native_fixture_tests {
             offset += size;
         }
         assert_eq!(offset, fixture.len());
+    }
+}
+
+#[cfg(test)]
+mod observation_tests {
+    use super::*;
+
+    #[test]
+    fn observation_uses_explicit_framing_and_reports_types_only() {
+        let data = [
+            0, 0, 0, 1, 0x67, 0x42, 0, 0, 1, 0x68, 0x80, 0, 0, 1, 0x65, 0x88,
+        ];
+        assert_eq!(
+            inspect_nal_types(Framing::AnnexB, &data),
+            Ok((1 << 7) | (1 << 8) | (1 << 5))
+        );
+        assert_eq!(
+            inspect_nal_types(Framing::LengthPrefixed4, &[0, 0, 0, 2, 0x61, 0xe0]),
+            Ok(1 << 1)
+        );
+        assert!(inspect_nal_types(Framing::AnnexB, &[0, 0, 0, 2, 0x61, 0xe0]).is_err());
+        for invalid in [
+            &[][..],
+            &[0, 0, 1],
+            &[0, 0, 1, 0x80, 0x01],
+            &[0, 0, 1, 24, 0x01],
+            &[0, 0, 1, 0, 0x01],
+        ] {
+            assert!(inspect_nal_types(Framing::AnnexB, invalid).is_err());
+        }
+        let excessive = [0, 0, 1, 0x61, 0xe0].repeat(MAX_NALS + 1);
+        assert!(inspect_nal_types(Framing::AnnexB, &excessive).is_err());
     }
 }

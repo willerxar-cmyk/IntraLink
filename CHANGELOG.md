@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - Android preview.7 direct AVC observation
+
+- Borrow bounded direct MediaCodec output buffers synchronously through JNI to the shared Rust NAL framing parser; retain numeric metadata only, no captured bytes or network transmission.
+- Report actual observed picture-buffer rate, IDRs, config, partial/unparsed buffers, key flags and PTS separately from configured FPS. Preserve local system consent and mandatory cleanup.
+- Execute actual API 36 x86_64 emulator JNI and local screen encoder tests. Add dedicated-emulator consent acceptance tool; physical runtime and public distribution remain unqualified.
+
 ## Unreleased - bounded AVC producer and candidate verification
 
 - Add shared Rust AVC Annex B/length-prefixed NAL packetization with immutable parameter sets, AUD/IDR normalization and existing v9 structural checks; use one reusable record buffer and the authenticated diagnostic demand/receipt path. No remote Android video capability or new wire protocol.

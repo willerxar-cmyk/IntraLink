@@ -151,3 +151,7 @@ The foreground input producer and per-host transport worker now share a bounded 
 ## Bounded local AVC producer adapter (2026-11-27)
 
 The shared Rust H.264 packetizer normalizes complete explicitly framed local encoder units into the existing restricted v9 diagnostic envelope, directly into the existing reusable record buffer. The loopback-only QUIC demand and credit pipeline remains unchanged. See [AVC-PACKETIZER.md](AVC-PACKETIZER.md). No new wire capability, JNI screen session or remote decoder is enabled.
+
+## Android local codec buffer boundary (preview.7)
+
+The sole MediaCodec owner passes an exact direct buffer slice synchronously to the shared Rust NAL framing parser, without a full-frame copy or retained native pointer. Kotlin tracks numeric output observations only; independently authorized remote media and decoder integration remain separate. See ANDROID.md and AVC-PACKETIZER.md.

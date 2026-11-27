@@ -16,7 +16,8 @@ internal object CaptureRun {
         val fps: Int = 0,
         val buffers: Long = 0,
         val bytes: Long = 0,
-        val elapsedMs: Long = 0
+        val elapsedMs: Long = 0,
+        val avc: AvcObservation.Stats = AvcObservation.Stats()
     )
 
     private var nextId = 1L

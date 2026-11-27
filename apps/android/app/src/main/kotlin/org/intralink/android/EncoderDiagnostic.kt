@@ -14,7 +14,8 @@ import android.view.Surface
 
 /**
  * All projection/codec ownership stays on this one worker. Encoded buffers
- * are released immediately without reading, persisting or transmitting them.
+ * are inspected synchronously for bounded NAL metadata, then released. No
+ * encoded content is copied into app storage or sent over the network.
  */
 internal class EncoderDiagnostic(
     context: Context,
@@ -38,6 +39,7 @@ internal class EncoderDiagnostic(
     private var startMs = 0L
     private var metrics = CaptureRun.Snapshot(id = id)
     private val info = MediaCodec.BufferInfo()
+    private val observation = AvcObservation()
 
     private val callback = object : MediaProjection.Callback() {
         override fun onStop() = finish(CaptureRun.Phase.SYSTEM_STOP)
@@ -130,15 +132,27 @@ internal class EncoderDiagnostic(
                     if (index == MediaCodec.INFO_TRY_AGAIN_LATER) break
                     if (index == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) continue
                     if (index >= 0) {
-                        if (info.size > 0 && info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG == 0) {
-                            count++
-                            bytes += info.size.toLong()
+                        try {
+                            if (info.size > 0) {
+                                val config = info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0
+                                val partial = info.flags and MediaCodec.BUFFER_FLAG_PARTIAL_FRAME != 0
+                                val key = info.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME != 0
+                                if (!config) {
+                                    count++
+                                    bytes += info.size.toLong()
+                                }
+                                val mask = if (observation.canInspect(partial)) {
+                                    AvcBuffers.inspect(encoder.getOutputBuffer(index), info.size)
+                                } else -1
+                                observation.record(mask, config, partial, key, info.presentationTimeUs)
+                            }
+                        } finally {
+                            encoder.releaseOutputBuffer(index, false)
                         }
-                        encoder.releaseOutputBuffer(index, false)
                     }
                 }
                 val elapsed = SystemClock.elapsedRealtime() - startMs
-                metrics = metrics.copy(buffers = count, bytes = bytes, elapsedMs = elapsed)
+                metrics = metrics.copy(buffers = count, bytes = bytes, elapsedMs = elapsed, avc = observation.snapshot())
                 CaptureRun.update(metrics)
                 if (elapsed >= DURATION_MS) {
                     finish(if (count > 0) CaptureRun.Phase.COMPLETE else CaptureRun.Phase.NO_OUTPUT)

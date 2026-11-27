@@ -120,7 +120,21 @@ class OnboardingInstrumentation : Instrumentation() {
             CaptureRun.cancel(newCapture)
             check(!CaptureRun.claim(newCapture))
             CaptureRun.finish(newCapture, CaptureRun.Phase.STOPPED)
-            results.putString("stream", "\nIntraLink JNI onboarding: PASSED\n")
+            // Exercise the exact borrowed direct-buffer JNI boundary with
+            // synthetic NAL headers only; no display capture or decode.
+            val avc = byteArrayOf(0, 0, 1, 0x65, 0x78)
+            val direct = java.nio.ByteBuffer.allocateDirect(avc.size + 3)
+            direct.position(3)
+            direct.put(avc)
+            direct.flip()
+            direct.position(3)
+            check(AvcBuffers.inspect(direct, avc.size) == (1 shl 5))
+            check(direct.position() == 3)
+            check(AvcBuffers.inspect(direct, avc.size - 1) == -1)
+            check(AvcBuffers.inspect(java.nio.ByteBuffer.wrap(avc), avc.size) == -1)
+            check(NativeBridge.inspectAvc(direct.slice(), avc.size, 99) == -1)
+            check(NativeBridge.inspectAvc(direct.slice(), avc.size + 1, 0) == -1)
+            results.putString("stream", "\nIntraLink JNI onboarding: PASSED\nIntraLink AVC buffer boundary: PASSED\n")
             resultCode = Activity.RESULT_OK
         } catch (error: Exception) {
             results.putString("stream", "\nIntraLink JNI onboarding: FAILED: " + error.javaClass.simpleName + "\n")
