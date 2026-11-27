@@ -155,3 +155,7 @@ The shared Rust H.264 packetizer normalizes complete explicitly framed local enc
 ## Android local codec buffer boundary (preview.7)
 
 The sole MediaCodec owner passes an exact direct buffer slice synchronously to the shared Rust NAL framing parser, without a full-frame copy or retained native pointer. Kotlin tracks numeric output observations only; independently authorized remote media and decoder integration remain separate. See ANDROID.md and AVC-PACKETIZER.md.
+
+## Local AVC producer and exact-mode policy (2026-11-27)
+
+A two-picture Rust producer owns one ordered v9 encoder epoch, invalidates unsent dependent pictures on loss/age/pressure, requests IDR and packetizes only on demand. It reuses the existing authenticated transport credit; no alternate connection engine. Exact tested operating-point selection has independent local ceilings and supports orientation-specific geometry. The policy and new SPS metadata observation do not change the wire or authorization. See AVC-PRODUCER.md.

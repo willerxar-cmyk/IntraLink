@@ -347,3 +347,139 @@ async fn encoder_packetizer_reuses_authenticated_demand_and_receipts() -> Result
     host.close().await;
     Ok(())
 }
+
+#[tokio::test]
+async fn bounded_native_avc_producer_recovers_over_existing_quic_credit() -> Result<()> {
+    use h264::{
+        Framing,
+        producer::{Poll, Producer, Push},
+    };
+    use std::time::Instant as LocalInstant;
+    let fixture =
+        include_bytes!("../../../intralink-d3d11/examples/fixtures/headless-bands-1080p.h264");
+    let sizes = [895, 2642, 2563, 866, 2581, 2579];
+    let offsets = [0, 895, 3537, 6100, 6966, 9547];
+    let p = Profile::new(1080, 60, 3, 8_000_000).unwrap();
+    let (host, viewer, addr) = endpoints().await?;
+    let (source, mut requests) = mpsc::channel::<CaptureRequest>(1);
+    let producer = async {
+        let first = requests
+            .recv()
+            .await
+            .context("Missing first capture demand")?;
+        let mut mailbox = Producer::new(p, LocalInstant::now());
+        let push = |mailbox: &mut Producer, index: usize| -> Result<Push> {
+            let offset = offsets[index];
+            mailbox
+                .push(
+                    Framing::AnnexB,
+                    matches!(index, 0 | 3),
+                    (index as i64) * 16_667,
+                    fixture[offset..offset + sizes[index]].into(),
+                    LocalInstant::now(),
+                )
+                .map_err(|err| anyhow::anyhow!("Local producer failed: {err:?}"))
+        };
+        assert_eq!(push(&mut mailbox, 0)?, Push::Queued);
+        let mut output = first.buffer;
+        assert_eq!(
+            mailbox.poll(LocalInstant::now(), &mut output),
+            Ok(Poll::Frame)
+        );
+        ensure!(
+            first.reply.send(Ok(Capture::Frame(output))).is_ok(),
+            "Capture canceled"
+        );
+        // Fill the unsent mailbox with the old GOP. Loss invalidates both
+        // reference-dependent pictures, before any wire sequence is allocated.
+        assert_eq!(push(&mut mailbox, 1)?, Push::Queued);
+        assert_eq!(push(&mut mailbox, 2)?, Push::Queued);
+        assert_eq!(mailbox.notify_loss(LocalInstant::now()), Ok(true));
+        assert_eq!(mailbox.pending_count(), 0);
+        let req = requests.recv().await.context("Missing no-update demand")?;
+        let mut output = req.buffer;
+        assert_eq!(
+            mailbox.poll(LocalInstant::now(), &mut output),
+            Ok(Poll::NoUpdate {
+                request_keyframe: false
+            })
+        );
+        ensure!(
+            req.reply.send(Ok(Capture::NoUpdate(output))).is_ok(),
+            "Capture canceled"
+        );
+        for index in [3, 4, 5] {
+            let req = requests.recv().await.context("Missing recovered demand")?;
+            assert_eq!(push(&mut mailbox, index)?, Push::Queued);
+            let mut output = req.buffer;
+            assert_eq!(
+                mailbox.poll(LocalInstant::now(), &mut output),
+                Ok(Poll::Frame)
+            );
+            ensure!(
+                req.reply.send(Ok(Capture::Frame(output))).is_ok(),
+                "Capture canceled"
+            );
+        }
+        mailbox.close();
+        let req = requests.recv().await.context("Missing end demand")?;
+        ensure!(req.reply.send(Ok(Capture::End)).is_ok(), "Capture canceled");
+        Ok::<(), anyhow::Error>(())
+    };
+    let mut observed = Vec::new();
+    let (served, viewed, produced) = tokio::join!(
+        serve_h264_diagnostic(&host, viewer.id(), p, source),
+        view_h264_diagnostic(&viewer, host.id(), std::slice::from_ref(&addr), p, |f| {
+            let result = (|| {
+                let au = h264::unwrap(&f.payload).map_err(|err| anyhow::anyhow!("{err:?}"))?;
+                let index = [0, 3, 4, 5][observed.len()];
+                // The same strict packetizer normalizes start-code widths.
+                let mut expected = Vec::new();
+                let mut standalone = h264::Packetizer::new(p);
+                // A non-IDR needs its preceding independently validated base.
+                if index >= 3 {
+                    for prior in 3..index {
+                        standalone
+                            .packetize(
+                                Framing::AnnexB,
+                                prior == 3,
+                                &fixture[offsets[prior]..offsets[prior] + sizes[prior]],
+                                &mut expected,
+                            )
+                            .map_err(|err| anyhow::anyhow!("{err:?}"))?;
+                    }
+                }
+                standalone
+                    .packetize(
+                        Framing::AnnexB,
+                        matches!(index, 0 | 3),
+                        &fixture[offsets[index]..offsets[index] + sizes[index]],
+                        &mut expected,
+                    )
+                    .map_err(|err| anyhow::anyhow!("{err:?}"))?;
+                ensure!(
+                    au.annex_b == h264::unwrap(&expected).unwrap().annex_b,
+                    "Recovered payload differs"
+                );
+                observed.push((f.record_sequence, au.sequence, au.keyframe));
+                Ok(())
+            })();
+            ready(result)
+        }),
+        producer
+    );
+    produced?;
+    let served = served?;
+    assert_eq!(served, viewed?);
+    assert_eq!(
+        (served.frames, served.no_updates, served.repeats),
+        (4, 1, 0)
+    );
+    assert_eq!(
+        observed,
+        vec![(1, 1, true), (3, 2, true), (4, 3, false), (5, 4, false)]
+    );
+    viewer.close().await;
+    host.close().await;
+    Ok(())
+}

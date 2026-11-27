@@ -116,6 +116,108 @@ impl Bits {
     }
 }
 
+/// Bounded observation of a progressive 8-bit 4:2:0 SPS prefix.
+/// This deliberately does not validate VUI, slice syntax, DPB conformance
+/// or the complete RBSP. It is not a decoder admission check.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct SpsInfo {
+    pub profile_idc: u8,
+    pub level_idc: u8,
+    pub constraints: u8,
+    pub width: u16,
+    pub height: u16,
+    pub references: u8,
+    pub poc_type: u8,
+}
+
+pub(super) fn observe_sps(nal: &[u8]) -> Result<SpsInfo, Error> {
+    if nal.len() > MAX_PARAMETER_BYTES || nal.first().is_none_or(|b| b & 0x9f != 7 || b & 0x60 == 0)
+    {
+        return Err(Error::ParameterSets);
+    }
+    let mut bits = Bits::new(nal.get(1..).ok_or(Error::ParameterSets)?)?;
+    let profile_idc = bits.read(8)? as u8;
+    let constraints = bits.read(8)? as u8;
+    let level_idc = bits.read(8)? as u8;
+    if !matches!(profile_idc, 66 | 77 | 100)
+        || constraints & 3 != 0
+        || !matches!(
+            level_idc,
+            10 | 11
+                | 12
+                | 13
+                | 20
+                | 21
+                | 22
+                | 30
+                | 31
+                | 32
+                | 40
+                | 41
+                | 42
+                | 50
+                | 51
+                | 52
+                | 60
+                | 61
+                | 62
+        )
+    {
+        return Err(Error::ParameterSets);
+    }
+    bits.ue(31)?; // SPS id
+    if profile_idc == 100 {
+        bits.expect_ue(1)?; // 4:2:0
+        bits.expect_ue(0)?; // 8-bit luma
+        bits.expect_ue(0)?; // 8-bit chroma
+        bits.expect(1, 0)?; // no transform bypass
+        bits.expect(1, 0)?; // custom scaling lists are not observed by this parser
+    }
+    bits.ue(12)?; // log2_max_frame_num_minus4
+    let poc_type = bits.ue(2)? as u8;
+    match poc_type {
+        0 => {
+            bits.ue(12)?;
+        }
+        2 => {}
+        _ => return Err(Error::ParameterSets), // type 1 not supported here
+    }
+    let references = bits.ue(16)? as u8;
+    bits.flag()?; // gaps_in_frame_num_value_allowed_flag
+    let coded_width = (bits.ue(119)? + 1) * 16;
+    let coded_height = (bits.ue(119)? + 1) * 16;
+    bits.expect(1, 1)?; // progressive only
+    bits.flag()?; // direct_8x8_inference_flag
+    let crop = if bits.flag()? {
+        [bits.ue(959)?, bits.ue(959)?, bits.ue(959)?, bits.ue(959)?]
+    } else {
+        [0; 4]
+    };
+    let width = coded_width
+        .checked_sub(2 * (crop[0] + crop[1]))
+        .ok_or(Error::ParameterSets)?;
+    let height = coded_height
+        .checked_sub(2 * (crop[2] + crop[3]))
+        .ok_or(Error::ParameterSets)?;
+    if !(64..=1920).contains(&width)
+        || !(64..=1920).contains(&height)
+        || width.min(height) > 1080
+        || coded_width.min(coded_height) > 1088
+    {
+        return Err(Error::ParameterSets);
+    }
+    bits.flag()?; // VUI present flag only; no color/timing inference
+    Ok(SpsInfo {
+        profile_idc,
+        level_idc,
+        constraints,
+        width: width as u16,
+        height: height as u16,
+        references,
+        poc_type,
+    })
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Sps {
     pub id: u32,

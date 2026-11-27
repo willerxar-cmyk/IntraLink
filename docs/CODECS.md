@@ -61,3 +61,7 @@ Compact/Tiles/JPEG are the required native desktop preview baseline and do not u
 ## Local AVC packetizer (2026-11-27)
 
 Shared Rust adapter implements complete Annex B/length-prefixed units, separate SPS/PPS and missing AUD normalization, directly to existing v9 envelopes. Host transport tests and exact native generated 1080p AVC NAL comparisons passed. Not general Android codec compatibility or a remotely reachable AVC decoder. See [AVC-PACKETIZER.md](AVC-PACKETIZER.md).
+
+## AVC CPU recovery fixture (2026-11-27)
+
+The external developer-only CPU h264 decoder verified the exact generated NVENC fixture after the Rust bounded producer drops two unsent P pictures and resumes at the next IDR. All four retained decoded YUV frames match the original byte-for-byte, sampled maximum YUV error 1. No hardware acceleration or remote bitstream. See AVC-PRODUCER.md and benchmarks/avc-cpu-recovery-20261127.json. Runtime software AVC decoder integration and isolation remain open.

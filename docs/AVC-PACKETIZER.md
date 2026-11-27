@@ -19,3 +19,7 @@ Next: use authorized Android device or isolated emulator to observe real format/
 ## Local Android producer observation (preview.7)
 
 `inspect_nal_types` reuses the explicit bounded framing parser without copying frame content. It reports only a numeric mask of accepted NAL header types (1-23); no complete picture, parameter set, POC, geometry or v9-compatibility claim. The Android worker passes a sliced direct MediaCodec buffer to JNI with its exact size; raw bytes are never sent or stored. Kotlin distinguishes config, partial chain, IDR flag, timestamps and VCL-containing buffers. Existing strict Packetizer and StreamState, v9 loopback-only transport and software desktop protocols remain unchanged. Actual vendor CSD/profile negotiation, safe remote decoder and independently consented media session still require implementation.
+
+## Bounded producer and exact operating points (2026-11-27)
+
+New shared local producer handles unsent queue loss by clearing dependent records and waiting for a validated IDR. Existing v9 structural state, sequence, receipt window and loopback restriction remain unchanged. The independent local mode selector and SPS prefix observation do not create an authenticated negotiation or native decoder grant. See [AVC-PRODUCER.md](AVC-PRODUCER.md).

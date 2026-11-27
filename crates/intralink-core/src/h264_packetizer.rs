@@ -88,6 +88,27 @@ pub fn inspect_nal_types(framing: Framing, data: &[u8]) -> Result<u32, Error> {
     Ok(mask)
 }
 
+/// Read one SPS from explicit local configuration framing. Permit an
+/// accompanying PPS, but never accept a picture or multiple SPS definitions.
+pub fn inspect_sps(framing: Framing, data: &[u8]) -> Result<parameters::SpsInfo, Error> {
+    if data.len() > 2 * (MAX_PARAMETER_SET + 4) {
+        return Err(Error::Size);
+    }
+    let units = nals(framing, data)?;
+    let mut info = None;
+    let mut pps = false;
+    for nal in units.as_slice() {
+        match nal[0] & 31 {
+            7 if info.is_none() && !pps => info = Some(parameters::observe_sps(nal)?),
+            8 if info.is_some() && !pps && nal.len() <= MAX_PARAMETER_SET && nal[0] & 0x60 != 0 => {
+                pps = true
+            }
+            _ => return Err(Error::ParameterSets),
+        }
+    }
+    info.ok_or(Error::ParameterSets)
+}
+
 fn append(output: &mut Vec<u8>, nal: &[u8]) -> Result<(), Error> {
     if output.len() + 3 + nal.len() > MAX_FRAME_BYTES {
         return Err(Error::Size);

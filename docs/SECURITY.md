@@ -144,3 +144,7 @@ The v9 diagnostic adapter adds no permissions or listeners and preserves loopbac
 ## Android direct AVC buffer observation (preview.7)
 
 The local consented diagnostic now reads the exact borrowed direct-buffer slice synchronously on its sole codec owner thread for a bounded NAL-type mask. The Rust JNI bridge rejects empty/oversized, non-direct/incorrect-capacity, malformed or unsupported framing; it never retains a pointer or coded bytes. The acquired codec buffer is released in finally. Partial chains are excluded, no decoder receives these data, and no remote permission/listener or wire change is added. This is a scoped native memory-safety boundary, not a complete decoder security audit. User-facing local disclosure was updated. See ANDROID.md and AVC-PACKETIZER.md.
+
+## AVC recovery and SPS metadata boundary (2026-11-27)
+
+Queue ownership, age, IDR deadline and exact packetizer validation prevent publication of dependent pictures after local loss; no arbitrary P-frame dropping. All malformed or incompatible units close the local epoch. New SPS prefix observation only reports bounded numeric metadata, not full bitstream admission or decoder safety. v9 loopback-only and the existing strict SPS/PPS validator remain unchanged. External CPU decoder test accepts only a known embedded generated fixture; not a native decoder sandbox. See AVC-PRODUCER.md.

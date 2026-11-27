@@ -1,0 +1,38 @@
+{
+  "scope": "known generated fixture, CPU decoder, no remote or display path",
+  "ffmpeg": "ffmpeg version 8.1.1-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers",
+  "decoder": "h264; hwaccel none; 2 configured threads",
+  "source_sha256": "283ab72056ae1b9edf57a6bae51edd255db01ffd72593e1b0113e6914db0cda0",
+  "source_bytes": 12126,
+  "recovered_sha256": "979261c6e89ead1872b3350fd5b8efe5c137e82c97b59e193361b8dc0da33a59",
+  "recovered_bytes": 6909,
+  "original_frames": 6,
+  "recovered_original_indices": [
+    0,
+    3,
+    4,
+    5
+  ],
+  "exact_recovered_frame_hashes": [
+    "a168c7987434673b524b935d88ff890d0bfc6b530c56869360d39a0746ca5441",
+    "ebec77391731cdade17187909c73f1df7049542e78ccc9960d1e9868b42e5732",
+    "c87e7f7e554682e66670226bfa7f7ff8eaab771ea0fc02a1f28fa0d0cbfeaf34",
+    "9646367f46c1e06c95995b83a5fd8321c14ab6b25a334751f24e08fcd732ba19"
+  ],
+  "exact_decoded_bytes": 12441600,
+  "max_sampled_yuv_error": 1,
+  "original_decode_wall_seconds": 0.11547180000161461,
+  "recovered_decode_wall_seconds": 0.08499750000009954,
+  "stream": {
+    "codec_name": "h264",
+    "profile": "High",
+    "width": 1920,
+    "height": 1080,
+    "pix_fmt": "yuv420p",
+    "color_range": "tv",
+    "color_space": "bt709",
+    "color_transfer": "bt709",
+    "color_primaries": "bt709",
+    "has_b_frames": 0
+  }
+}
