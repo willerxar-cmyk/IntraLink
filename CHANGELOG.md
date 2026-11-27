@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - Android local onboarding
+
+- Add Kotlin Android app with the shared Rust encrypted identity, role and naming operations, ABI-specific JNI builds and explicit no-backup policy.
+- Add real JNI instrumentation test, localization resources, safe insets, optional authorized signing and package validation.
+- Add Android candidate CI, native/JVM dependency notices and separate signed debug/unsigned release candidates. No Android remote transport or production release claim.
+
 ## 0.22.0-preview.3 - Windows input queue and native regression
 
 - Bound queued input age and coalesce only replaceable unsent pointer motion; preserve held-key, drag, wheel, focus and acknowledgment barriers. Cancel pending sink acceptance when authenticated transport closes.

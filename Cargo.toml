@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/intralink-core", "crates/intralink-transport", "crates/intralink-vault", "crates/intralink-d3d11", "crates/intralink-input-win", "apps/intralink"]
+members = ["crates/intralink-core", "crates/intralink-transport", "crates/intralink-vault", "crates/intralink-d3d11", "crates/intralink-input-win", "apps/intralink", "crates/intralink-android"]
 resolver = "3"
 
 [workspace.package]

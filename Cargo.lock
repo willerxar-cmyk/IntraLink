@@ -1745,6 +1745,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "intralink-android"
+version = "0.22.0"
+dependencies = [
+ "anyhow",
+ "intralink-core",
+ "intralink-vault",
+ "jni 0.21.1",
+ "serde_json",
+ "zeroize",
+]
+
+[[package]]
 name = "intralink-core"
 version = "0.22.0"
 dependencies = [

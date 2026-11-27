@@ -1,0 +1,110 @@
+import groovy.json.JsonOutput
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import javax.inject.Inject
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecOperations
+import org.gradle.work.DisableCachingByDefault
+
+plugins {
+    id 'com.android.application'
+}
+// Release signing is opt-in with an existing, authorized keystore.
+def signingEnvironment = [
+    storeFile: providers.environmentVariable('INTRALINK_ANDROID_KEYSTORE'),
+    storePassword: providers.environmentVariable('INTRALINK_ANDROID_STORE_PASSWORD'),
+    keyAlias: providers.environmentVariable('INTRALINK_ANDROID_KEY_ALIAS'),
+    keyPassword: providers.environmentVariable('INTRALINK_ANDROID_KEY_PASSWORD')
+]
+def signingRequested = signingEnvironment.values().any { it.isPresent() }
+if (signingRequested && !signingEnvironment.values().every { it.isPresent() && !it.get().isEmpty() }) {
+    throw new GradleException('Android signing requires all four INTRALINK_ANDROID_* variables.')
+}
+
+android {
+    namespace = 'org.intralink.android'
+    compileSdk = 36
+    defaultConfig {
+        applicationId = 'org.intralink.android'
+        minSdk = 26
+        targetSdk = 36
+        versionCode = 220004
+        versionName = '0.22.0-preview.4'
+        testInstrumentationRunner = 'org.intralink.android.OnboardingInstrumentation'
+        ndk { abiFilters 'arm64-v8a', 'x86_64' }
+    }
+    if (signingRequested) {
+        signingConfigs {
+            authorizedRelease {
+                storeFile = file(signingEnvironment.storeFile.get())
+                storePassword = signingEnvironment.storePassword.get()
+                keyAlias = signingEnvironment.keyAlias.get()
+                keyPassword = signingEnvironment.keyPassword.get()
+                if (!storeFile.isFile()) throw new GradleException('Authorized Android keystore not found.')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled = false
+            if (signingRequested) signingConfig = signingConfigs.authorizedRelease
+        }
+    }
+}
+
+@DisableCachingByDefault(because = 'Cargo validates the shared Rust build graph and inputs')
+abstract class BuildIntraLinkRust extends DefaultTask {
+    @Internal abstract DirectoryProperty getRepositoryDirectory()
+    @OutputDirectory abstract DirectoryProperty getOutputDirectory()
+    @Inject abstract ExecOperations getExecOperations()
+
+    @TaskAction void buildLibraries() {
+        def python = System.getProperty('os.name').startsWith('Windows') ? 'python' : 'python3'
+        execOperations.exec {
+            workingDir repositoryDirectory.get().asFile
+            commandLine python, 'tools/build_android_native.py',
+                outputDirectory.get().asFile.absolutePath
+        }
+    }
+}
+
+def buildRust = tasks.register('buildRust', BuildIntraLinkRust) {
+    repositoryDirectory.set(rootProject.layout.projectDirectory.dir('../..'))
+    outputDirectory.set(layout.buildDirectory.dir('generated/jniLibs'))
+    outputs.upToDateWhen { false }
+}
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.sources.jniLibs.addGeneratedSourceDirectory(buildRust, { it.outputDirectory })
+    }
+}
+
+// Export only the actual release runtime graph, never an assumed package list.
+tasks.register('writeRuntimeDependencyInventory') {
+    def destination = layout.buildDirectory.file('reports/runtime-dependencies.json')
+    outputs.file(destination)
+    outputs.upToDateWhen { false }
+    doLast {
+        def entries = configurations.releaseRuntimeClasspath.incoming.artifacts.artifacts.collect { artifact ->
+            def id = artifact.id.componentIdentifier
+            if (!(id instanceof ModuleComponentIdentifier)) {
+                throw new GradleException('Review non-Maven runtime dependency before distribution.')
+            }
+            def dependency = dependencies.create(id.group + ':' + id.module + ':' + id.version + '@pom')
+            def pom = configurations.detachedConfiguration(dependency)
+            pom.transitive = false
+            [
+                group: id.group,
+                name: id.module,
+                version: id.version,
+                artifact: artifact.file.absolutePath,
+                pom: pom.singleFile.absolutePath
+            ]
+        }.sort { row -> row.group + ':' + row.name + ':' + row.version }
+        def output = destination.get().asFile
+        output.parentFile.mkdirs()
+        output.setText(JsonOutput.prettyPrint(JsonOutput.toJson(entries)) + '\n', 'UTF-8')
+    }
+}

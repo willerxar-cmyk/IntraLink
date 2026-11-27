@@ -1,4 +1,4 @@
-"""Generate the portable desktop release dependency inventory and notices.
+"""Generate a locked native dependency inventory and notices.
 
 Requires the locked, already-resolved Cargo registry and GitHub CLI for exact
 upstream notices absent from certain published crate archives. No package code
@@ -17,6 +17,8 @@ FEATURES = "intralink/wgc-preview,intralink/jpeg-simd,intralink/jpeg-parallel,in
 PLATFORMS = {
     "windows": ("x86_64-pc-windows-msvc", FEATURES),
     "linux": ("x86_64-unknown-linux-gnu", FEATURES.replace("wgc-preview", "desktop-preview")),
+    "android-arm64": ("aarch64-linux-android", ""),
+    "android-x86_64": ("x86_64-linux-android", ""),
 }
 NOTICE = re.compile(r"^(licen[cs]es?|copying|copyright|notice|authors)([_.-]|$)", re.I)
 
@@ -107,7 +109,10 @@ def main():
         features += ",intralink/input-preview"
     if args.output.exists():
         raise FileExistsError(args.output)
-    flags = ["--locked", "--offline", "--no-default-features", "--features", features]
+    package_name = "intralink-android" if args.platform.startswith("android-") else "intralink"
+    flags = ["--locked", "--offline", "--no-default-features"]
+    if features:
+        flags += ["--features", features]
     host = next(line.removeprefix("host: ") for line in capture("rustc", "-vV").splitlines()
                 if line.startswith("host: "))
     filters = ["--filter-platform", target]
@@ -115,7 +120,7 @@ def main():
         filters += ["--filter-platform", host]
     metadata = json.loads(capture("cargo", "metadata", "--format-version", "1",
                                   *filters, *flags))
-    tree = capture("cargo", "tree", "-p", "intralink", "--target", target, "-e",
+    tree = capture("cargo", "tree", "-p", package_name, "--target", target, "-e",
                    "normal,build", "--prefix", "none", "--format", "{p}",
                    "--charset", "ascii", *flags)
     selected = {tuple(m.groups()) for line in tree.splitlines()
@@ -197,7 +202,7 @@ def main():
     if any(not row["license"] and not row["license_file"] for row in rows):
         raise ValueError("Undeclared license in resolved dependency graph")
     text = [
-        f"IntraLink {args.platform} x64 portable preview - third-party inventory",
+        f"IntraLink {args.platform} preview - native third-party inventory",
         f"Target: {target}", f"Build host: {host}", f"Cargo features: {features}",
         "Includes the resolved normal/build dependency graph; build-only packages "
         "may not be linked into the executable.",
@@ -214,7 +219,7 @@ def main():
     with zipfile.ZipFile(args.output, "x", zipfile.ZIP_DEFLATED) as output:
         output.writestr("THIRD-PARTY-NOTICES.txt", "\n".join(text) + "\n")
         output.writestr("dependency-inventory.json", json.dumps({
-            "target": target, "build_host": host, "features": features, "scope": "normal and build dependencies",
+            "target": target, "build_host": host, "features": features, "package": package_name, "scope": "normal and build dependencies",
             "packages": rows,
         }, indent=2) + "\n")
         for name, content in sorted(notices.items()):
