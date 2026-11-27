@@ -63,8 +63,13 @@ jobs:
         run: |
           set -euo pipefail
           if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y ffmpeg
+            # Use the runner's signed Ubuntu archive only. An unrelated
+            # third-party repository returned HTTP 403 on Ubuntu 26.04.
+            ubuntu_sources=/etc/apt/sources.list.d/ubuntu.sources
+            test -r "$ubuntu_sources"
+            apt_options=(-o "Dir::Etc::sourcelist=$ubuntu_sources" -o Dir::Etc::sourceparts=- -o Acquire::Retries=3)
+            sudo apt-get "${apt_options[@]}" update
+            sudo apt-get "${apt_options[@]}" install -y --no-install-recommends ffmpeg
           fi
           python3 -B tools/verify_avc_recovery_cpu.py --output avc-cpu-recovery-ci.json
       - name: Preserve CPU decoder recovery evidence
