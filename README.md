@@ -4,9 +4,9 @@
 
 IntraLink is an independent Rust remote-access project designed for a single controller, several computers, and optional host/controller roles on the same device. It uses Iroh QUIC with pinned device identities, without a mandatory account, directory or commercial relay.
 
-[Download Windows preview](https://github.com/willerxar-cmyk/IntraLink/releases/tag/v0.22.0-preview.3) · [Quick start](#quick-start) · [Security](docs/SECURITY.md) · [Roadmap](docs/ROADMAP.md)
+[Download desktop preview](https://github.com/willerxar-cmyk/IntraLink/releases/tag/v0.22.0-preview.4) · [Quick start](#quick-start) · [Security](docs/SECURITY.md) · [Roadmap](docs/ROADMAP.md)
 
-> **Development preview 0.22.0-preview.3 (Windows x64).** Windows x64 local diagnostics and authenticated loopback sessions have passed. This is not a production-certified remote-control tool. Use only on private, owner-authorized test networks. Physical multi-device sessions, sustained 1080p60, code signing, and independent security review are still open.
+> **Development preview 0.22.0-preview.4 (Windows and Linux x64).** Windows native generated-window diagnostics and Linux CI builds/tests have passed; Linux physical capture and KVM are not qualified. This is not a production-certified remote-control tool. Use only on private, owner-authorized test networks. Physical multi-device sessions, sustained 1080p60, code signing, and independent security review are still open.
 
 ## What works today
 
@@ -29,17 +29,29 @@ The Windows portable build uses optional WGC/D3D11 capture and scaling; the soft
 - **BASE - Control other devices:** use the central computer with your keyboard and mouse. The current CLI calls this role `controller`.
 - **CLIENT - Receive control:** use the device that shares its screen or receives approved input. The current CLI calls this role `host`.
 
-The public preview.3 still uses CLI setup. The next source candidate adds a graphical first-run BASE/CLIENT selector, named encrypted identities, and authenticated role changes (see [ONBOARDING.md](docs/ONBOARDING.md)). The desktop selector hands off name/passphrase entry to the local terminal; this is not yet a complete GUI dashboard. Screen and input permissions remain independent.
+Preview.4 adds a graphical first-run BASE/CLIENT selector, named encrypted identities, and authenticated role changes (see [ONBOARDING.md](docs/ONBOARDING.md)). The desktop selector hands off name/passphrase entry to the local terminal; this is not yet a complete GUI dashboard. Screen and input permissions remain independent.
 
 | Platform | Available distribution |
 |---|---|
-| Windows x64 | Preview 3 portable ZIP; local native diagnostics passed, physical KVM pending |
-| Linux x86_64 | Native CI build/tests passed; public packaging and physical qualification pending |
-| Android | Application and signed APK/AAB not available yet |
+| Windows x64 | Preview 4 portable ZIP; local native diagnostics passed, physical KVM pending |
+| Linux x86_64 | Preview 4 TAR.GZ; native Ubuntu 24.04 CI build/tests passed; physical capture and input adapter pending |
+| Android | Local onboarding under development; no qualified Android remote session or signed release yet |
+
+## Install on Linux (experimental)
+
+Download the Linux x86_64 TAR.GZ and verify the published SHA-256 manifest. Extract into a private user-owned directory. This candidate was built and tested on Ubuntu 24.04; system libraries are not bundled. Check the included linux-runtime-libraries.txt for the native dependency list. On Ubuntu, the runtime libraries include libgbm1 and libxcb1. An active supported X11 session is required for the desktop viewer; Wayland is not qualified. Do not enable global input permissions or run with elevated privileges.
+
+From the extracted directory:
+
+    ./intralink --version
+    ./intralink --help
+    ./intralink setup
+
+Linux input injection/capture for KVM is not implemented yet. The native CI gate tests the actual binary and transport; it is not a physical desktop acceptance test. Read the license provenance notes included in the package.
 
 ## Install
 
-1. Open [Releases](https://github.com/willerxar-cmyk/IntraLink/releases) and select the current Windows x64 **pre-release**.
+1. Open [Releases](https://github.com/willerxar-cmyk/IntraLink/releases) and select the current Windows or Linux x64 **pre-release**. The Windows instructions below use PowerShell.
 2. Download the portable ZIP, verify its SHA-256 against the release manifest, and extract it to a user-owned directory. No installer or administrator rights required. The executable is not yet code-signed; verify provenance before execution.
 3. Open PowerShell in that directory and run:
 

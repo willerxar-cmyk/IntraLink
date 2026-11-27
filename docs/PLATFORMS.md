@@ -1,6 +1,6 @@
 # Target matrix and release status
 
-Windows x64 preview.3 is public and its generated-window native video diagnostics passed; physical multi-device KVM is unqualified. Linux X11 desktop source exists, but the native build and physical acceptance are pending. Android has no app yet. The manual Portable desktop candidates workflow builds and packages Windows/Linux independently; hosted artifacts are not automatically released. The table below remains a target matrix, not a list of supported release claims. See [DESKTOP.md](DESKTOP.md) and [RELEASE-PREVIEW.md](RELEASE-PREVIEW.md).
+Preview.4 desktop candidates: Windows x64 passed local native generated-window diagnostics; Linux x86_64 passed native Ubuntu 24.04 CI strict lint, tests, Release, CLI execution, ldd, inventory and archive verification. Physical multi-device KVM, Linux real X11/Wayland capture and Linux input injection remain unqualified. Android local setup is under development. See [DESKTOP.md](DESKTOP.md), [ONBOARDING.md](ONBOARDING.md) and [RELEASE-PREVIEW.md](RELEASE-PREVIEW.md).
 
 | Platform | Controller | Host approach | Targets |
 |---|---|---|---|
