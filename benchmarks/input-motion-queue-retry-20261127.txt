@@ -1,0 +1,28 @@
+﻿    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.34s
+     Running unittests src\lib.rs (D:\IntraLink-validation-v020\target\debug\deps\intralink_transport-75da089dcbe7b9a9.exe)
+
+running 13 tests
+test input_queue::tests::local_command_age_reduces_remaining_wire_budget ... ok
+test input_queue::tests::key_and_ack_barriers_are_preserved ... ok
+test input_queue::tests::movement_replaces_only_unsent_tail_and_never_drag_or_click_barriers ... ok
+test input_queue::tests::saturation_and_shutdown_fail_closed ... ok
+test input_queue::tests::canceled_wait_does_not_consume_next_command ... ok
+test input::tests::wrong_identity_never_reaches_input_sink ... ok
+test input::tests::local_rejection_is_not_acknowledged ... ok
+test input::tests::disconnected_controller_closes_consumer_with_owned_release_plan ... ok
+input_queue_loopback: generated_idle_moves=320, replaced=310, sent_idle_moves=10, total_records=83, ack_samples=80, ack_p50_ms=0.565, ack_p95_ms=1.335, ack_max_ms=1.414
+test input::tests::coalesced_motion_preserves_exact_quic_click_drag_key_and_focus_order ... ok
+test input::tests::malformed_sequence_or_inactive_input_never_reaches_local_sink ... ok
+test input::tests::three_authenticated_hosts_keep_independent_input_and_release_before_switch ... ok
+test input::tests::expired_client_budget_cancels_pending_host_acceptance ... ok
+test input::tests::eight_authenticated_input_hosts_share_one_endpoint ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 47 filtered out; finished in 0.47s
+
+     Running tests\multi_host.rs (D:\IntraLink-validation-v020\target\debug\deps\multi_host-290c08cc6c6c1e30.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+EXIT input-targeted-retry 0
