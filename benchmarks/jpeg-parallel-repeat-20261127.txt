@@ -1,0 +1,30 @@
+Local JPEG encode comparison: simd_feature=true, runtime_avx2=true
+encoder=image_reference, height=1080, quality=75, sampling=444, samples=12, bytes=515502, p50_ms=44.236, p95_ms=51.142, worst_ms=51.142
+encoder=bounded_rust_jpeg, height=1080, quality=75, sampling=444, samples=12, bytes=517257, p50_ms=23.037, p95_ms=26.877, worst_ms=26.877
+encoder=parallel_2, height=1080, quality=75, sampling=444, samples=12, bytes=517262, p50_ms=15.446, p95_ms=19.726, worst_ms=19.726
+encoder=parallel_4, height=1080, quality=75, sampling=444, samples=12, bytes=517285, p50_ms=11.762, p95_ms=16.343, worst_ms=16.343
+profile_height=1080, jpeg_workers=4, jpeg_records=12, samples=12
+stage=resize_rgb, height=1080, p50_ms=1.209, worst_ms=1.537
+stage=tiles_compare, height=1080, p50_ms=0.187, worst_ms=0.215
+stage=jpeg, height=1080, p50_ms=11.269, worst_ms=12.357
+stage=total_encode, height=1080, p50_ms=12.570, worst_ms=13.641
+encoder=image_reference, height=720, quality=75, sampling=444, samples=12, bytes=249907, p50_ms=19.243, p95_ms=22.375, worst_ms=22.375
+encoder=bounded_rust_jpeg, height=720, quality=75, sampling=444, samples=12, bytes=250627, p50_ms=10.266, p95_ms=11.558, worst_ms=11.558
+encoder=parallel_2, height=720, quality=75, sampling=444, samples=12, bytes=250632, p50_ms=6.927, p95_ms=7.868, worst_ms=7.868
+encoder=parallel_4, height=720, quality=75, sampling=444, samples=12, bytes=250643, p50_ms=5.217, p95_ms=5.591, worst_ms=5.591
+profile_height=720, jpeg_workers=4, jpeg_records=12, samples=12
+stage=resize_rgb, height=720, p50_ms=0.555, worst_ms=0.778
+stage=tiles_compare, height=720, p50_ms=0.091, worst_ms=0.100
+stage=jpeg, height=720, p50_ms=5.413, worst_ms=6.498
+stage=total_encode, height=720, p50_ms=6.045, worst_ms=7.169
+encoder=image_reference, height=540, quality=75, sampling=444, samples=12, bytes=143529, p50_ms=11.050, p95_ms=12.115, worst_ms=12.115
+encoder=bounded_rust_jpeg, height=540, quality=75, sampling=444, samples=12, bytes=143907, p50_ms=5.948, p95_ms=6.270, worst_ms=6.270
+encoder=parallel_2, height=540, quality=75, sampling=444, samples=12, bytes=143929, p50_ms=4.208, p95_ms=4.558, worst_ms=4.558
+encoder=parallel_4, height=540, quality=75, sampling=444, samples=12, bytes=143931, p50_ms=3.071, p95_ms=3.688, worst_ms=3.688
+profile_height=540, jpeg_workers=4, jpeg_records=12, samples=12
+stage=resize_rgb, height=540, p50_ms=0.297, worst_ms=0.392
+stage=tiles_compare, height=540, p50_ms=0.049, worst_ms=0.055
+stage=jpeg, height=540, p50_ms=3.088, worst_ms=3.608
+stage=total_encode, height=540, p50_ms=3.449, worst_ms=4.044
+encoder_check=passed; local generated pixels only, no capture or network.
+repeat exit=0
