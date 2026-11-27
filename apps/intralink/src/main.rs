@@ -355,6 +355,9 @@ enum Command {
         /// Keep the locally selected JPEG quality fixed instead of adapting to receipt pressure.
         #[arg(long)]
         fixed_quality: bool,
+        /// Overlap two ordered capture demands (fixed v8 and fixed quality only).
+        #[arg(long, requires = "fixed_quality", conflicts_with_all = ["adaptive_resolution", "negotiate_codec", "negotiate_profile"])]
+        pipeline: bool,
         /// Use adaptive-resolution protocol v10; both endpoints must opt in.
         #[arg(long)]
         adaptive_resolution: bool,
@@ -699,6 +702,7 @@ fn main() -> Result<()> {
             height,
             quality,
             fixed_quality,
+            pipeline,
             adaptive_resolution,
             negotiate_codec,
             negotiate_profile,
@@ -723,6 +727,7 @@ fn main() -> Result<()> {
                         capture,
                         desktop::StreamOptions {
                             fixed_quality,
+                            pipeline,
                             protocol: desktop::view_protocol(
                                 adaptive_resolution,
                                 negotiate_codec,

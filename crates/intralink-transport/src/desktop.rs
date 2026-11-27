@@ -60,6 +60,7 @@ pub struct H264Frame {
 }
 
 mod handshake;
+mod pipeline;
 mod profile;
 pub use profile::ViewMode;
 use profile::{MediaFrame, RequestedMode, SessionProfile};
@@ -152,6 +153,26 @@ pub async fn serve_view_with_protocol(
         SessionProfile::Desktop(config, protocol),
         source,
         &mut TokioWait,
+        false,
+    ))
+    .await
+}
+
+/// Explicit fixed-geometry local overlap. The same v8 wire and identity
+/// handshake are used; unsent demands reserve existing receipt credit.
+pub async fn serve_view_pipelined(
+    endpoint: &Endpoint,
+    approved: EndpointId,
+    config: VideoConfig,
+    source: mpsc::Sender<CaptureRequest>,
+) -> Result<Stats> {
+    Box::pin(serve_media(
+        endpoint,
+        approved,
+        SessionProfile::Desktop(config, ViewProtocol::Fixed),
+        source,
+        &mut TokioWait,
+        true,
     ))
     .await
 }
@@ -181,6 +202,7 @@ pub async fn serve_h264_diagnostic_with_waiter<W: PacerWait>(
         SessionProfile::H264(profile),
         source,
         waiter,
+        false,
     ))
     .await
 }
@@ -191,6 +213,7 @@ async fn serve_media<W: PacerWait>(
     config: SessionProfile,
     source: mpsc::Sender<CaptureRequest>,
     waiter: &mut W,
+    pipelined: bool,
 ) -> Result<Stats> {
     let incoming = timeout(ACCEPT_LIMIT, endpoint.accept())
         .await
@@ -223,120 +246,128 @@ async fn serve_media<W: PacerWait>(
         };
         let stream = async {
             let deadline = Instant::now() + Duration::from_secs(config.seconds());
-            let mut pacer = config.pacer();
-            let mut media_state = config.media_guard();
-            let mut stats = Stats::default();
-            let mut buffer = Vec::new();
-            let mut credit = CreditWindow::default();
-            while stats.records() < config.max_frames() && Instant::now() < deadline {
-                while let Ok(received) = receipt_rx.try_recv() {
-                    ensure!(credit.acknowledge(received), "Invalid frame acknowledgment");
-                }
-                let receipt_pressure =
-                    ReceiptPressure::from_backlog(credit.outstanding(), credit.priority());
-                if !credit.has_credit() {
-                    let remaining = deadline.saturating_duration_since(Instant::now());
+            let (stats, mut credit) = if pipelined {
+                let SessionProfile::Desktop(profile, ViewProtocol::Fixed) = config else {
+                    bail!("Pipelined demand requires fixed desktop profile");
+                };
+                pipeline::stream(&mut tx, &mut receipt_rx, &source, profile, deadline).await?
+            } else {
+                let mut pacer = config.pacer();
+                let mut media_state = config.media_guard();
+                let mut stats = Stats::default();
+                let mut buffer = Vec::new();
+                let mut credit = CreditWindow::default();
+                while stats.records() < config.max_frames() && Instant::now() < deadline {
+                    while let Ok(received) = receipt_rx.try_recv() {
+                        ensure!(credit.acknowledge(received), "Invalid frame acknowledgment");
+                    }
+                    let receipt_pressure =
+                        ReceiptPressure::from_backlog(credit.outstanding(), credit.priority());
+                    if !credit.has_credit() {
+                        let remaining = deadline.saturating_duration_since(Instant::now());
+                        if remaining.is_zero() {
+                            break;
+                        }
+                        // No further capture while the bounded receipt window is full.
+                        // A deadline or invalid receipt closes the session fail-closed.
+                        let received = timeout(IO_LIMIT.min(remaining), receipt_rx.recv())
+                            .await
+                            .context("Desktop receipt window stalled")?
+                            .context("Desktop receipt stream closed")?;
+                        ensure!(credit.acknowledge(received), "Invalid frame acknowledgment");
+                    }
+                    let started = Instant::now();
+                    let remaining = deadline.saturating_duration_since(started);
                     if remaining.is_zero() {
                         break;
                     }
-                    // No further capture while the bounded receipt window is full.
-                    // A deadline or invalid receipt closes the session fail-closed.
-                    let received = timeout(IO_LIMIT.min(remaining), receipt_rx.recv())
-                        .await
-                        .context("Desktop receipt window stalled")?
-                        .context("Desktop receipt stream closed")?;
-                    ensure!(credit.acknowledge(received), "Invalid frame acknowledgment");
-                }
-                let started = Instant::now();
-                let remaining = deadline.saturating_duration_since(started);
-                if remaining.is_zero() {
-                    break;
-                }
-                let (reply, response) = oneshot::channel();
-                let frame = timeout(remaining.min(IO_LIMIT), async {
-                    source
-                        .send(CaptureRequest {
-                            buffer,
-                            reply,
-                            receipt_pressure,
-                            desktop_config: config.desktop_config(),
-                        })
-                        .await
-                        .map_err(|_| anyhow::anyhow!("Local capture source stopped"))?;
-                    response.await.context("Local capture response dropped")?
-                })
-                .await
-                .context("Local capture timed out")??;
-                if Instant::now() >= deadline {
-                    break;
-                }
-                let (header, data, height) = match frame {
-                    Capture::End => break,
-                    Capture::Repeat(data) => {
-                        ensure!(stats.frames > 0 && data.is_empty(), "Invalid local repeat");
-                        (REPEAT, data, None)
+                    let (reply, response) = oneshot::channel();
+                    let frame = timeout(remaining.min(IO_LIMIT), async {
+                        source
+                            .send(CaptureRequest {
+                                buffer,
+                                reply,
+                                receipt_pressure,
+                                desktop_config: config.desktop_config(),
+                            })
+                            .await
+                            .map_err(|_| anyhow::anyhow!("Local capture source stopped"))?;
+                        response.await.context("Local capture response dropped")?
+                    })
+                    .await
+                    .context("Local capture timed out")??;
+                    if Instant::now() >= deadline {
+                        break;
                     }
-                    Capture::NoUpdate(data) => {
-                        ensure!(
-                            stats.frames > 0 && data.is_empty(),
-                            "Invalid local no-update"
-                        );
-                        (NO_UPDATE, data, None)
-                    }
-                    Capture::Frame(data) => (
-                        frame_header(data.len()).context("Invalid local frame length")?,
-                        data,
-                        None,
-                    ),
-                    Capture::AdaptiveFrame { height, data } => (
-                        frame_header(data.len()).context("Invalid local frame length")?,
-                        data,
-                        Some(height),
-                    ),
-                };
-                let observation = parse_length(header).context("Invalid local record")?;
-                if matches!(observation, Record::Frame(_)) {
-                    media_state.accept(height, &data)?;
-                }
-                let remaining = deadline.saturating_duration_since(Instant::now());
-                timeout(IO_LIMIT.min(remaining), async {
-                    tx.write_all(&header).await?;
-                    if matches!(observation, Record::Frame(_)) {
-                        if let Some(height) = height {
-                            tx.write_all(&height.to_be_bytes()).await?;
+                    let (header, data, height) = match frame {
+                        Capture::End => break,
+                        Capture::Repeat(data) => {
+                            ensure!(stats.frames > 0 && data.is_empty(), "Invalid local repeat");
+                            (REPEAT, data, None)
                         }
-                        tx.write_all(&data).await?;
+                        Capture::NoUpdate(data) => {
+                            ensure!(
+                                stats.frames > 0 && data.is_empty(),
+                                "Invalid local no-update"
+                            );
+                            (NO_UPDATE, data, None)
+                        }
+                        Capture::Frame(data) => (
+                            frame_header(data.len()).context("Invalid local frame length")?,
+                            data,
+                            None,
+                        ),
+                        Capture::AdaptiveFrame { height, data } => (
+                            frame_header(data.len()).context("Invalid local frame length")?,
+                            data,
+                            Some(height),
+                        ),
+                    };
+                    let observation = parse_length(header).context("Invalid local record")?;
+                    if matches!(observation, Record::Frame(_)) {
+                        media_state.accept(height, &data)?;
                     }
-                    Ok::<(), anyhow::Error>(())
-                })
-                .await
-                .context("Desktop transfer timed out")??;
-                ensure!(credit.record_sent(), "Frame credit exhausted");
-                match observation {
-                    Record::Repeat => stats.repeats += 1,
-                    Record::NoUpdate => stats.no_updates += 1,
-                    Record::Frame(_) => {
-                        stats.frames += 1;
-                        stats.media_bytes += data.len() as u64;
+                    let remaining = deadline.saturating_duration_since(Instant::now());
+                    timeout(IO_LIMIT.min(remaining), async {
+                        tx.write_all(&header).await?;
+                        if matches!(observation, Record::Frame(_)) {
+                            if let Some(height) = height {
+                                tx.write_all(&height.to_be_bytes()).await?;
+                            }
+                            tx.write_all(&data).await?;
+                        }
+                        Ok::<(), anyhow::Error>(())
+                    })
+                    .await
+                    .context("Desktop transfer timed out")??;
+                    ensure!(credit.record_sent(), "Frame credit exhausted");
+                    match observation {
+                        Record::Repeat => stats.repeats += 1,
+                        Record::NoUpdate => stats.no_updates += 1,
+                        Record::Frame(_) => {
+                            stats.frames += 1;
+                            stats.media_bytes += data.len() as u64;
+                        }
+                        Record::End => bail!("Unexpected local end"),
                     }
-                    Record::End => bail!("Unexpected local end"),
+                    buffer = data;
+                    buffer.clear();
+                    // No-update can reduce polling demand, but does not verify unchanged pixels.
+                    let interval = pacer
+                        .with_priority(!matches!(observation, Record::Frame(_)), credit.priority());
+                    let delay = interval
+                        .saturating_sub(started.elapsed())
+                        .min(deadline.saturating_duration_since(Instant::now()));
+                    if !delay.is_zero() {
+                        let due = Instant::now() + delay;
+                        timeout(IO_LIMIT, waiter.wait(delay))
+                            .await
+                            .context("Media pacing wait timed out")??;
+                        ensure!(Instant::now() >= due, "Media pacing wait returned early");
+                    }
                 }
-                buffer = data;
-                buffer.clear();
-                // No-update can reduce polling demand, but does not verify unchanged pixels.
-                let interval = pacer
-                    .with_priority(!matches!(observation, Record::Frame(_)), credit.priority());
-                let delay = interval
-                    .saturating_sub(started.elapsed())
-                    .min(deadline.saturating_duration_since(Instant::now()));
-                if !delay.is_zero() {
-                    let due = Instant::now() + delay;
-                    timeout(IO_LIMIT, waiter.wait(delay))
-                        .await
-                        .context("Media pacing wait timed out")??;
-                    ensure!(Instant::now() >= due, "Media pacing wait returned early");
-                }
-            }
+                (stats, credit)
+            };
             // No new capture after the deadline. Drain the remaining receipts
             // under a single cleanup budget rather than one timeout per record.
             // Keep the local capture channel alive until transport cleanup ends.
@@ -689,3 +720,6 @@ mod negotiated_tests;
 
 #[cfg(test)]
 mod bounded_tests;
+
+#[cfg(test)]
+mod pipeline_tests;

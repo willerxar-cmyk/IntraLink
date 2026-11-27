@@ -2,6 +2,8 @@
 
 ## 0.22.0 — shared endpoint and full application validation
 
+- Add opt-in fixed-v8 ordered capture/encode overlap, with at most two reserved local demands sharing existing credit, a one-worker stateful encoder lane and foreground-controlled publication/cancellation. Add generated dense-window QUIC loopback comparison; no wire change or speculative display readback.
+
 - Add opt-in bounded two/four-worker JPEG encoding using standard restart markers, exact serial/parallel decoded-pixel regression checks, and local production stage timing. Preserve default serial path, 4:4:4 sampling, quality and record limits.
 
 - Optimize the portable JPEG writer with optional AVX2 runtime dispatch, bounded output-buffer reuse and preserved 4:4:4 sampling/quantization; avoid provably infeasible duplicate Compact keyframe work. Keep the existing decoder and protocol.

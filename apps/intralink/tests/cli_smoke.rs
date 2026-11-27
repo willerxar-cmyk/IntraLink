@@ -213,3 +213,41 @@ fn encoder_diagnostic_is_local_and_explicit() {
     assert!(!output.status.success());
     assert!(String::from_utf8_lossy(&output.stderr).contains("cannot be used with"));
 }
+
+#[cfg(all(
+    feature = "desktop-preview",
+    any(target_os = "windows", target_os = "linux")
+))]
+#[test]
+fn pipeline_requires_explicit_fixed_profile_before_connection() {
+    let help = stdout(&["share-desktop", "--help"]);
+    assert!(help.contains("--pipeline"));
+    let common = [
+        "share-desktop",
+        "--bind",
+        "127.0.0.1:12345",
+        "--controller",
+        "test",
+        "--monitor",
+        "1",
+        "--pipeline",
+    ];
+    for extra in [
+        vec![],
+        vec!["--fixed-quality", "--adaptive-resolution"],
+        vec!["--fixed-quality", "--negotiate-codec"],
+        vec!["--fixed-quality", "--negotiate-profile"],
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_intralink"))
+            .args(common)
+            .args(extra)
+            .output()
+            .expect("Parse pipeline limits");
+        assert!(!output.status.success());
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            stderr.contains("required") || stderr.contains("cannot be used with"),
+            "{stderr}"
+        );
+    }
+}

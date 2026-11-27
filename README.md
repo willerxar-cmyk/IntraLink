@@ -6,6 +6,8 @@ Version 0.22.0 — development preview. The complete locked Windows workspace ha
 
 ### v0.22 additions
 
+- Explicit fixed-v8 `share-desktop --pipeline --fixed-quality` overlaps two reserved local capture demands with one ordered CPU encoder. Existing eight-record credit, visible local approval, fixed geometry and payload bounds remain enforced. Native generated-window loopback diagnostic: `desktop-profile-check --pipeline`. See [ORDERED-PIPELINE.md](docs/ORDERED-PIPELINE.md).
+
 - Optional `jpeg-parallel` feature splits software JPEG keyframes into MCU-aligned strips and joins them using standard JPEG restart markers, without GPU or a new wire protocol. Local encoder diagnostics measure the serial, two-worker and four-worker paths and individual production encode stages. See [JPEG-PARALLEL.md](docs/JPEG-PARALLEL.md).
 
 - Optimized software JPEG using pinned Rust `jpeg-encoder` with optional AVX2 dispatch and independent scalar builds. Preserve explicit 4:4:4 chroma, quantization, bounded payloads and wire compatibility. `desktop-profile-check --encoder` compares local CPU encode times. See [JPEG-ENCODER.md](docs/JPEG-ENCODER.md).

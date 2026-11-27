@@ -59,3 +59,8 @@ Run the standalone media harness, locked workspace CPU/NVENC tests, independent 
 ### Parallel JPEG gate
 
 Run the standalone harness, strict CPU/WGC/NVENC parallel and independent scalar Clippy, full parallel CPU and NVENC workspace tests, and scalar app tests. Verify exact serial/parallel decoded pixels at every supported tier and three qualities, bounded strip-buffer reuse, generated-header validation and atomic oversize rejection. Build locked WGC SIMD parallel Release; execute encoder comparison and stage profiling, Host calibration and native retarget diagnostics. No change to network ordering or claims of sustained physical FPS.
+
+
+### Ordered Host pipeline gate
+
+Validate FIFO pending requests, shared credit reservation and record budget, initial-frame and priority constraints, authenticated QUIC ordering and saturated credit, unauthorized identity, local two-frame lane and exact delta base, cancellation/join and CLI restrictions. Run locked CPU/NVENC parallel workspace and scalar app suites, four strict Clippy configurations, standalone harness, WGC portable Release and owned-window native pipeline, retarget and geometry checks. No physical network or sustained FPS claim. See [ORDERED-PIPELINE.md](ORDERED-PIPELINE.md).

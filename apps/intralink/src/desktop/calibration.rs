@@ -35,10 +35,19 @@ pub struct ProfileCheckArgs {
     /// Compare the current and historical software JPEG encoders on generated pixels.
     #[arg(long, conflicts_with_all = ["host", "hardware", "slots"])]
     encoder: bool,
+    /// Compare ordered serial/overlapped capture on an owned window and QUIC loopback.
+    #[arg(long, conflicts_with_all = ["host", "encoder", "hardware", "slots"])]
+    pipeline: bool,
 }
 
 impl ProfileCheckArgs {
     pub fn run(self) -> Result<()> {
+        if self.pipeline {
+            #[cfg(all(target_os = "windows", feature = "wgc-preview"))]
+            return crate::run_async(super::pipeline_check::run);
+            #[cfg(not(all(target_os = "windows", feature = "wgc-preview")))]
+            anyhow::bail!("Native pipeline diagnostic requires Windows wgc-preview");
+        }
         if self.encoder {
             return super::jpeg_benchmark::run();
         }

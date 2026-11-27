@@ -128,3 +128,8 @@ Use `--negotiate-profile --auto-profile` on a viewer/workspace to calibrate real
 ## Optimized portable JPEG encoder
 
 The software JPEG path uses the pinned Rust encoder with optional runtime AVX2 and preserved baseline 4:4:4 chroma/quality. Explicit scalar builds omit `jpeg-simd`. Output is checked while writing against the existing 2 MiB record bound. No wire or authorization changes. `desktop-profile-check --encoder` runs an encoder-only local comparison; see [JPEG-ENCODER.md](JPEG-ENCODER.md).
+
+
+## Optional ordered Host pipeline
+
+`share-desktop --pipeline --fixed-quality` enables two locally reserved ordered demands on fixed v8. Incompatible with adaptive geometry/codec negotiation in this first version. The visible stop window, approved display and peer, existing wire credit and ordered deltas remain enforced. `desktop-profile-check --pipeline` compares the one- and two-demand paths on a generated WGC window through authenticated QUIC loopback. See [ORDERED-PIPELINE.md](ORDERED-PIPELINE.md).

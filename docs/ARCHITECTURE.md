@@ -118,3 +118,8 @@ Opt-in automatic Host preflight captures only a generated owned child window and
 ### Bounded portable JPEG write path
 
 CPU JPEG writes directly into the recycled bounded transport buffer through a checked writer. Explicit 4:4:4 sampling and approved quality are retained. Optional AVX2 runtime dispatch is contained in the pinned Rust dependency; scalar code and the existing decoder remain available. The Compact encoder avoids provably infeasible second keyframe attempts; wire tags and authorization are unchanged. See [JPEG-ENCODER.md](JPEG-ENCODER.md).
+
+
+### Local fixed-v8 capture/encode overlap
+
+Explicit two-demand scheduling reserves existing receipt credit before capture. Foreground owns approved native capture and publication, one stateful encoder runs on a blocking worker, at most one raw frame waits, and the transport writes replies FIFO. Stop cancels transport before joining. No wire change, no adaptive geometry in this version. See [ORDERED-PIPELINE.md](ORDERED-PIPELINE.md).

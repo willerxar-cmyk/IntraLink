@@ -147,3 +147,8 @@ The bounded Rust JPEG writer and optional SIMD dispatch are implemented; qualifi
 ### Bounded parallel software JPEG
 
 Optional MCU-row restart strips use two or four workers on suitable CPUs, with serial compatibility and no new wire format. Benchmark serial/parallel and profile individual encode stages before attempting multi-frame capture/convert/encode overlap. Physical authorized sessions and additional native codec adapters remain separate work. See [JPEG-PARALLEL.md](JPEG-PARALLEL.md).
+
+
+### Ordered local overlap checkpoint
+
+Explicit fixed-v8/fixed-quality pipeline implemented, using two reserved local demands and one stateful CPU encoder. Adaptive transition barriers, physical authorized multi-device sessions, and optional native platform/codec qualification remain separate work. See [ORDERED-PIPELINE.md](ORDERED-PIPELINE.md).

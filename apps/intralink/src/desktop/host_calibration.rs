@@ -121,7 +121,7 @@ fn marker(x: u32, y: u32, (width, height): (u32, u32)) -> bool {
     x.abs_diff(width / 2) < (width / 8).max(1) && y.abs_diff(height / 2) < (height / 8).max(1)
 }
 
-fn change_fixture(frame: &mut RgbaImage) {
+pub(super) fn change_fixture(frame: &mut RgbaImage) {
     let size = frame.dimensions();
     for (x, y, pixel) in frame.enumerate_pixels_mut() {
         if !marker(x, y, size) {

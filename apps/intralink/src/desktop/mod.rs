@@ -15,8 +15,11 @@ mod decoder_process;
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 pub mod h264_check;
 mod host_capture;
+mod host_pipeline;
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 mod live_h264;
+#[cfg(all(target_os = "windows", feature = "wgc-preview"))]
+mod pipeline_check;
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 mod precise_timer;
 pub use host_capture::CaptureBackend;
@@ -52,7 +55,7 @@ use intralink_transport::{
     bind_controller,
     desktop::{
         Capture, CaptureRequest, Stats, VideoFrame, ViewMode, bind_view_with_protocol,
-        serve_view_with_protocol, view_with_observations,
+        serve_view_pipelined, serve_view_with_protocol, view_with_observations,
     },
 };
 use intralink_vault::{Direction, Vault};
@@ -131,6 +134,7 @@ pub fn view_protocol(adaptive: bool, negotiated: bool, bounded: bool) -> ViewPro
 pub struct StreamOptions {
     pub fixed_quality: bool,
     pub protocol: ViewProtocol,
+    pub pipeline: bool,
 }
 
 /// Network tasks never own a native GUI or capture handle. Cancellation has
@@ -147,7 +151,12 @@ pub async fn share(
     let StreamOptions {
         fixed_quality,
         protocol,
+        pipeline,
     } = options;
+    ensure!(
+        !pipeline || (fixed_quality && protocol == ViewProtocol::Fixed),
+        "Pipeline requires fixed quality and fixed v8 geometry"
+    );
     require_graphical_terminal()?;
     backend.validate()?;
     ensure!(local.port() != 0, "Specify a nonzero listening port");
@@ -187,6 +196,9 @@ pub async fn share(
         config.seconds()
     );
     println!("Explicit capture backend: {backend:?}");
+    if pipeline {
+        println!("Local pipeline: two reserved ordered demands; fixed quality and geometry");
+    }
     if matches!(protocol, ViewProtocol::Negotiated | ViewProtocol::Bounded) {
         let caps = intralink_core::capabilities::CodecCapabilities::through(config.mode());
         println!(
@@ -236,12 +248,34 @@ pub async fn share(
         let result = tokio::select! {
             biased;
             _ = &mut stop_rx => Ok(None),
-            outcome = serve_view_with_protocol(&endpoint, peer, config, source, protocol) => outcome.map(Some),
+            outcome = async {
+                if pipeline { serve_view_pipelined(&endpoint, peer, config, source).await }
+                else { serve_view_with_protocol(&endpoint, peer, config, source, protocol).await }
+            } => outcome.map(Some),
         };
         endpoint.close().await;
         result
     });
     println!("Waiting at {local} for the approved peer (up to 120s). No capture has started.");
+    if pipeline {
+        let started = Instant::now();
+        let local = host_pipeline::run(
+            &display,
+            backend,
+            config,
+            &mut indicator,
+            &mut requests,
+            &task,
+            stop,
+        )
+        .await;
+        let result = task.await.context("Desktop network task failed")?;
+        drop(indicator);
+        drop(vault);
+        println!("Sharing stopped; listener closed.");
+        local?;
+        return Ok(report(result?, started));
+    }
     let mut encoder = None::<codec::Encoder>;
     let mut quality = None::<AdaptiveQuality>;
     let mut resolution = None::<AdaptiveResolution>;
