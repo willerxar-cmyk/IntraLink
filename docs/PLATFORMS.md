@@ -1,6 +1,6 @@
 # Target matrix and release status
 
-Preview.4 desktop candidates: Windows x64 passed local native generated-window diagnostics; Linux x86_64 passed native Ubuntu 24.04 CI strict lint, tests, Release, CLI execution, ldd, inventory and archive verification. Physical multi-device KVM, Linux real X11/Wayland capture and Linux input injection remain unqualified. Android local setup candidate is built; next source implements manual pairing and one-shot diagnostics. Release signing, physical Android acceptance, screen and input capabilities remain pending. See [DESKTOP.md](DESKTOP.md), [ONBOARDING.md](ONBOARDING.md) and [RELEASE-PREVIEW.md](RELEASE-PREVIEW.md).
+Preview.4 desktop candidates: Windows x64 passed local native generated-window diagnostics; Linux x86_64 passed native Ubuntu 24.04 CI strict lint, tests, Release, CLI execution, ldd, inventory and archive verification. Physical multi-device KVM, Linux real X11/Wayland capture and Linux input injection remain unqualified. Android preview.5 candidate with manual pairing and one-shot diagnostics passed local build/package checks. Release signing, physical Android acceptance, screen and input capabilities remain pending. See [DESKTOP.md](DESKTOP.md), [ONBOARDING.md](ONBOARDING.md) and [RELEASE-PREVIEW.md](RELEASE-PREVIEW.md).
 
 | Platform | Controller | Host approach | Targets |
 |---|---|---|---|

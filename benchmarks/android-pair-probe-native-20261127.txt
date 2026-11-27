@@ -1,0 +1,113 @@
+    Checking tokio v1.54.1
+    Checking intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+    Checking tokio-util v0.7.20
+    Checking tokio-rustls v0.26.6
+    Checking hyper v1.13.0
+    Checking tower v0.5.3
+    Checking netlink-sys v0.9.0
+    Checking tower-http v0.6.11
+    Checking netdev v0.47.0
+    Checking n0-future v0.3.2
+    Checking tokio-stream v0.1.19
+    Checking n0-watcher v1.0.1
+    Checking hyper-util v0.1.21
+    Checking tokio-websockets v0.13.3
+    Checking netlink-proto v0.13.0
+    Checking noq v1.5.0
+    Checking netwatch v0.20.2
+    Checking backon v1.6.0
+    Checking hyper-rustls v0.27.10
+    Checking reqwest v0.13.5
+    Checking n0-dns-resolver v0.1.1
+    Checking iroh-dns v1.5.0
+    Checking iroh-relay v1.5.0
+    Checking iroh v1.5.0
+    Checking intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+    Checking intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+    Checking intralink-android v0.22.0 (D:\IntraLink\crates\intralink-android)
+    Finished `release` profile [optimized] target(s) in 49.25s
+   Compiling tokio v1.54.1
+   Compiling tokio-util v0.7.20
+   Compiling tokio-rustls v0.26.6
+   Compiling hyper v1.13.0
+   Compiling tower v0.5.3
+   Compiling n0-future v0.3.2
+   Compiling hyper-util v0.1.21
+   Compiling hyper-rustls v0.27.10
+   Compiling tower-http v0.6.11
+   Compiling netlink-sys v0.9.0
+   Compiling tokio-stream v0.1.19
+   Compiling reqwest v0.13.5
+   Compiling noq v1.5.0
+   Compiling netdev v0.47.0
+   Compiling n0-dns-resolver v0.1.1
+   Compiling iroh-dns v1.5.0
+   Compiling netlink-proto v0.13.0
+   Compiling n0-watcher v1.0.1
+   Compiling tokio-websockets v0.13.3
+   Compiling netwatch v0.20.2
+   Compiling backon v1.6.0
+   Compiling iroh-relay v1.5.0
+   Compiling iroh v1.5.0
+   Compiling intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+   Compiling intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+   Compiling intralink-android v0.22.0 (D:\IntraLink\crates\intralink-android)
+    Finished `release` profile [optimized] target(s) in 3m 23s
+    Checking tokio v1.54.1
+    Checking intralink-core v0.22.0 (D:\IntraLink\crates\intralink-core)
+    Checking tokio-util v0.7.20
+    Checking hyper v1.13.0
+    Checking tokio-rustls v0.26.6
+    Checking tower v0.5.3
+    Checking netlink-sys v0.9.0
+    Checking netdev v0.47.0
+    Checking tower-http v0.6.11
+    Checking n0-future v0.3.2
+    Checking tokio-stream v0.1.19
+    Checking n0-watcher v1.0.1
+    Checking hyper-util v0.1.21
+    Checking tokio-websockets v0.13.3
+    Checking netlink-proto v0.13.0
+    Checking noq v1.5.0
+    Checking netwatch v0.20.2
+    Checking backon v1.6.0
+    Checking hyper-rustls v0.27.10
+    Checking reqwest v0.13.5
+    Checking n0-dns-resolver v0.1.1
+    Checking iroh-dns v1.5.0
+    Checking iroh-relay v1.5.0
+    Checking iroh v1.5.0
+    Checking intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+    Checking intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+    Checking intralink-android v0.22.0 (D:\IntraLink\crates\intralink-android)
+    Finished `release` profile [optimized] target(s) in 14.87s
+   Compiling tokio v1.54.1
+   Compiling tokio-util v0.7.20
+   Compiling hyper v1.13.0
+   Compiling tokio-rustls v0.26.6
+   Compiling tower v0.5.3
+   Compiling n0-future v0.3.2
+   Compiling tower-http v0.6.11
+   Compiling hyper-util v0.1.21
+   Compiling hyper-rustls v0.27.10
+   Compiling reqwest v0.13.5
+   Compiling netlink-sys v0.9.0
+   Compiling tokio-stream v0.1.19
+   Compiling netdev v0.47.0
+   Compiling noq v1.5.0
+   Compiling n0-dns-resolver v0.1.1
+   Compiling iroh-dns v1.5.0
+   Compiling netlink-proto v0.13.0
+   Compiling n0-watcher v1.0.1
+   Compiling tokio-websockets v0.13.3
+   Compiling netwatch v0.20.2
+   Compiling backon v1.6.0
+   Compiling iroh-relay v1.5.0
+   Compiling iroh v1.5.0
+   Compiling intralink-transport v0.22.0 (D:\IntraLink\crates\intralink-transport)
+   Compiling intralink-vault v0.22.0 (D:\IntraLink\crates\intralink-vault)
+   Compiling intralink-android v0.22.0 (D:\IntraLink\crates\intralink-android)
+    Finished `release` profile [optimized] target(s) in 2m 04s
+Built arm64-v8a: apps\android\app\build\generated\jniLibs\arm64-v8a\libintralink_android.so (9686504 bytes)
+Built x86_64: apps\android\app\build\generated\jniLibs\x86_64\libintralink_android.so (11018424 bytes)
+EXIT 0
