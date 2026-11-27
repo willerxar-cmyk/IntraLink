@@ -95,7 +95,7 @@ fn allowed_modes(ceiling: CodecMode) -> impl Iterator<Item = CodecMode> {
 
 /// A locally generated, bounded high-frequency region plus large desktop
 /// gradients and a stable central color marker. Never use user pixels.
-fn dense_fixture(size: (u32, u32)) -> Result<RgbaImage> {
+pub(super) fn dense_fixture(size: (u32, u32)) -> Result<RgbaImage> {
     let (width, height) = size;
     validate_source_size(width, height)?;
     Ok(RgbaImage::from_fn(width, height, |x, y| {
@@ -131,7 +131,7 @@ fn change_fixture(frame: &mut RgbaImage) {
     }
 }
 
-fn verify_marker(config: VideoConfig, pixels: &[u32]) -> Result<()> {
+pub(super) fn verify_marker(config: VideoConfig, pixels: &[u32]) -> Result<()> {
     let (width, height) = (config.width() as usize, config.height() as usize);
     ensure!(
         pixels.len() == width * height,

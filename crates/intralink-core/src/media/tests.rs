@@ -459,3 +459,41 @@ fn uniform_row_comparison_preserves_nonuniform_edge_tiles() {
     apply_delta(config, &data, &mut pixels).unwrap();
     assert_pixels(&after, &pixels);
 }
+
+#[test]
+fn failed_compact_delta_implies_no_complete_keyframe_with_same_or_smaller_budget() {
+    let config = VideoConfig::new(540, 60, 75, 30)
+        .unwrap()
+        .with_mode(crate::desktop::CodecMode::Compact);
+    let grid = Grid::new(config);
+    let mut previous = vec![0; grid.pixels() * 3];
+    let mut current = previous.clone();
+    for (i, pixel) in current.chunks_exact_mut(3).enumerate() {
+        let x = i % grid.width;
+        let y = i / grid.width;
+        if y < 96 {
+            pixel.copy_from_slice(&[(x * 13 + y * 17) as u8, (x * y) as u8, 211]);
+        } else if x < 128 {
+            pixel.copy_from_slice(&[29, 31, 37]);
+        }
+    }
+    for phase in 0..2 {
+        for budget in [32 * 1024, 128 * 1024, MAX_DELTA_BYTES] {
+            let mut delta = Vec::new();
+            if encode_delta(config, &previous, &current, &mut delta, budget).unwrap()
+                == Delta::KeyframeRequired
+            {
+                assert!(delta.is_empty());
+                let mut complete = Vec::new();
+                assert!(!encode_keyframe(config, &current, &mut complete, budget).unwrap());
+                assert!(complete.is_empty());
+            }
+        }
+        if phase == 0 {
+            previous.clone_from(&current);
+            for pixel in current.chunks_exact_mut(3) {
+                pixel[0] ^= 64;
+            }
+        }
+    }
+}

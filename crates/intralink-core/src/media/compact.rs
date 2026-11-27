@@ -110,10 +110,11 @@ pub(super) fn encode(rgb: &[u8], out: &mut Vec<u8>, budget: usize) -> Option<u8>
     let mut runs = 0usize;
     for_runs(rgb, |_, _| {
         runs += 1;
-        2 + 4 * runs < size
+        let length = 2 + 4 * runs;
+        length < size && length <= budget
     });
     let runs_len = 2 + 4 * runs;
-    if runs_len < size {
+    if runs_len < size && runs_len <= budget {
         mode = RUNS;
         size = runs_len;
     }
@@ -240,5 +241,51 @@ mod tests {
         assert_eq!(validate(RUNS, &data, 258), None);
         data[1] = 3;
         assert_eq!(validate(RUNS, &data, 257), None);
+    }
+}
+
+#[cfg(test)]
+mod budget_tests {
+    use super::*;
+
+    #[test]
+    fn early_run_budget_rejection_preserves_exact_best_encoding() {
+        for rgb in [
+            (0..MAX_PIXELS)
+                .flat_map(|i| [(i * 31) as u8, (i / 256) as u8, 91])
+                .collect::<Vec<_>>(),
+            (0..MAX_PIXELS)
+                .flat_map(|i| [(i % 16) as u8, 21, 29])
+                .collect(),
+            (0..MAX_PIXELS)
+                .flat_map(|i| [(i / 128) as u8, 70, 80])
+                .collect(),
+        ] {
+            let mut full = Vec::new();
+            let mode = encode(&rgb, &mut full, MAX_PIXELS * 3).unwrap();
+            for budget in [
+                0,
+                1,
+                5,
+                16,
+                32,
+                64,
+                128,
+                256,
+                full.len().saturating_sub(1),
+                full.len(),
+                full.len() + 1,
+            ] {
+                let mut out = vec![99];
+                let result = encode(&rgb, &mut out, budget);
+                if budget < full.len() {
+                    assert_eq!(result, None);
+                    assert_eq!(out, [99]);
+                } else {
+                    assert_eq!(result, Some(mode));
+                    assert_eq!(&out[1..], full.as_slice());
+                }
+            }
+        }
     }
 }

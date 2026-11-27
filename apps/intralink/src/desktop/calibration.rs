@@ -32,10 +32,16 @@ pub struct ProfileCheckArgs {
     /// Measure Host capture backends and software encoding of generated pixels only.
     #[arg(long, conflicts_with_all = ["hardware", "slots"])]
     host: bool,
+    /// Compare the current and historical software JPEG encoders on generated pixels.
+    #[arg(long, conflicts_with_all = ["host", "hardware", "slots"])]
+    encoder: bool,
 }
 
 impl ProfileCheckArgs {
     pub fn run(self) -> Result<()> {
+        if self.encoder {
+            return super::jpeg_benchmark::run();
+        }
         if self.host {
             let ceiling = intralink_core::desktop::VideoConfig::new(1080, 60, 75, 30)
                 .context("Invalid Host calibration profile")?

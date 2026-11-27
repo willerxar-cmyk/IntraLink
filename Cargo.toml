@@ -28,6 +28,7 @@ tempfile = "3.27"
 fs2 = "0.4.3"
 directories = "6"
 image = { version = "=0.25.10", default-features = false, features = ["jpeg"] }
+jpeg-encoder = { version = "=0.7.1" }
 fast_image_resize = { version = "=6.2.0", features = ["only_u8x4"] }
 windows-capture = "=2.0.1"
 windows = { version = "=0.62.2", features = ["Win32_Graphics_Direct3D11", "Win32_Graphics_Dxgi_Common"] }

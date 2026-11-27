@@ -123,3 +123,8 @@ Use `--negotiate-profile --auto-profile` on a viewer/workspace to calibrate real
 ## Optional measured Host profile
 
 `--capture auto` selects a concrete locally measured backend and bounded height/FPS on a disposable generated window before the sharing approval prompt. No real monitor capture or network starts during calibration. Explicit backends and the snapshot default remain unchanged; no fallback after approval. `desktop-profile-check --host` runs the same diagnostic independently. See [HOST-CALIBRATION.md](HOST-CALIBRATION.md).
+
+
+## Optimized portable JPEG encoder
+
+The software JPEG path uses the pinned Rust encoder with optional runtime AVX2 and preserved baseline 4:4:4 chroma/quality. Explicit scalar builds omit `jpeg-simd`. Output is checked while writing against the existing 2 MiB record bound. No wire or authorization changes. `desktop-profile-check --encoder` runs an encoder-only local comparison; see [JPEG-ENCODER.md](JPEG-ENCODER.md).

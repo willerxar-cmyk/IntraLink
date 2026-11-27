@@ -6,8 +6,10 @@ license.workspace = true
 publish.workspace = true
 
 [features]
-default = []
-desktop-preview = ["dep:xcap", "dep:image", "dep:minifb", "dep:fast_image_resize"]
+default = ["jpeg-simd"]
+# Weak feature: the non-desktop build does not pull in a JPEG encoder.
+jpeg-simd = ["jpeg-encoder?/simd"]
+desktop-preview = ["dep:xcap", "dep:image", "dep:minifb", "dep:fast_image_resize", "dep:jpeg-encoder"]
 wgc-preview = ["desktop-preview", "dep:windows-capture", "dep:intralink-d3d11"]
 nvenc-preview = ["wgc-preview", "intralink-d3d11/nvenc-preview"]
 vaapi-probe = ["dep:libva"]
@@ -35,6 +37,7 @@ serde_json = { workspace = true, optional = true }
 [target.'cfg(any(target_os = "windows", target_os = "linux"))'.dependencies]
 xcap = { workspace = true, optional = true }
 image = { workspace = true, optional = true }
+jpeg-encoder = { workspace = true, optional = true }
 fast_image_resize = { workspace = true, optional = true }
 minifb = { workspace = true, optional = true }
 

@@ -2,6 +2,8 @@
 
 ## 0.22.0 — shared endpoint and full application validation
 
+- Optimize the portable JPEG writer with optional AVX2 runtime dispatch, bounded output-buffer reuse and preserved 4:4:4 sampling/quantization; avoid provably infeasible duplicate Compact keyframe work. Keep the existing decoder and protocol.
+
 - Add opt-in measured automatic Host capture/backend and output ceiling selection using a locally generated window and production software encoding. Preserve explicit backends, snapshot default, consent, identity, wire protocols and CPU baseline.
 
 - Measure independent concurrent CPU decoder cohorts for 1-8 selected slots; share immutable fixtures, keep decoder/canvas ownership separate, and derive receiver limits from observed parallel frame/batch periods, not serial division. Preserve per-device ceilings and v12 wire.

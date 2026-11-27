@@ -137,3 +137,8 @@ Opt-in real CPU decoder calibration and local vendor-neutral Windows D3D11 capab
 ### Host calibration checkpoint
 
 Opt-in local measured capture/encode selection uses generated-window diagnostics before real display approval; physical monitor and sustained network qualification, optional native codec adapters and containment remain separate gates. See [HOST-CALIBRATION.md](HOST-CALIBRATION.md).
+
+
+### Portable encoder optimization checkpoint
+
+The bounded Rust JPEG writer and optional SIMD dispatch are implemented; qualification includes the independent scalar configuration and actual local A/B performance. Subsequent work should use the measured Host bottlenecks to prioritize additional CPU parallelism/encoder optimization and optional native codec adapters; physical authorized sessions remain necessary for sustained 1080p60 qualification. See [JPEG-ENCODER.md](JPEG-ENCODER.md).

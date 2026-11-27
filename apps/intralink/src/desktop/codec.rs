@@ -2,9 +2,7 @@
 use std::io::Cursor;
 
 use anyhow::{Result, ensure};
-use image::{
-    ExtendedColorType, ImageFormat, ImageReader, Limits, RgbaImage, codecs::jpeg::JpegEncoder,
-};
+use image::{ImageFormat, ImageReader, Limits, RgbaImage};
 use intralink_core::{
     adaptive::{ViewProtocol, config_at_height, is_keyframe},
     desktop::{MAX_FRAME_BYTES, VideoConfig},
@@ -96,6 +94,7 @@ impl Encoder {
         jpeg.clear();
         // Hybrid is explicitly selected by both peers. Refresh after a bounded
         // number of changed records; static screens still use repeat records.
+        let mut exact_possible = true;
         let delta = if self.config.mode().supports_tiles()
             && self.has_previous
             && self.deltas_since_keyframe < 120
@@ -103,14 +102,20 @@ impl Encoder {
             let budget = self
                 .last_keyframe_size
                 .clamp(MIN_DELTA_BUDGET, media::MAX_DELTA_BYTES);
-            media::encode_delta(
+            let delta = media::encode_delta(
                 self.config,
                 &self.previous,
                 &self.scratch,
                 &mut jpeg,
                 budget,
             )
-            .map_err(|err| anyhow::anyhow!("Tile encoder failed: {err:?}"))?
+            .map_err(|err| anyhow::anyhow!("Tile encoder failed: {err:?}"))?;
+            // A complete Compact keyframe contains every changed tile plus
+            // the unchanged tiles, with the same per-tile representation.
+            // If that subset already exceeds the keyframe budget, a second
+            // lossless attempt is provably impossible.
+            exact_possible = delta != Delta::KeyframeRequired || budget < LOSSLESS_ATTEMPT_BUDGET;
+            delta
         } else if self.has_previous && self.scratch == self.previous {
             Delta::Unchanged
         } else {
@@ -120,7 +125,8 @@ impl Encoder {
             Delta::Unchanged => return Ok(Capture::Repeat(jpeg)),
             Delta::Encoded => self.deltas_since_keyframe += 1,
             Delta::KeyframeRequired => {
-                let exact = self.config.mode().supports_compact()
+                let exact = exact_possible
+                    && self.config.mode().supports_compact()
                     && media::encode_keyframe(
                         self.config,
                         &self.scratch,
@@ -129,13 +135,11 @@ impl Encoder {
                     )
                     .map_err(|err| anyhow::anyhow!("Lossless keyframe encoder failed: {err:?}"))?;
                 if !exact {
-                    jpeg.clear();
-                    jpeg.push(JPEG_TAG);
-                    JpegEncoder::new_with_quality(&mut jpeg, self.jpeg_quality).encode(
+                    super::jpeg::encode_rgb(
+                        self.config,
+                        self.jpeg_quality,
                         &self.scratch,
-                        width,
-                        height,
-                        ExtendedColorType::Rgb8,
+                        &mut jpeg,
                     )?;
                 }
                 ensure!(
@@ -290,7 +294,7 @@ mod tests {
         assert_eq!(pixels[0], 0x0c2238);
         Ok(())
     }
-    use image::{RgbImage, Rgba};
+    use image::{RgbImage, Rgba, codecs::jpeg::JpegEncoder};
     use intralink_core::desktop::CodecMode;
 
     fn config() -> VideoConfig {

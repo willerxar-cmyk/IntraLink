@@ -49,3 +49,8 @@ Run calibration pure-policy and generated-codec tests, actual CLI validation, in
 ### Host calibration gate
 
 Qualify the pure selection policy (manual ceilings, duplicate/invalid measurements, CPU-only candidate), actual dense encoding/decoding, cancellation and explicit CLI opt-in. Run strict Clippy, portable and NVIDIA feature suites, locked WGC Release without NVIDIA dependencies, `desktop-profile-check --host` and owned-window retarget/geometry regression. Record actual candidate results and selected profile; do not imply physical monitor/network qualification.
+
+
+### JPEG optimization gate
+
+Run the standalone media harness, locked workspace CPU/NVENC tests, independent no-default-features scalar app tests, and strict CPU/WGC/NVENC/scalar Clippy. Verify identical baseline 4:4:4 sampling and quantization tables and bounded decoded error at qualities 35/75/90. Check partial-record rejection, buffer reuse, lossless budget subset and smallest-representation invariants. Build independent scalar and SIMD WGC Releases; run `desktop-profile-check --encoder` on each, then the SIMD Host calibration and native retarget diagnostic. Preserve existing artifacts and record separate encoder-only and local full-pipeline measurements. No sustained network claim.

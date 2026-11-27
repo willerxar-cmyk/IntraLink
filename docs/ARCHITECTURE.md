@@ -113,3 +113,8 @@ Portable CPU decode calibration measures representative production decoder work 
 ### Local measured Host profile
 
 Opt-in automatic Host preflight captures only a generated owned child window and measures available native capture paths plus production CPU encoding. Deterministic bounded selection precedes approval and listener creation; exact real display identity is rechecked. The chosen concrete backend remains fixed for the session. No wire changes, remote native codec or mandatory acceleration. See [HOST-CALIBRATION.md](HOST-CALIBRATION.md).
+
+
+### Bounded portable JPEG write path
+
+CPU JPEG writes directly into the recycled bounded transport buffer through a checked writer. Explicit 4:4:4 sampling and approved quality are retained. Optional AVX2 runtime dispatch is contained in the pinned Rust dependency; scalar code and the existing decoder remain available. The Compact encoder avoids provably infeasible second keyframe attempts; wire tags and authorization are unchanged. See [JPEG-ENCODER.md](JPEG-ENCODER.md).

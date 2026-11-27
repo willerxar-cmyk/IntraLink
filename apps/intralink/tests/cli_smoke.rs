@@ -198,3 +198,18 @@ fn host_calibration_is_opt_in_and_keeps_explicit_capture() {
         assert!(String::from_utf8_lossy(&output.stderr).contains("cannot be used with"));
     }
 }
+
+#[cfg(all(
+    feature = "desktop-preview",
+    any(target_os = "windows", target_os = "linux")
+))]
+#[test]
+fn encoder_diagnostic_is_local_and_explicit() {
+    assert!(stdout(&["desktop-profile-check", "--help"]).contains("--encoder"));
+    let output = Command::new(env!("CARGO_BIN_EXE_intralink"))
+        .args(["desktop-profile-check", "--encoder", "--host"])
+        .output()
+        .expect("Validate diagnostic mode");
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("cannot be used with"));
+}
