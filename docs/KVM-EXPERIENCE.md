@@ -129,3 +129,8 @@ The existing virtual pointer processes the raw counts in order with fractional B
 ## Current desktop session coexistence (2026-11-28)
 
 The original exclusive encrypted-profile lock remains mandatory for mutations and legacy/Android commands. Current Windows and Linux desktop commands may hold one shared read-only profile lease per independently approved capability, with exclusive screen/input lane locks. See [SESSION-COEXISTENCE.md](SESSION-COEXISTENCE.md) for exact operation, constraints and scope; this supersedes earlier desktop-only exclusive-session statements. Test evidence: benchmarks/kvm-session-coexistence-20261128.txt. Combined viewer-control UI and physical acceptance remain pending.
+
+
+## Unified Windows BASE control (2026-11-28)
+
+Current Windows input-preview adds `control-desktop --choose --input-port PORT` for one paired CLIENT, with a single foreground window/unlock and independent screen/input/2 start/stop/arm. See [UNIFIED-CONTROL.md](UNIFIED-CONTROL.md) for exact operating scope, primary monitor confirmation, coordinate mapping, local safety guards and test evidence. Separate CLIENT listeners, physical acceptance, authenticated video-source binding, unified multi-device control and Linux/Android UI remain open.

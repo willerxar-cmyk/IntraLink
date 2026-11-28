@@ -672,3 +672,41 @@ fn simultaneous_input_port_is_explicit_bounded_and_interactive() {
         }
     }
 }
+
+#[cfg(all(target_os = "windows", feature = "input-preview"))]
+#[test]
+fn unified_control_is_explicit_interactive_and_requires_separate_input_port() {
+    let help = stdout(&["control-desktop", "--help"]);
+    assert!(
+        help.contains("--choose") && help.contains("--device") && help.contains("--input-port")
+    );
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("profile.vault");
+    for args in [
+        vec!["control-desktop", "--choose"],
+        vec!["control-desktop", "--choose", "--input-port", "0"],
+        vec![
+            "control-desktop",
+            "--choose",
+            "--device",
+            "fixture",
+            "--input-port",
+            "45101",
+        ],
+        vec!["control-desktop", "--choose", "--input-port", "45101"],
+    ] {
+        let result = Command::new(env!("CARGO_BIN_EXE_intralink"))
+            .arg("--vault")
+            .arg(&path)
+            .args(&args)
+            .output()
+            .unwrap();
+        assert!(!result.status.success(), "{args:?}");
+        assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 0);
+        if args == vec!["control-desktop", "--choose", "--input-port", "45101"] {
+            assert!(
+                String::from_utf8_lossy(&result.stderr).contains("interactive graphical terminal")
+            );
+        }
+    }
+}

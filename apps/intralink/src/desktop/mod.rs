@@ -3,6 +3,8 @@ mod calibration;
 mod capture_fixture;
 pub use capture_fixture::PatternArgs;
 mod codec;
+#[cfg(all(target_os = "windows", feature = "input-preview"))]
+pub(crate) mod control;
 mod decoder;
 mod host_calibration;
 mod jpeg;

@@ -29,6 +29,7 @@ mod edge_check;
 pub(super) use edge_check::run as edge_check;
 #[path = "input_keys.rs"]
 mod keys;
+pub(super) use keys::desktop_key;
 #[path = "input_layout_store.rs"]
 mod layout_store;
 #[path = "input_pad.rs"]
@@ -79,7 +80,7 @@ impl Slot {
         self.confirmed_guarded(event, window, |_| true).await
     }
 
-    async fn confirmed_guarded(
+    pub(crate) async fn confirmed_guarded(
         &self,
         event: Event,
         window: &mut Window,
@@ -138,7 +139,7 @@ const BUTTONS: [(MouseButton, Button); 3] = [
 ];
 
 #[derive(Default)]
-struct Snapshot {
+pub(crate) struct Snapshot {
     keys: BTreeSet<Key>,
     buttons: BTreeSet<Button>,
     position: Option<(u16, u16)>,
@@ -151,7 +152,7 @@ fn local_keys(window: &Window) -> BTreeSet<Key> {
         .filter_map(keys::key)
         .collect()
 }
-fn local_buttons(window: &Window) -> BTreeSet<Button> {
+pub(crate) fn local_buttons(window: &Window) -> BTreeSet<Button> {
     BUTTONS
         .into_iter()
         .filter_map(|(local, remote)| window.get_mouse_down(local).then_some(remote))
@@ -177,7 +178,7 @@ impl Snapshot {
         self.forward_with_keys(window, slot, position, local_keys(window))
     }
 
-    fn forward_with_keys(
+    pub(crate) fn forward_with_keys(
         &mut self,
         window: &Window,
         slot: &Slot,

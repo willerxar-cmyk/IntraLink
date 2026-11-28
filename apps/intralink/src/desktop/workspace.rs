@@ -48,27 +48,27 @@ const KEYS: [Key; MAX_DEVICES] = [
     Key::F8,
 ];
 
-struct Target {
-    name: String,
-    identity: EndpointId,
-    route: Route,
-    mode: ViewMode,
+pub(super) struct Target {
+    pub(super) name: String,
+    pub(super) identity: EndpointId,
+    pub(super) route: Route,
+    pub(super) mode: ViewMode,
 }
 
-struct Session {
+pub(super) struct Session {
     stop: Option<oneshot::Sender<()>>,
-    task: JoinHandle<Result<Option<Stats>>>,
-    surface: Arc<Mutex<PresentationSurface>>,
+    pub(super) task: JoinHandle<Result<Option<Stats>>>,
+    pub(super) surface: Arc<Mutex<PresentationSurface>>,
     background: Arc<AtomicBool>,
     counters: Arc<SessionCounters>,
-    source_status: Arc<SourceStatus>,
+    pub(super) source_status: Arc<SourceStatus>,
     sampler: RateSampler,
     started: Instant,
     last_presented_sequence: usize,
 }
 
 impl Session {
-    fn stop(&mut self) {
+    pub(super) fn stop(&mut self) {
         if let Some(stop) = self.stop.take() {
             let _ = stop.send(());
         }
@@ -82,7 +82,7 @@ impl Session {
 
 // Each session has a bounded ordered queue and one independent decode worker.
 // Only fully decoded pixels are shared with the foreground window; no delta is dropped.
-fn start(target: &Target, endpoint: Endpoint, priority: ViewPriority) -> Session {
+pub(super) fn start(target: &Target, endpoint: Endpoint, priority: ViewPriority) -> Session {
     let mode = target.mode;
     let identity = target.identity;
     let route = target.route.clone();

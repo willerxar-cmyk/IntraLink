@@ -212,6 +212,26 @@ pub(super) enum DesktopCommand {
         #[arg(long, value_enum, default_value = "compact")]
         codec: MediaMode,
     },
+    /// Open one paired Windows CLIENT in a unified screen/input window.
+    #[cfg(all(target_os = "windows", feature = "input-preview"))]
+    ControlDesktop {
+        #[arg(long, required_unless_present = "choose", conflicts_with = "choose")]
+        device: Option<String>,
+        /// Select exactly one paired CLIENT in the local selector.
+        #[arg(long)]
+        choose: bool,
+        /// Independently approved input/2 listener port (different from screen).
+        #[arg(long, value_parser = clap::value_parser!(u16).range(1..=65535))]
+        input_port: u16,
+        #[arg(long)]
+        adaptive_resolution: bool,
+        #[arg(long, conflicts_with = "adaptive_resolution")]
+        negotiate_codec: bool,
+        #[command(flatten)]
+        limits: desktop::ReceiveProfileArgs,
+        #[arg(long, value_enum, default_value = "compact")]
+        codec: MediaMode,
+    },
     /// Open a view-only workspace of paired hosts, each locally authorized.
     #[cfg(all(
         feature = "desktop-preview",

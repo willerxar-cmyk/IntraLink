@@ -173,6 +173,32 @@ pub(super) fn start_slot(
     hints: Vec<SocketAddr>,
     #[cfg(target_os = "windows")] geometry: bool,
 ) -> Slot {
+    let endpoint = endpoint.clone();
+    spawn_slot(name, async move {
+        let candidates = match routing::resolve(&route).await {
+            Ok(saved) => input_candidates(&hints, &saved),
+            Err(error) if !hints.is_empty() => {
+                eprintln!("Saved route resolution failed: {error:#}. Trying pinned LAN hints.");
+                input_candidates(&hints, &[])
+            }
+            Err(error) => return Err(error),
+        };
+        ensure!(
+            !candidates.is_empty(),
+            "Input preview requires a private IPv4 route"
+        );
+        #[cfg(target_os = "windows")]
+        if geometry {
+            return InputConnection::connect_geometry(&endpoint, identity, &candidates).await;
+        }
+        InputConnection::connect(&endpoint, identity, &candidates).await
+    })
+}
+
+fn spawn_slot(
+    name: String,
+    connect: impl std::future::Future<Output = Result<InputConnection>> + Send + 'static,
+) -> Slot {
     let (sender, mut receiver) = input_queue::channel();
     let ready = Arc::new(AtomicBool::new(false));
     let worker_ready = ready.clone();
@@ -182,26 +208,13 @@ pub(super) fn start_slot(
     let worker_display = display.clone();
     let last_ui = Arc::new(Mutex::new(Instant::now()));
     let worker_ui = last_ui.clone();
-    let endpoint = endpoint.clone();
     let task = tokio::spawn(async move {
         let result = async {
-            let candidates = match routing::resolve(&route).await {
-                Ok(saved) => input_candidates(&hints, &saved),
-                Err(error) if !hints.is_empty() => {
-                    eprintln!("Saved route resolution failed: {error:#}. Trying pinned LAN hints.");
-                    input_candidates(&hints, &[])
-                }
-                Err(error) => return Err(error),
-            };
-            ensure!(!candidates.is_empty(), "Input preview requires a private IPv4 route");
-            #[cfg(target_os = "linux")]
-            let mut connection = InputConnection::connect(&endpoint, identity, &candidates).await?;
+            let mut connection = connect.await?;
             #[cfg(target_os = "windows")]
-            let mut connection = if geometry {
-                let connection = InputConnection::connect_geometry(&endpoint,identity,&candidates).await?;
-                worker_display.set(connection.display().context("Missing authenticated display")?).map_err(|_|anyhow::anyhow!("Duplicate display metadata"))?;
-                connection
-            } else { InputConnection::connect(&endpoint,identity,&candidates).await? };
+            if let Some(display)=connection.display(){
+                worker_display.set(display).map_err(|_|anyhow::anyhow!("Duplicate display metadata"))?;
+            }
             worker_ready.store(true, Ordering::Release);
             let mut heartbeat = tokio::time::interval(HEARTBEAT);
             heartbeat.set_missed_tick_behavior(MissedTickBehavior::Delay);
@@ -246,9 +259,25 @@ pub(super) fn start_slot(
     }
 }
 
+// Only the test executable may open this generated loopback transport.
+// The production entry point above always resolves and filters private LAN.
+#[cfg(all(test, target_os = "windows"))]
+pub(crate) fn fixture_slot(
+    endpoint: &Endpoint,
+    name: String,
+    identity: EndpointId,
+    address: SocketAddr,
+) -> Slot {
+    assert!(address.ip().is_loopback());
+    let endpoint = endpoint.clone();
+    spawn_slot(name, async move {
+        InputConnection::connect_geometry(&endpoint, identity, &[address]).await
+    })
+}
+
 /// An explicit input listener port is a temporary route hint, never
 /// a persisted grant or a change to the expected endpoint identity.
-fn input_route(saved: &Route, port: Option<u16>) -> Result<Route> {
+pub(crate) fn input_route(saved: &Route, port: Option<u16>) -> Result<Route> {
     match port {
         Some(port) => Route::new(saved.host(), port),
         None => Ok(saved.clone()),

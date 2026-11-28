@@ -11,6 +11,8 @@ const NOTICE_DELAY_MS: u64 = 1_000;
 pub(super) struct SourceStatus {
     origin: Instant,
     since: AtomicU64,
+    #[cfg(all(target_os = "windows", feature = "input-preview"))]
+    sample: AtomicU64,
 }
 
 impl Default for SourceStatus {
@@ -18,6 +20,8 @@ impl Default for SourceStatus {
         Self {
             origin: Instant::now(),
             since: AtomicU64::new(0),
+            #[cfg(all(target_os = "windows", feature = "input-preview"))]
+            sample: AtomicU64::new(0),
         }
     }
 }
@@ -35,6 +39,14 @@ impl SourceStatus {
     }
 
     fn observe_at(&self, record: Record, ms: u64) {
+        #[cfg(all(target_os = "windows", feature = "input-preview"))]
+        match record {
+            Record::Frame(_) | Record::Repeat => {
+                self.sample.store(ms.saturating_add(1), Ordering::Release)
+            }
+            Record::End => self.sample.store(0, Ordering::Release),
+            Record::NoUpdate => {}
+        }
         if record == Record::NoUpdate {
             // Zero means no active no-update interval. Preserve the first
             // observation rather than extending the deadline on every poll.
@@ -47,6 +59,19 @@ impl SourceStatus {
         } else {
             self.since.store(0, Ordering::Release);
         }
+    }
+
+    /// Latest received frame or verified repeat observation. Not a remote
+    /// timestamp or proof that the local presentation has zero frame age.
+    #[cfg(all(target_os = "windows", feature = "input-preview"))]
+    pub(super) fn sample_recent(&self) -> bool {
+        self.sample_recent_at(self.elapsed_ms())
+    }
+
+    #[cfg(all(target_os = "windows", feature = "input-preview"))]
+    fn sample_recent_at(&self, ms: u64) -> bool {
+        let last = self.sample.load(Ordering::Acquire);
+        last != 0 && ms.saturating_sub(last - 1) <= 2000
     }
 
     pub(super) fn notice_due(&self) -> bool {
@@ -64,6 +89,21 @@ impl SourceStatus {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(all(target_os = "windows", feature = "input-preview"))]
+    #[test]
+    fn only_frame_and_repeat_refresh_direct_control_sample_window() {
+        let state = SourceStatus::default();
+        assert!(!state.sample_recent_at(0));
+        state.observe_at(Record::Frame(4), 100);
+        assert!(state.sample_recent_at(2100));
+        state.observe_at(Record::NoUpdate, 2000);
+        assert!(!state.sample_recent_at(2101));
+        state.observe_at(Record::Repeat, 2200);
+        assert!(state.sample_recent_at(4200));
+        state.observe_at(Record::End, 4201);
+        assert!(!state.sample_recent_at(4201));
+    }
 
     #[test]
     fn no_update_notice_is_delayed_and_only_observed_pixels_clear_it() {

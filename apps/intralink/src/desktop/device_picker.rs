@@ -78,6 +78,7 @@ fn card(slot: usize) -> Rect {
 
 struct Selection {
     count: usize,
+    limit: usize,
     page: usize,
     selected: BTreeSet<usize>,
 }
@@ -86,6 +87,7 @@ impl Selection {
     fn new(count: usize) -> Self {
         Self {
             count,
+            limit: MAX_SLOTS,
             page: 0,
             selected: BTreeSet::new(),
         }
@@ -99,7 +101,13 @@ impl Selection {
         if index >= self.count {
             return;
         }
-        if !self.selected.remove(&index) && self.selected.len() < MAX_SLOTS {
+        if self.selected.remove(&index) {
+            return;
+        }
+        if self.limit == 1 {
+            self.selected.clear();
+        }
+        if self.selected.len() < self.limit {
             self.selected.insert(index);
         }
     }
@@ -108,7 +116,9 @@ impl Selection {
         match action {
             Action::Device(index) => {
                 index < self.count
-                    && (self.selected.contains(&index) || self.selected.len() < MAX_SLOTS)
+                    && (self.limit == 1
+                        || self.selected.contains(&index)
+                        || self.selected.len() < self.limit)
             }
             Action::Back => true,
             Action::Previous => self.page > 0,
@@ -224,7 +234,11 @@ fn render(
         32,
         15,
         if matches!(scan, Scan::SavedRoutes) {
-            "INTRALINK / SCREEN WORKSPACE"
+            if selection.limit == 1 {
+                "INTRALINK / SCREEN + INPUT"
+            } else {
+                "INTRALINK / SCREEN WORKSPACE"
+            }
         } else {
             "INTRALINK / INPUT WORKSPACE"
         },
@@ -232,7 +246,18 @@ fn render(
         ACCENT,
     );
     label(canvas, 32, 41, "SELECT YOUR DEVICES", 3, INK);
-    label(canvas, 32, 72, scan.label(), 2, MUTED);
+    label(
+        canvas,
+        32,
+        72,
+        if selection.limit == 1 {
+            "SELECT ONE CLIENT / INDEPENDENT APPROVALS"
+        } else {
+            scan.label()
+        },
+        2,
+        MUTED,
+    );
     for (slot, device) in devices
         .iter()
         .skip(selection.page * PAGE_SIZE)
@@ -265,7 +290,11 @@ fn render(
             INK,
         );
         let status = if matches!(scan, Scan::SavedRoutes) {
-            "SAVED ROUTE / SCREEN APPROVAL REQUIRED"
+            if selection.limit == 1 {
+                "SAVED ID / SEPARATE SESSION APPROVALS"
+            } else {
+                "SAVED ROUTE / SCREEN APPROVAL REQUIRED"
+            }
         } else if hints.contains_key(&device.id) {
             "INPUT ANNOUNCEMENT FOUND"
         } else if matches!(scan, Scan::Running) {
@@ -296,7 +325,7 @@ fn render(
         &format!(
             "{} / {} SELECTED   PAGE {} / {}",
             selection.selected.len(),
-            MAX_SLOTS,
+            selection.limit,
             selection.page + 1,
             selection.pages()
         ),
@@ -321,6 +350,8 @@ fn render(
 pub(crate) enum Kind {
     Screen,
     #[cfg(all(target_os = "windows", feature = "input-preview"))]
+    Control,
+    #[cfg(all(target_os = "windows", feature = "input-preview"))]
     Input(Protocol),
 }
 
@@ -328,6 +359,8 @@ impl Kind {
     fn scan(self, _devices: &[Device]) -> Option<JoinHandle<Result<Hints>>> {
         match self {
             Self::Screen => None,
+            #[cfg(all(target_os = "windows", feature = "input-preview"))]
+            Self::Control => None,
             #[cfg(all(target_os = "windows", feature = "input-preview"))]
             Self::Input(protocol) => {
                 let ids = _devices.iter().map(|device| device.id).collect::<Vec<_>>();
@@ -339,7 +372,7 @@ impl Kind {
     }
 }
 
-/// The existing exclusive vault lock remains held by the caller. No session
+/// The caller holds the appropriate profile/capability lease. No session
 /// endpoint is created by the selector; each capability keeps its own policy.
 pub(crate) async fn choose(profile: &Profile, kind: Kind) -> Result<(Vec<String>, Hints)> {
     super::require_graphical_terminal()?;
@@ -368,6 +401,10 @@ pub(crate) async fn choose(profile: &Profile, kind: Kind) -> Result<(Vec<String>
     window.set_target_fps(30);
     let mut canvas = vec![0; WIDTH * HEIGHT];
     let mut selection = Selection::new(devices.len());
+    #[cfg(all(target_os = "windows", feature = "input-preview"))]
+    if matches!(kind, Kind::Control) {
+        selection.limit = 1;
+    }
     let mut hints = Hints::new();
     let mut worker = kind.scan(&devices);
     let mut scan = if worker.is_some() {
@@ -617,4 +654,20 @@ mod tests {
             Some(Action::Start)
         );
     }
+}
+
+#[cfg(test)]
+#[test]
+fn unified_selector_replaces_the_previous_single_selection() {
+    let mut selection = Selection::new(12);
+    selection.limit = 1;
+    selection.toggle(1);
+    assert!(selection.enabled(Action::Device(9), false));
+    selection.toggle(9);
+    assert_eq!(
+        selection.selected.iter().copied().collect::<Vec<_>>(),
+        vec![9]
+    );
+    selection.toggle(9);
+    assert!(selection.selected.is_empty());
 }

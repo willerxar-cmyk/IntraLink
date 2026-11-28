@@ -647,6 +647,19 @@ fn main() -> Result<()> {
                 )
             })
         }
+        #[cfg(all(target_os = "windows", feature = "input-preview"))]
+        Command::Desktop(DesktopCommand::ControlDesktop {
+            device,
+            choose,
+            input_port,
+            adaptive_resolution,
+            negotiate_codec,
+            limits,
+            codec,
+        }) => {
+            let mode = limits.single_mode(codec.into(), adaptive_resolution, negotiate_codec)?;
+            run_async(|| desktop::control::run(&path, device, choose, input_port, mode))
+        }
         #[cfg(all(
             feature = "desktop-preview",
             any(target_os = "windows", target_os = "linux")

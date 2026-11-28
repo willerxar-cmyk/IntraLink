@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - unified Windows BASE control window
+
+- Add single paired CLIENT selector, independently initiated screen and input/2 lanes, single vault unlock and separate stop controls.
+- Add composite 1920x1080 presentation, content-only coordinate mapping, explicit primary review/arm, stale/focus/geometry guards and bounded independent release.
+- Reuse existing ordered screen decoder and input worker; qualify native generated UI and actual pinned loopback workers in both stop orders. No new wire formats or dependencies.
+
 ## Unreleased - independent simultaneous desktop capabilities
 
 - Add typed read-only shared profile leases with an exclusive lane for screen and for input; retain original exclusive mutation lock.

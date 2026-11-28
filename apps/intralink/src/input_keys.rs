@@ -104,7 +104,7 @@ pub fn key(local: Local) -> Option<Key> {
 /// Desktop-edge capture does not reserve the manual F1-F9 slot keys.
 /// OS-global modifiers and lock toggles are deliberately not forwarded
 /// by this temporary foreground-only prototype.
-pub(super) fn desktop_key(local: Local) -> Option<Key> {
+pub(crate) fn desktop_key(local: Local) -> Option<Key> {
     use Local::*;
     let usage = match local {
         F1 => 58,
