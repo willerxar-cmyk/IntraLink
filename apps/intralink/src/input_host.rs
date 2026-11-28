@@ -14,7 +14,7 @@ use intralink_input_win::{EntryPortal, PortalStyle, physical_primary};
 use intralink_transport::input::{Delivery, bind_input, serve_input};
 #[cfg(target_os = "windows")]
 use intralink_transport::input::{bind_input_geometry, serve_input_geometry};
-use intralink_vault::{Direction, Vault};
+use intralink_vault::{Direction, SessionKind, SessionVault};
 #[cfg(target_os = "windows")]
 use std::time::Instant;
 use std::{net::SocketAddr, path::Path, time::Duration};
@@ -166,7 +166,7 @@ pub(super) async fn run(
         (1..=MAX_SECONDS).contains(&seconds),
         "Invalid input duration"
     );
-    let vault = Vault::lock(path)?;
+    let vault = SessionVault::lock(path, SessionKind::Input)?;
     let password = prompt_password()?;
     let profile = vault.load(password.as_bytes())?;
     drop(password);

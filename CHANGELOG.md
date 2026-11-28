@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased - independent simultaneous desktop capabilities
+
+- Add typed read-only shared profile leases with an exclusive lane for screen and for input; retain original exclusive mutation lock.
+- Use separate desktop capability reservations and session-only alternate input port, preserving the same identity, grants and wire protocols.
+- Verify cross-process locking and real same-identity QUIC coexistence, including independent stop in both orders.
+- Fix the reproduced Windows full-feature CLI stack overflow by flattening an internal desktop command group; preserve all public command spellings and flags.
+
 ## Unreleased - Raw Input and compact control
 
 - Add optional foreground relative mouse Raw Input with bounded ordered samples, exact owned registration, and deterministic cleanup.

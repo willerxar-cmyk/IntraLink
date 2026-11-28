@@ -13,7 +13,7 @@ use intralink_transport::{
     input::InputConnection,
     input_queue::{self, INTERACTIVE_BUDGET},
 };
-use intralink_vault::{Direction, Route, Vault};
+use intralink_vault::{Direction, Route, SessionKind, SessionVault};
 use iroh::{Endpoint, EndpointId, SecretKey};
 use std::{
     collections::BTreeSet,
@@ -37,7 +37,8 @@ pub(super) async fn load_targets(
     #[cfg(target_os = "windows")] choose: bool,
     #[cfg(target_os = "windows")] geometry: bool,
     lan: bool,
-) -> Result<(Vault, SecretKey, Vec<Target>)> {
+    input_port: Option<u16>,
+) -> Result<(SessionVault, SecretKey, Vec<Target>)> {
     #[cfg(target_os = "windows")]
     let explicit = !choose;
     #[cfg(target_os = "linux")]
@@ -48,7 +49,7 @@ pub(super) async fn load_targets(
             "Select 1-8 distinct input hosts"
         );
     }
-    let vault = Vault::lock(path)?;
+    let vault = SessionVault::lock(path, SessionKind::Input)?;
     let password = prompt_password()?;
     let profile = vault.load(password.as_bytes())?;
     drop(password);
@@ -90,10 +91,12 @@ pub(super) async fn load_targets(
         let peer = profile.peer(name, Direction::Outbound)?;
         let identity = peer.identity()?;
         ensure!(identities.insert(identity), "Duplicate input host identity");
+        let saved = peer.route().context("Outbound route missing")?;
+        let route = input_route(saved, input_port)?;
         targets.push((
             name.clone(),
             identity,
-            peer.route().context("Outbound route missing")?.clone(),
+            route,
             hints.remove(&identity).unwrap_or_default(),
         ));
     }
@@ -110,6 +113,12 @@ pub(super) async fn load_targets(
             }
             Err(error) => eprintln!("LAN discovery failed: {error:#}. Using saved routes."),
         }
+    }
+    if let Some(port) = input_port {
+        for (_, _, _, hints) in &mut targets {
+            hints.retain(|address| address.port() == port);
+        }
+        println!("Session-only input port: {port}; saved peer routes and identities unchanged.");
     }
     let secret = profile.secret_key();
     drop(profile);
@@ -237,6 +246,15 @@ pub(super) fn start_slot(
     }
 }
 
+/// An explicit input listener port is a temporary route hint, never
+/// a persisted grant or a change to the expected endpoint identity.
+fn input_route(saved: &Route, port: Option<u16>) -> Result<Route> {
+    match port {
+        Some(port) => Route::new(saved.host(), port),
+        None => Ok(saved.clone()),
+    }
+}
+
 /// Keep at least one valid saved route when discovered hints are available.
 fn input_candidates(hints: &[SocketAddr], saved: &[SocketAddr]) -> Vec<SocketAddr> {
     let mut candidates = Vec::with_capacity(4);
@@ -292,6 +310,20 @@ mod tests {
         assert!(actual.iter().all(|a| private_lan(*a)));
         assert_eq!(input_candidates(&[], &saved), vec![saved[1], saved[2]]);
         assert!(input_candidates(&hints[..1], &saved[..1]).is_empty());
+    }
+
+    #[test]
+    fn alternate_input_port_preserves_saved_host_and_does_not_mutate_route() -> Result<()> {
+        for host in ["192.168.1.20", "fixture.local"] {
+            let saved = Route::new(host, 45100)?;
+            let alternate = input_route(&saved, Some(45101))?;
+            assert_eq!(alternate.host(), saved.host());
+            assert_eq!(alternate.port(), 45101);
+            assert_eq!(saved.port(), 45100);
+            assert_eq!(input_route(&saved, None)?, saved);
+            assert!(input_route(&saved, Some(0)).is_err());
+        }
+        Ok(())
     }
 
     #[test]

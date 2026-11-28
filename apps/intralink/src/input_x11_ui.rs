@@ -149,8 +149,13 @@ fn decide(poll: Poll, active: bool) -> Decision {
     }
 }
 
-pub(super) async fn workspace(path: &Path, names: &[String], lan: bool) -> Result<()> {
-    let (_vault, secret, targets) = load_targets(path, names, lan).await?;
+pub(super) async fn workspace(
+    path: &Path,
+    names: &[String],
+    lan: bool,
+    input_port: Option<u16>,
+) -> Result<()> {
+    let (_vault, secret, targets) = load_targets(path, names, lan, input_port).await?;
     approve(
         "Open the focused local X11 input pad for these paired hosts? F1-F8 select on key release; F12 releases input; Escape closes. Leaving or obscuring the window disconnects an active host. No global hook or screen stream.",
     )?;

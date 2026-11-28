@@ -1,5 +1,5 @@
 //! Local presentation preference. Never supplies routes, grants, or an active target.
-//! The existing exclusive vault lock must be held by the workspace.
+//! The workspace must hold the exclusive input lane and shared profile lease.
 use super::portal::Mode;
 use anyhow::{Context, Result, ensure};
 use intralink_core::{input::MAX_SLOTS, input_layout::Layout};

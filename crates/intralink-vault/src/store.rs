@@ -1,4 +1,4 @@
-//! Serialize access and write authenticated ciphertext using same-directory staging.
+//! Shared read-only capability leases; exclusive authenticated ciphertext writes.
 use std::{
     fs::{self, File, OpenOptions},
     io::{Read, Write},
@@ -16,8 +16,40 @@ pub struct Vault {
     _lock: File,
 }
 
-impl Vault {
-    pub fn lock(path: &Path) -> Result<Self> {
+/// A read-only profile lease for one explicitly approved desktop capability.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SessionKind {
+    Screen,
+    Input,
+}
+
+impl SessionKind {
+    fn suffix(self) -> &'static str {
+        match self {
+            Self::Screen => ".screen-session.lock",
+            Self::Input => ".input-session.lock",
+        }
+    }
+}
+
+/// Holds an exclusive capability lock and a shared profile lock for its
+/// entire lifetime. There is deliberately no initialize/save/rename/revoke
+/// method on this type. Existing exclusive Vault users remain incompatible
+/// with any running session, including older binaries and Android.
+pub struct SessionVault {
+    path: PathBuf,
+    // Drop the capability lease before releasing the shared profile lease.
+    _capability: File,
+    _profile: File,
+}
+
+struct LockPaths {
+    path: PathBuf,
+    profile: PathBuf,
+}
+
+impl LockPaths {
+    fn resolve(path: &Path) -> Result<Self> {
         let parent = path
             .parent()
             .filter(|p| !p.as_os_str().is_empty())
@@ -28,24 +60,90 @@ impl Vault {
             .context("Could not resolve vault directory")?;
         let filename = path.file_name().context("Vault requires a file name")?;
         let path = parent.join(filename);
-        let mut lock_name = filename.to_os_string();
-        lock_name.push(".lock");
-        let lock_path = parent.join(lock_name);
         reject_symlink(&path)?;
-        reject_symlink(&lock_path)?;
-        let mut options = OpenOptions::new();
-        options.read(true).write(true).create(true).truncate(false);
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::OpenOptionsExt;
-            options.mode(0o600);
-        }
-        let lock = options
-            .open(lock_path)
-            .context("Could not open local vault lock")?;
-        fs2::FileExt::try_lock_exclusive(&lock)
-            .context("Vault already in use; close the other local command")?;
-        Ok(Self { path, _lock: lock })
+        let profile = sidecar(&path, ".lock")?;
+        Ok(Self { path, profile })
+    }
+}
+
+fn sidecar(path: &Path, suffix: &str) -> Result<PathBuf> {
+    let mut filename = path
+        .file_name()
+        .context("Vault requires a file name")?
+        .to_os_string();
+    filename.push(suffix);
+    Ok(path.with_file_name(filename))
+}
+
+fn open_lock(path: &Path) -> Result<File> {
+    reject_symlink(path)?;
+    let mut options = OpenOptions::new();
+    options.read(true).write(true).create(true).truncate(false);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    let lock = options
+        .open(path)
+        .context("Could not open local vault lock")?;
+    ensure!(
+        lock.metadata()?.is_file(),
+        "Vault lock must be a regular file"
+    );
+    Ok(lock)
+}
+
+fn load_profile(path: &Path, password: &[u8]) -> Result<Profile> {
+    reject_symlink(path)?;
+    let file = File::open(path).context("Could not open vault; initialize it first")?;
+    ensure!(file.metadata()?.is_file(), "Vault must be a regular file");
+    let mut bytes = Vec::new();
+    file.take(envelope::MAX_FILE_SIZE as u64 + 1)
+        .read_to_end(&mut bytes)?;
+    envelope::open(&bytes, password)
+}
+
+impl SessionVault {
+    pub fn lock(path: &Path, kind: SessionKind) -> Result<Self> {
+        let paths = LockPaths::resolve(path)?;
+        // All callers acquire the original profile lock first. A mutating
+        // command can never interleave between capability admission and read.
+        let profile = open_lock(&paths.profile)?;
+        fs2::FileExt::try_lock_shared(&profile)
+            .context("Vault is being edited or used by an exclusive command")?;
+        // Do not create a session lane for an uninitialized profile.
+        ensure!(
+            paths.path.is_file(),
+            "Could not open vault; initialize it first"
+        );
+        let capability = open_lock(&sidecar(&paths.path, kind.suffix())?)?;
+        fs2::FileExt::try_lock_exclusive(&capability).with_context(|| {
+            format!("{kind:?} capability already in use; stop the other local command")
+        })?;
+        Ok(Self {
+            path: paths.path,
+            _capability: capability,
+            _profile: profile,
+        })
+    }
+
+    pub fn load(&self, password: &[u8]) -> Result<Profile> {
+        load_profile(&self.path, password)
+    }
+}
+
+impl Vault {
+    pub fn lock(path: &Path) -> Result<Self> {
+        let paths = LockPaths::resolve(path)?;
+        let lock = open_lock(&paths.profile)?;
+        fs2::FileExt::try_lock_exclusive(&lock).context(
+            "Vault already in use; close active screen/input sessions or the other local command",
+        )?;
+        Ok(Self {
+            path: paths.path,
+            _lock: lock,
+        })
     }
 
     pub fn initialize(&self, profile: &Profile, password: &[u8]) -> Result<()> {
@@ -53,13 +151,7 @@ impl Vault {
     }
 
     pub fn load(&self, password: &[u8]) -> Result<Profile> {
-        reject_symlink(&self.path)?;
-        let file = File::open(&self.path).context("Could not open vault; initialize it first")?;
-        ensure!(file.metadata()?.is_file(), "Vault must be a regular file");
-        let mut bytes = Vec::new();
-        file.take(envelope::MAX_FILE_SIZE as u64 + 1)
-            .read_to_end(&mut bytes)?;
-        envelope::open(&bytes, password)
+        load_profile(&self.path, password)
     }
 
     /// Authenticate the current ciphertext before replacing it. A normal save

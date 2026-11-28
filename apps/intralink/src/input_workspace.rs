@@ -2,7 +2,7 @@
 use super::*;
 
 pub(crate) async fn configure_topology(path: &Path, names: &[String]) -> Result<()> {
-    let (_vault, secret, targets) = load_targets(path, names, false, false, false).await?;
+    let (_vault, secret, targets) = load_targets(path, names, false, false, false, None).await?;
     let observed = topology_store::observe_base()?;
     let peers = targets.iter().map(|(_, id, _, _)| *id).collect();
     let store = topology_store::Store::new(path, secret.public(), peers, observed)?;
@@ -27,6 +27,7 @@ pub(crate) async fn workspace(
     choose: bool,
     lan: bool,
     mode: WorkspaceMode,
+    input_port: Option<u16>,
 ) -> Result<()> {
     let spatial = matches!(mode, WorkspaceMode::Spatial);
     let geometry = matches!(
@@ -49,7 +50,8 @@ pub(crate) async fn workspace(
         !detect_displays || geometry,
         "Authenticated displays require geometry mode"
     );
-    let (_vault, secret, targets) = load_targets(path, names, choose, detect_displays, lan).await?;
+    let (_vault, secret, targets) =
+        load_targets(path, names, choose, detect_displays, lan, input_port).await?;
     let store = if geometry {
         let observed = topology_store::observe_base()?;
         let peers = targets.iter().map(|(_, id, _, _)| *id).collect();

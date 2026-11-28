@@ -36,3 +36,8 @@ A normal `save` first authenticates and validates the existing ciphertext with t
 ## Named identities and explicit role migration
 
 The next candidate accepts the optional device_name (1-64 UTF-8 bytes, no control characters) in encrypted schema 1. Missing fields remain valid. The separate authenticated Vault.change_role operation reviews the expected impact under the same exclusive lock, retains the identity, preserves compatible grants and historical replay receipts, revokes incompatible grants and clears pending invitations on a real change. Historical receipts in a client-only profile are inert until a later controller role. A no-op changes no ciphertext; a normal save still rejects role or identity changes. Old strict readers may reject named profiles and host-only historical receipts; do not downgrade. See ONBOARDING.md.
+
+
+## Current desktop session coexistence (2026-11-28)
+
+The original exclusive encrypted-profile lock remains mandatory for mutations and legacy/Android commands. Current Windows and Linux desktop commands may hold one shared read-only profile lease per independently approved capability, with exclusive screen/input lane locks. See [SESSION-COEXISTENCE.md](SESSION-COEXISTENCE.md) for exact operation, constraints and scope; this supersedes earlier desktop-only exclusive-session statements. Test evidence: benchmarks/kvm-session-coexistence-20261128.txt. Combined viewer-control UI and physical acceptance remain pending.

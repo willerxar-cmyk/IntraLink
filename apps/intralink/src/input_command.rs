@@ -53,6 +53,9 @@ pub enum Action {
         /// Find private-LAN input announcements for the selected paired hosts.
         #[arg(long)]
         lan: bool,
+        /// Session-only UDP input listener port for every selected peer (saved host and identity unchanged).
+        #[arg(long, value_parser = clap::value_parser!(u16).range(1..=65535))]
+        input_port: Option<u16>,
         /// Choose paired CLIENTs graphically; includes one bounded LAN scan.
         #[cfg(target_os = "windows")]
         #[arg(long)]
@@ -143,6 +146,7 @@ impl Action {
                 spatial,
                 choose,
                 lan,
+                input_port,
                 geometry,
                 detect_displays,
                 desktop_edges,
@@ -167,12 +171,14 @@ impl Action {
                 } else {
                     WorkspaceMode::Manual
                 };
-                super::input_ui::workspace(path, &device, choose, lan, mode).await
+                super::input_ui::workspace(path, &device, choose, lan, mode, input_port).await
             }
             #[cfg(target_os = "linux")]
-            Self::Workspace { device, lan } => {
-                super::input_x11_ui::workspace(path, &device, lan).await
-            }
+            Self::Workspace {
+                device,
+                lan,
+                input_port,
+            } => super::input_x11_ui::workspace(path, &device, lan, input_port).await,
         }
     }
 }

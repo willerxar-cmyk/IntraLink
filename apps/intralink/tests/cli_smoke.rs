@@ -641,3 +641,34 @@ fn raw_motion_and_compact_source_require_explicit_interactive_authenticated_edge
         }
     }
 }
+
+#[cfg(any(
+    all(target_os = "windows", feature = "input-preview"),
+    all(target_os = "linux", feature = "input-x11-preview")
+))]
+#[test]
+fn simultaneous_input_port_is_explicit_bounded_and_interactive() {
+    assert!(stdout(&["input", "workspace", "--help"]).contains("--input-port"));
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("profile.vault");
+    for port in ["0", "65536", "45101"] {
+        let result = Command::new(env!("CARGO_BIN_EXE_intralink"))
+            .arg("--vault")
+            .arg(&path)
+            .args([
+                "input",
+                "workspace",
+                "--device",
+                "fixture",
+                "--input-port",
+                port,
+            ])
+            .output()
+            .unwrap();
+        assert!(!result.status.success());
+        assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 0);
+        if port == "45101" {
+            assert!(String::from_utf8_lossy(&result.stderr).contains("local interactive terminal"));
+        }
+    }
+}

@@ -12,7 +12,7 @@ use intralink_transport::{
     bind_workspace_controller,
     desktop::{Stats, VideoFrame, ViewMode, view_with_observations},
 };
-use intralink_vault::{Direction, Route, Vault};
+use intralink_vault::{Direction, Route, SessionKind, SessionVault};
 use iroh::{Endpoint, EndpointId};
 use minifb::{Key, KeyRepeat, MouseButton, MouseMode, ScaleMode, Window, WindowOptions};
 use std::{
@@ -388,8 +388,8 @@ pub enum Targets {
     },
 }
 
-/// Every target is drawn from an existing outbound grant. The vault remains
-/// locked throughout the workspace; stop the workspace before editing grants.
+/// Every target is drawn from an existing outbound grant. Hold the screen
+/// lane and shared profile lease until all owned sessions have closed.
 pub async fn run(
     path: &Path,
     selected: Targets,
@@ -405,7 +405,7 @@ pub async fn run(
         WorkspacePolicy::new(names.len(), all_live).context("Select 1-8 distinct hosts")?;
     }
     require_graphical_terminal()?;
-    let vault = Vault::lock(path)?;
+    let vault = SessionVault::lock(path, SessionKind::Screen)?;
     let password = prompt_password()?;
     let profile = vault.load(password.as_bytes())?;
     drop(password);

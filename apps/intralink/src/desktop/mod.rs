@@ -68,7 +68,7 @@ use intralink_transport::{
         serve_view_pipelined, serve_view_with_protocol, view_with_observations,
     },
 };
-use intralink_vault::{Direction, Vault};
+use intralink_vault::{Direction, SessionKind, SessionVault};
 use minifb::{Key, ScaleMode, Window, WindowOptions};
 use tokio::sync::{mpsc, oneshot};
 use xcap::Monitor;
@@ -170,7 +170,7 @@ pub async fn share(
     require_graphical_terminal()?;
     backend.validate()?;
     ensure!(local.port() != 0, "Specify a nonzero listening port");
-    let vault = Vault::lock(path)?;
+    let vault = SessionVault::lock(path, SessionKind::Screen)?;
     let password = prompt_password()?;
     let profile = vault.load(password.as_bytes())?;
     drop(password);
@@ -482,7 +482,7 @@ pub async fn share(
 
 pub async fn receive(path: &Path, device: &str, mode: ViewMode) -> Result<Outcome> {
     require_graphical_terminal()?;
-    let vault = Vault::lock(path)?;
+    let vault = SessionVault::lock(path, SessionKind::Screen)?;
     let password = prompt_password()?;
     let profile = vault.load(password.as_bytes())?;
     drop(password);

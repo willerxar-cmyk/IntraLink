@@ -209,7 +209,7 @@ pub(crate) async fn run(path: &Path, names: &[String], seconds: u16) -> Result<(
         (5..=120).contains(&seconds),
         "Edge check duration outside 5-120 seconds"
     );
-    let (_vault, secret, targets) = load_targets(path, names, false, false, false).await?;
+    let (_vault, secret, targets) = load_targets(path, names, false, false, false, None).await?;
     let observed = topology_store::observe_base()?;
     let screen = physical_primary()?;
     ensure!(

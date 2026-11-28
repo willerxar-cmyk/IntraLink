@@ -1,5 +1,5 @@
-//! Identity-bound, local-only geometry preference. The exclusive encrypted
-//! vault lock is held by the caller; this file supplies no routes or grants.
+//! Identity-bound, local-only geometry preference. The exclusive input lane
+//! and shared profile lease are held by the caller; no routes or grants.
 use super::portal::Mode;
 use anyhow::{Context, Result, ensure};
 use intralink_core::{
