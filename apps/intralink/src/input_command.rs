@@ -19,6 +19,10 @@ pub enum Action {
         /// Advertise this separately approved input listener on the private LAN.
         #[arg(long)]
         advertise_lan: bool,
+        /// Use explicit input/2 with the current primary display metadata (Windows).
+        #[cfg(target_os = "windows")]
+        #[arg(long)]
+        display_geometry: bool,
     },
     /// Edit measured BASE and manually confirmed CLIENT display geometry offline.
     #[cfg(target_os = "windows")]
@@ -49,6 +53,10 @@ pub enum Action {
         #[cfg(target_os = "windows")]
         #[arg(long)]
         geometry: bool,
+        /// Require authenticated input/2 geometry from every selected CLIENT; no downgrade.
+        #[cfg(target_os = "windows")]
+        #[arg(long, requires = "geometry")]
+        detect_displays: bool,
     },
 }
 
@@ -64,7 +72,20 @@ impl Action {
                 controller,
                 seconds,
                 advertise_lan,
-            } => super::input_host::run(path, bind, &controller, seconds, advertise_lan).await,
+                #[cfg(target_os = "windows")]
+                display_geometry,
+            } => {
+                super::input_host::run(
+                    path,
+                    bind,
+                    &controller,
+                    seconds,
+                    advertise_lan,
+                    #[cfg(target_os = "windows")]
+                    display_geometry,
+                )
+                .await
+            }
             #[cfg(target_os = "windows")]
             Self::Topology { device } => super::input_ui::configure_topology(path, &device).await,
             #[cfg(target_os = "windows")]
@@ -74,6 +95,7 @@ impl Action {
                 choose,
                 lan,
                 geometry,
+                detect_displays,
             } => {
                 super::input_ui::workspace(
                     path,
@@ -82,6 +104,7 @@ impl Action {
                     choose,
                     lan,
                     geometry,
+                    detect_displays,
                 )
                 .await
             }

@@ -1,12 +1,18 @@
 //! Common consent, pinned peer, bounded input transport and release lifecycle.
 use crate::discovery::{Advertisement, Protocol};
+#[cfg(target_os = "windows")]
+use crate::input_ui::topology_store;
 use crate::local::{approve, prompt_password};
 use anyhow::{Result, ensure};
 use intralink_core::input::MAX_SECONDS;
 #[cfg(target_os = "windows")]
-use intralink_core::input::Record;
+use intralink_core::input::{Event, Record};
 use intralink_transport::input::{Delivery, bind_input, serve_input};
+#[cfg(target_os = "windows")]
+use intralink_transport::input::{bind_input_geometry, serve_input_geometry};
 use intralink_vault::{Direction, Vault};
+#[cfg(target_os = "windows")]
+use std::time::Instant;
 use std::{net::SocketAddr, path::Path, time::Duration};
 use tokio::{sync::mpsc, time::sleep};
 
@@ -69,6 +75,7 @@ pub(super) async fn run(
     controller: &str,
     seconds: u16,
     advertise_lan: bool,
+    #[cfg(target_os = "windows")] display_geometry: bool,
 ) -> Result<()> {
     ensure!(
         private_lan(address),
@@ -94,14 +101,45 @@ pub(super) async fn run(
             "LAN announcement exposes this public identity and private IP/port, not a grant. Only the approved BASE can authenticate."
         );
     }
+    #[cfg(target_os = "windows")]
+    let observed = if display_geometry {
+        let observed = topology_store::observe_base()?;
+        let d = observed.display;
+        println!(
+            "Input/2 shares the approved primary display metadata only with {controller}: {}x{}, {}% scale, {} degrees rotation. Geometry changes stop the session.",
+            d.width, d.height, d.scale, d.rotation
+        );
+        Some(observed)
+    } else {
+        None
+    };
     approve(CONSENT)?;
     // Native initialization and the visible local stop control must succeed
     // before a listening endpoint can be opened.
     let mut native = LocalInput::open()?;
     ensure!(native.poll()?, "Local input indicator is not ready");
+    #[cfg(target_os = "windows")]
+    let endpoint = if let Some(observed) = observed {
+        ensure!(
+            topology_store::observe_base()? == observed,
+            "Primary display changed before session; approve again"
+        );
+        bind_input_geometry(secret, address).await?
+    } else {
+        bind_input(secret, address).await?
+    };
+    #[cfg(target_os = "linux")]
     let endpoint = bind_input(secret, address).await?;
+    #[cfg(target_os = "windows")]
+    let protocol = if display_geometry {
+        Protocol::InputGeometry
+    } else {
+        Protocol::Input
+    };
+    #[cfg(target_os = "linux")]
+    let protocol = Protocol::Input;
     let advertisement = if advertise_lan {
-        match Advertisement::for_protocol(endpoint.id(), address, Protocol::Input) {
+        match Advertisement::for_protocol(endpoint.id(), address, protocol) {
             Ok(advertisement) => Some(advertisement),
             Err(error) => {
                 endpoint.close().await;
@@ -113,17 +151,43 @@ pub(super) async fn run(
     };
     let (sender, mut receiver) = mpsc::channel::<Delivery>(1);
     let listener = endpoint.clone();
-    let mut task = tokio::spawn(async move { serve_input(&listener, peer, seconds, sender).await });
+    let mut task = tokio::spawn(async move {
+        #[cfg(target_os = "windows")]
+        if let Some(observed) = observed {
+            return serve_input_geometry(&listener, peer, seconds, sender, observed.display).await;
+        }
+        serve_input(&listener, peer, seconds, sender).await
+    });
+    #[cfg(target_os = "windows")]
+    let mut last_geometry_check = Instant::now();
+    #[cfg(target_os = "windows")]
+    let mut check_geometry = |force: bool| -> Result<()> {
+        if let Some(observed) = observed
+            && (force || last_geometry_check.elapsed() >= Duration::from_millis(500))
+        {
+            ensure!(
+                topology_store::observe_base()? == observed,
+                "Primary display changed; input session stopped"
+            );
+            last_geometry_check = Instant::now();
+        }
+        Ok(())
+    };
     println!(
         "Input listener active for {controller}. Local approval is session-specific; no video."
     );
     let local = async {
         loop {
             if !native.poll()? || task.is_finished() { break; }
+            #[cfg(target_os = "windows")]
+            check_geometry(false)?;
             tokio::select! {
                 biased;
                 delivery = receiver.recv() => {
                     let Some(delivery) = delivery else { break; };
+                    if !native.poll()? || task.is_finished() || delivery.accepted.is_closed() { break; }
+                    #[cfg(target_os = "windows")]
+                    check_geometry(delivery.record.event == Event::Activate)?;
                     if !native.poll()? || task.is_finished() || delivery.accepted.is_closed() { break; }
                     let applied = native.apply(delivery.record);
                     let failed = applied.is_err();

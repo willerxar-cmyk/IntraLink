@@ -4,6 +4,10 @@ use std::fmt;
 pub const ALPN: &[u8] = b"intralink/input/1";
 pub const HELLO: &[u8; 8] = b"ILKVM1\0\0";
 pub const READY: &[u8; 8] = b"ILKVMOK1";
+/// Explicit geometry-aware capability; never silently downgrade to input/1.
+pub const GEOMETRY_ALPN: &[u8] = b"intralink/input/2";
+pub const GEOMETRY_HELLO: &[u8; 8] = b"ILKVM2\0\0";
+pub const GEOMETRY_READY: &[u8; 8] = b"ILKVMOK2";
 pub const RECORD_BYTES: usize = 12;
 pub const MAX_SECONDS: u16 = 3600;
 pub const MAX_SLOTS: usize = 8;

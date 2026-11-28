@@ -6,6 +6,8 @@ use crate::{
     routing,
 };
 use anyhow::{Context, Result, ensure};
+#[cfg(target_os = "windows")]
+use intralink_core::display_geometry::Display;
 use intralink_core::input::{Event, MAX_SLOTS};
 use intralink_transport::{
     input::InputConnection,
@@ -33,6 +35,7 @@ pub(super) async fn load_targets(
     path: &Path,
     names: &[String],
     #[cfg(target_os = "windows")] choose: bool,
+    #[cfg(target_os = "windows")] geometry: bool,
     lan: bool,
 ) -> Result<(Vault, SecretKey, Vec<Target>)> {
     #[cfg(target_os = "windows")]
@@ -53,6 +56,14 @@ pub(super) async fn load_targets(
         profile.role().can_initiate(),
         "Profile cannot initiate input"
     );
+    #[cfg(target_os = "windows")]
+    let protocol = if geometry {
+        Protocol::InputGeometry
+    } else {
+        Protocol::Input
+    };
+    #[cfg(target_os = "linux")]
+    let protocol = Protocol::Input;
     let mut hints = Hints::new();
     #[cfg(target_os = "windows")]
     let chosen_names;
@@ -60,7 +71,7 @@ pub(super) async fn load_targets(
     let names = if choose {
         let (selected, found) = crate::desktop::device_picker::choose(
             &profile,
-            crate::desktop::device_picker::Kind::Input,
+            crate::desktop::device_picker::Kind::Input(protocol),
         )
         .await?;
         chosen_names = selected;
@@ -91,7 +102,7 @@ pub(super) async fn load_targets(
     if lan {
         let expected: Vec<_> = targets.iter().map(|(_, id, _, _)| *id).collect();
         println!("Looking for approved input announcements on the private LAN (hints only).");
-        match discovery::find_many(&expected, Protocol::Input).await {
+        match discovery::find_many(&expected, protocol).await {
             Ok(mut found) => {
                 for (_, id, _, hints) in &mut targets {
                     *hints = found.remove(id).unwrap_or_default();
@@ -111,11 +122,20 @@ pub(super) struct Slot {
     ready: Arc<AtomicBool>,
     last_ui: Arc<Mutex<Instant>>,
     pub(super) task: JoinHandle<Result<()>>,
+    #[cfg(target_os = "windows")]
+    display: Arc<std::sync::OnceLock<Display>>,
 }
 
 impl Slot {
     pub(super) fn connected(&self) -> bool {
         self.ready.load(Ordering::Acquire) && !self.task.is_finished()
+    }
+
+    #[cfg(target_os = "windows")]
+    pub(super) fn display(&self) -> Option<Display> {
+        self.connected()
+            .then(|| self.display.get().copied())
+            .flatten()
     }
 
     pub(super) fn pulse(&self) -> Result<()> {
@@ -142,10 +162,15 @@ pub(super) fn start_slot(
     identity: EndpointId,
     route: Route,
     hints: Vec<SocketAddr>,
+    #[cfg(target_os = "windows")] geometry: bool,
 ) -> Slot {
     let (sender, mut receiver) = input_queue::channel();
     let ready = Arc::new(AtomicBool::new(false));
     let worker_ready = ready.clone();
+    #[cfg(target_os = "windows")]
+    let display = Arc::new(std::sync::OnceLock::new());
+    #[cfg(target_os = "windows")]
+    let worker_display = display.clone();
     let last_ui = Arc::new(Mutex::new(Instant::now()));
     let worker_ui = last_ui.clone();
     let endpoint = endpoint.clone();
@@ -160,7 +185,14 @@ pub(super) fn start_slot(
                 Err(error) => return Err(error),
             };
             ensure!(!candidates.is_empty(), "Input preview requires a private IPv4 route");
+            #[cfg(target_os = "linux")]
             let mut connection = InputConnection::connect(&endpoint, identity, &candidates).await?;
+            #[cfg(target_os = "windows")]
+            let mut connection = if geometry {
+                let connection = InputConnection::connect_geometry(&endpoint,identity,&candidates).await?;
+                worker_display.set(connection.display().context("Missing authenticated display")?).map_err(|_|anyhow::anyhow!("Duplicate display metadata"))?;
+                connection
+            } else { InputConnection::connect(&endpoint,identity,&candidates).await? };
             worker_ready.store(true, Ordering::Release);
             let mut heartbeat = tokio::time::interval(HEARTBEAT);
             heartbeat.set_missed_tick_behavior(MissedTickBehavior::Delay);
@@ -200,6 +232,8 @@ pub(super) fn start_slot(
         ready,
         last_ui,
         task,
+        #[cfg(target_os = "windows")]
+        display,
     }
 }
 

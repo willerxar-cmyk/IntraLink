@@ -19,6 +19,8 @@ use crate::{
     local::approve,
 };
 
+#[path = "input_display_review.rs"]
+mod display_review;
 #[path = "input_keys.rs"]
 mod keys;
 #[path = "input_layout_store.rs"]
@@ -34,7 +36,10 @@ mod topology_editor;
 #[path = "input_topology_pad.rs"]
 mod topology_pad;
 #[path = "input_topology_store.rs"]
-mod topology_store;
+pub(super) mod topology_store;
+#[path = "input_workspace.rs"]
+mod workspace_run;
+pub(super) use workspace_run::{configure_topology, workspace};
 
 const POLL: Duration = Duration::from_millis(8);
 
@@ -618,160 +623,4 @@ fn title(
         "IntraLink INPUT | {target} | {connected}/{} connected | {controls}{portal}",
         slots.len()
     )
-}
-
-pub(super) async fn configure_topology(path: &Path, names: &[String]) -> Result<()> {
-    let (_vault, secret, targets) = load_targets(path, names, false, false).await?;
-    let observed = topology_store::observe_base()?;
-    let peers = targets.iter().map(|(_, id, _, _)| *id).collect();
-    let store = topology_store::Store::new(path, secret.public(), peers, observed)?;
-    let mut names = vec!["BASE"];
-    names.extend(targets.iter().map(|(name, _, _, _)| name.as_str()));
-    topology_editor::edit(&store, &names)?;
-    println!("Topology saved locally; no connection or input session opened.");
-    Ok(())
-}
-
-pub(super) async fn workspace(
-    path: &Path,
-    names: &[String],
-    spatial: bool,
-    choose: bool,
-    lan: bool,
-    geometry: bool,
-) -> Result<()> {
-    let (_vault, secret, targets) = load_targets(path, names, choose, lan).await?;
-    let mut geometry = if geometry {
-        let observed = topology_store::observe_base()?;
-        let peers = targets.iter().map(|(_, id, _, _)| *id).collect();
-        let store = topology_store::Store::new(path, secret.public(), peers, observed)?;
-        let mut names = vec!["BASE"];
-        names.extend(targets.iter().map(|(name, _, _, _)| name.as_str()));
-        let config = topology_editor::edit(&store, &names)?;
-        Some(topology_pad::Pad::new(config, observed)?)
-    } else {
-        None
-    };
-    approve(if geometry.is_some() {
-        "Open the foreground geometry-aware input pad? The configured monitor geometry applies only inside this window. Each CLIENT must approve independently. Click BASE or F9 to arm, F12 releases. No global hook or screen stream."
-    } else if spatial {
-        "Open the visible spatial input pad? Review the arrangement and start from the local BASE card. START or F9 arms switching; F12 disarms and releases input. No global hook or screen stream."
-    } else {
-        "Open the visible input-only pad for these paired hosts? F1-F8 explicitly activate a ready host; F12 returns to local. No global hook, screen stream or unattended control."
-    })?;
-    let mut spatial = if spatial && geometry.is_none() {
-        let peers = targets
-            .iter()
-            .map(|(_, identity, _, _)| *identity)
-            .collect();
-        let store = layout_store::Store::new(path, secret.public(), peers)?;
-        Some(Spatial::new(store))
-    } else {
-        None
-    };
-    let mut window = window(
-        "IntraLink INPUT | LOCAL | connecting",
-        960,
-        540,
-        false,
-        0x00212c3b,
-    )?;
-    let endpoint = bind_workspace_controller(secret).await?;
-    let mut slots: Vec<_> = targets
-        .into_iter()
-        .map(|(name, identity, route, hints)| start_slot(&endpoint, name, identity, route, hints))
-        .collect();
-    for (index, slot) in slots.iter().enumerate() {
-        println!("F{}: {}", index + 1, slot.name);
-    }
-    println!(
-        "Focus the input pad. Its pointer maps to the active host's primary display. F12 releases the selected host; Escape closes. Do not use two profiles on the same computer."
-    );
-    let mut focus = Focus::default();
-    let mut previous = Snapshot::default();
-    let mut last_title = String::new();
-    if geometry.is_some() {
-        println!(
-            "Geometry mode: pointer transfers only over exact shared logical edges. CLIENT dimensions are user-confirmed, not remotely measured. F12 releases. Window only."
-        );
-    }
-    if spatial.is_some() {
-        println!(
-            "Spatial pad: drag named devices while SAFE. Changes save locally for this BASE and exact CLIENT set. Review the layout, click START or press F9 in the BASE card, cross with keys/buttons released. F12 disarms. F10 or the portal button changes intensity; RESET restores defaults."
-        );
-    }
-    let local = async {
-        loop {
-            window.update();
-            if !window.is_open() || window.is_key_down(LocalKey::Escape) {
-                break;
-            }
-            if focus.active().is_some() && !window.is_active() {
-                anyhow::bail!(
-                    "Input pad lost focus; disconnecting rather than forwarding stale input"
-                );
-            }
-            if let Some(geometry) = &mut geometry {
-                geometry
-                    .step(&mut focus, &mut previous, &slots, &mut window)
-                    .await?;
-                geometry.paint(&slots, &focus, &mut window)?;
-            } else if let Some(spatial) = &mut spatial {
-                spatial
-                    .step(&mut focus, &mut previous, &slots, &mut window)
-                    .await?;
-                spatial.paint(&slots, &focus, &mut window)?;
-            } else if window.is_active() {
-                let select = window
-                    .get_keys_pressed(KeyRepeat::No)
-                    .into_iter()
-                    .find_map(|key| SELECT_KEYS.iter().position(|candidate| *candidate == key));
-                let return_local = window.is_key_pressed(LocalKey::F12, KeyRepeat::No)
-                    || (focus.active().is_some() && normalized(&window).is_none());
-                if return_local {
-                    switch_focus(&mut focus, None, &slots, &mut window).await?;
-                    previous = Snapshot::default();
-                } else if let Some(index) = select {
-                    if slots.get(index).is_some_and(Slot::connected)
-                        && local_keys(&window).is_empty()
-                        && local_buttons(&window).is_empty()
-                        && normalized(&window).is_some()
-                    {
-                        if focus.active() != Some(index) {
-                            switch_focus(&mut focus, Some(index), &slots, &mut window).await?;
-                            previous = Snapshot::default();
-                        }
-                    } else {
-                        println!(
-                            "Target unavailable or local input still held; select again when ready."
-                        );
-                    }
-                }
-                if let Some(index) = focus.active() {
-                    ensure!(window.is_active(), "Input pad lost focus");
-                    let position = normalized(&window).context("Pointer left the input pad")?;
-                    previous.forward(&window, &slots[index], position)?;
-                }
-            }
-            let next = title(&slots, &focus, spatial.as_ref(), geometry.as_ref());
-            if next != last_title {
-                window.set_title(&next);
-                last_title = next;
-            }
-            sleep(POLL).await;
-        }
-        Ok::<(), anyhow::Error>(())
-    }
-    .await;
-    // Abort every owned worker on close/focus loss. Dropping the connection
-    // closes its QUIC session, causing the host to release its owned input.
-    focus.cancel();
-    for slot in &slots {
-        slot.task.abort();
-    }
-    for slot in &mut slots {
-        let _ = (&mut slot.task).await;
-    }
-    endpoint.close().await;
-    local
 }

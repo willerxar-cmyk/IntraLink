@@ -135,6 +135,8 @@ fn neutral(window: &Window, arming_key: bool) -> bool {
 pub(super) struct Pad {
     config: Config,
     observed: Observed,
+    authenticated: bool,
+    checked_base: Instant,
     topology: Topology,
     projection: Projection,
     gate: Gate,
@@ -147,7 +149,7 @@ pub(super) struct Pad {
 }
 
 impl Pad {
-    pub fn new(config: Config, observed: Observed) -> Result<Self> {
+    pub fn new(config: Config, observed: Observed, authenticated: bool) -> Result<Self> {
         let topology =
             display_geometry::topology(&config.placements).context("Invalid saved topology")?;
         ensure!(topology.connected(), "Topology has disconnected screens");
@@ -156,6 +158,8 @@ impl Pad {
         Ok(Self {
             config,
             observed,
+            authenticated,
+            checked_base: Instant::now(),
             topology,
             projection,
             gate: Gate::default(),
@@ -198,6 +202,23 @@ impl Pad {
         slots: &[Slot],
         window: &mut Window,
     ) -> Result<()> {
+        if self.authenticated {
+            ensure!(
+                self.config.placements.len() == slots.len() + 1
+                    && slots
+                        .iter()
+                        .zip(self.config.placements.iter().skip(1))
+                        .all(|(slot, p)| slot.display() == Some(p.display)),
+                "Authenticated CLIENT geometry session ended; reopen workspace"
+            );
+        }
+        if self.checked_base.elapsed() >= Duration::from_millis(500) {
+            ensure!(
+                topology_store::observe_base()? == self.observed,
+                "BASE geometry changed; reopen workspace"
+            );
+            self.checked_base = Instant::now();
+        }
         let ready = slots.iter().enumerate().fold(0u8, |mask, (i, slot)| {
             mask | if slot.connected() { 1 << i } else { 0 }
         });
@@ -275,7 +296,8 @@ impl Pad {
                 let projection = self.projection;
                 let topology = &self.topology;
                 let guard = |window: &Window| {
-                    neutral(window, false)
+                    !window.is_key_down(Key::F12)
+                        && neutral(window, false)
                         && super::pad::pointer(window)
                             .and_then(|p| projection.sample(topology, p))
                             .is_some_and(|s| s.id == transfer.target)

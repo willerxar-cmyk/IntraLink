@@ -3,8 +3,12 @@
 use std::{net::SocketAddr, time::Duration};
 
 use anyhow::{Context, Result, bail, ensure};
-use intralink_core::input::{
-    ALPN, Event, HELLO, MAX_EVENTS_PER_SECOND, MAX_SECONDS, READY, RECORD_BYTES, Record, State,
+use intralink_core::{
+    display_geometry::{DISPLAY_BYTES, Display},
+    input::{
+        ALPN, Event, GEOMETRY_ALPN, GEOMETRY_HELLO, GEOMETRY_READY, HELLO, MAX_EVENTS_PER_SECOND,
+        MAX_SECONDS, READY, RECORD_BYTES, Record, State,
+    },
 };
 use iroh::{
     Endpoint, EndpointAddr, EndpointId, SecretKey,
@@ -31,6 +35,10 @@ pub async fn bind_input(secret: SecretKey, address: SocketAddr) -> Result<Endpoi
     bind_for_protocol(secret, address, Some(ALPN)).await
 }
 
+pub async fn bind_input_geometry(secret: SecretKey, address: SocketAddr) -> Result<Endpoint> {
+    bind_for_protocol(secret, address, Some(GEOMETRY_ALPN)).await
+}
+
 fn remaining(deadline: Instant) -> Result<Duration> {
     let left = deadline.saturating_duration_since(Instant::now());
     ensure!(!left.is_zero(), "Input session expired");
@@ -46,6 +54,29 @@ pub async fn serve_input(
     seconds: u16,
     sink: mpsc::Sender<Delivery>,
 ) -> Result<u32> {
+    serve(endpoint, approved, seconds, sink, None).await
+}
+
+/// The host must obtain and approve its current display metadata locally.
+/// Authentication is the same pinned QUIC identity, not the metadata itself.
+pub async fn serve_input_geometry(
+    endpoint: &Endpoint,
+    approved: EndpointId,
+    seconds: u16,
+    sink: mpsc::Sender<Delivery>,
+    display: Display,
+) -> Result<u32> {
+    ensure!(display.encode().is_some(), "Invalid local display geometry");
+    serve(endpoint, approved, seconds, sink, Some(display)).await
+}
+
+async fn serve(
+    endpoint: &Endpoint,
+    approved: EndpointId,
+    seconds: u16,
+    sink: mpsc::Sender<Delivery>,
+    display: Option<Display>,
+) -> Result<u32> {
     ensure!(
         (1..=MAX_SECONDS).contains(&seconds),
         "Invalid input session duration"
@@ -58,7 +89,7 @@ pub async fn serve_input(
         connection.close(1u32.into(), b"input peer not approved");
         bail!("Input peer not approved");
     }
-    let result = receive(&connection, seconds, sink).await;
+    let result = receive(&connection, seconds, sink, display).await;
     if result.is_err() {
         connection.close(2u32.into(), b"input session stopped");
     }
@@ -69,14 +100,24 @@ async fn receive(
     connection: &Connection,
     seconds: u16,
     sink: mpsc::Sender<Delivery>,
+    display: Option<Display>,
 ) -> Result<u32> {
     let (mut tx, mut rx) = timeout(IO_LIMIT, connection.accept_bi()).await??;
     timeout(IO_LIMIT, async {
         let mut hello = [0; HELLO.len()];
         rx.read_exact(&mut hello).await?;
-        ensure!(&hello == HELLO, "Invalid input handshake");
-        tx.write_all(READY).await?;
+        let (expected, ready) = if display.is_some() {
+            (GEOMETRY_HELLO, GEOMETRY_READY)
+        } else {
+            (HELLO, READY)
+        };
+        ensure!(&hello == expected, "Invalid input handshake");
+        tx.write_all(ready).await?;
         tx.write_all(&seconds.to_be_bytes()).await?;
+        if let Some(display) = display {
+            tx.write_all(&display.encode().context("Invalid display geometry")?)
+                .await?;
+        }
         Ok::<(), anyhow::Error>(())
     })
     .await??;
@@ -140,6 +181,7 @@ pub struct InputConnection {
     state: State,
     deadline: Instant,
     closed: bool,
+    display: Option<Display>,
 }
 
 impl InputConnection {
@@ -148,23 +190,45 @@ impl InputConnection {
         expected: EndpointId,
         candidates: &[SocketAddr],
     ) -> Result<Self> {
+        Self::connect_mode(endpoint, expected, candidates, false).await
+    }
+
+    pub async fn connect_geometry(
+        endpoint: &Endpoint,
+        expected: EndpointId,
+        candidates: &[SocketAddr],
+    ) -> Result<Self> {
+        Self::connect_mode(endpoint, expected, candidates, true).await
+    }
+
+    async fn connect_mode(
+        endpoint: &Endpoint,
+        expected: EndpointId,
+        candidates: &[SocketAddr],
+        geometry: bool,
+    ) -> Result<Self> {
         let candidates = direct_candidates(candidates)?;
         let target = candidates
             .into_iter()
             .fold(EndpointAddr::new(expected), |target, addr| {
                 target.with_ip_addr(addr)
             });
-        let connection = timeout(HANDSHAKE_LIMIT, endpoint.connect(target, ALPN)).await??;
+        let (alpn, hello, ready) = if geometry {
+            (GEOMETRY_ALPN, GEOMETRY_HELLO, GEOMETRY_READY)
+        } else {
+            (ALPN, HELLO, READY)
+        };
+        let connection = timeout(HANDSHAKE_LIMIT, endpoint.connect(target, alpn)).await??;
         ensure!(
             connection.remote_id() == expected,
             "Input host identity mismatch"
         );
         let handshake = timeout(IO_LIMIT, async {
             let (mut tx, mut rx) = connection.open_bi().await?;
-            tx.write_all(HELLO).await?;
+            tx.write_all(hello).await?;
             let mut response = [0; READY.len()];
             rx.read_exact(&mut response).await?;
-            ensure!(&response == READY, "Invalid input acceptance");
+            ensure!(&response == ready, "Invalid input acceptance");
             let mut seconds = [0; 2];
             rx.read_exact(&mut seconds).await?;
             let seconds = u16::from_be_bytes(seconds);
@@ -172,10 +236,17 @@ impl InputConnection {
                 (1..=MAX_SECONDS).contains(&seconds),
                 "Invalid host input duration"
             );
-            Ok::<_, anyhow::Error>((tx, rx, seconds))
+            let display = if geometry {
+                let mut bytes = [0; DISPLAY_BYTES];
+                rx.read_exact(&mut bytes).await?;
+                Some(Display::decode(&bytes).context("Invalid authenticated display geometry")?)
+            } else {
+                None
+            };
+            Ok::<_, anyhow::Error>((tx, rx, seconds, display))
         })
         .await;
-        let (tx, rx, seconds) = match handshake {
+        let (tx, rx, seconds, display) = match handshake {
             Ok(Ok(result)) => result,
             Ok(Err(error)) => {
                 connection.close(2u32.into(), b"input handshake failed");
@@ -193,7 +264,13 @@ impl InputConnection {
             state: State::default(),
             deadline: Instant::now() + Duration::from_secs(u64::from(seconds)),
             closed: false,
+            display,
         })
+    }
+
+    /// Session-scoped metadata from the pinned host; not a reusable grant.
+    pub fn display(&self) -> Option<Display> {
+        self.display
     }
 
     pub fn active(&self) -> bool {

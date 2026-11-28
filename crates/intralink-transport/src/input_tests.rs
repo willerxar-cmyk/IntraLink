@@ -10,7 +10,17 @@ struct Host {
 }
 
 async fn host(controller: EndpointId) -> Result<Host> {
-    let endpoint = bind_input(SecretKey::generate(), "127.0.0.1:0".parse()?).await?;
+    host_mode(controller, None).await
+}
+
+async fn host_mode(controller: EndpointId, display: Option<Display>) -> Result<Host> {
+    let secret = SecretKey::generate();
+    let address = "127.0.0.1:0".parse()?;
+    let endpoint = if display.is_some() {
+        bind_input_geometry(secret, address).await?
+    } else {
+        bind_input(secret, address).await?
+    };
     let address = endpoint
         .bound_sockets()
         .into_iter()
@@ -18,7 +28,12 @@ async fn host(controller: EndpointId) -> Result<Host> {
         .context("No loopback")?;
     let (tx, mut rx) = mpsc::channel::<Delivery>(1);
     let listener = endpoint.clone();
-    let transport = tokio::spawn(async move { serve_input(&listener, controller, 20, tx).await });
+    let transport = tokio::spawn(async move {
+        match display {
+            Some(display) => serve_input_geometry(&listener, controller, 20, tx, display).await,
+            None => serve_input(&listener, controller, 20, tx).await,
+        }
+    });
     let consumer = tokio::spawn(async move {
         let mut state = State::default();
         let mut events = Vec::new();
@@ -42,6 +57,146 @@ async fn host(controller: EndpointId) -> Result<Host> {
         transport,
         consumer,
     })
+}
+
+#[tokio::test]
+async fn geometry_handshake_is_session_scoped_and_legacy_is_unchanged() -> Result<()> {
+    let controller = crate::bind_workspace_controller(SecretKey::generate()).await?;
+    let display = Display {
+        width: 1080,
+        height: 1920,
+        scale: 125,
+        rotation: 90,
+    };
+    let legacy = host(controller.id()).await?;
+    let geometry = host_mode(controller.id(), Some(display)).await?;
+    let mut old =
+        InputConnection::connect(&controller, legacy.endpoint.id(), &[legacy.address]).await?;
+    assert_eq!(old.display(), None);
+    let mut new =
+        InputConnection::connect_geometry(&controller, geometry.endpoint.id(), &[geometry.address])
+            .await?;
+    assert_eq!(new.display(), Some(display));
+    assert!(!new.active());
+    assert!(new.send(Event::Move { x: 1, y: 2 }).await.is_err());
+    new.send(Event::Heartbeat).await?;
+    new.send(Event::Activate).await?;
+    new.send(Event::Move { x: 32768, y: 0 }).await?;
+    new.send(Event::Deactivate).await?;
+    new.send(Event::End).await?;
+    old.send(Event::End).await?;
+    drop(new);
+    drop(old);
+    assert_eq!(legacy.transport.await??, 1);
+    assert_eq!(legacy.consumer.await??, vec![Event::End]);
+    assert_eq!(geometry.transport.await??, 5);
+    assert_eq!(
+        geometry.consumer.await??,
+        vec![
+            Event::Heartbeat,
+            Event::Activate,
+            Event::Move { x: 32768, y: 0 },
+            Event::Deactivate,
+            Event::End
+        ]
+    );
+    legacy.endpoint.close().await;
+    geometry.endpoint.close().await;
+    controller.close().await;
+    Ok(())
+}
+
+#[tokio::test]
+async fn geometry_handshake_rejects_wrong_version_and_malformed_metadata() -> Result<()> {
+    let controller = crate::bind_workspace_controller(SecretKey::generate()).await?;
+    for payload in [vec![0u8; DISPLAY_BYTES], vec![1u8; DISPLAY_BYTES - 1]] {
+        let listener = bind_input_geometry(SecretKey::generate(), "127.0.0.1:0".parse()?).await?;
+        let address = listener
+            .bound_sockets()
+            .into_iter()
+            .find(SocketAddr::is_ipv4)
+            .context("Missing loopback")?;
+        let server = listener.clone();
+        let expected = controller.id();
+        let task = tokio::spawn(async move {
+            let connection = timeout(IO_LIMIT, server.accept())
+                .await?
+                .context("Missing connection")?
+                .await?;
+            ensure!(connection.remote_id() == expected, "Wrong test peer");
+            let (mut tx, mut rx) = connection.accept_bi().await?;
+            let mut hello = [0; 8];
+            rx.read_exact(&mut hello).await?;
+            ensure!(&hello == GEOMETRY_HELLO, "Unexpected hello");
+            tx.write_all(GEOMETRY_READY).await?;
+            tx.write_all(&20u16.to_be_bytes()).await?;
+            tx.write_all(&payload).await?;
+            tx.finish()?;
+            let _ = timeout(IO_LIMIT, connection.closed()).await;
+            Ok::<(), anyhow::Error>(())
+        });
+        assert!(
+            InputConnection::connect_geometry(&controller, listener.id(), &[address])
+                .await
+                .is_err()
+        );
+        task.await??;
+        listener.close().await;
+    }
+    // A legacy endpoint cannot be used as a geometry-aware listener.
+    let legacy = bind_input(SecretKey::generate(), "127.0.0.1:0".parse()?).await?;
+    let address = legacy
+        .bound_sockets()
+        .into_iter()
+        .find(SocketAddr::is_ipv4)
+        .context("Missing loopback")?;
+    assert!(
+        InputConnection::connect_geometry(&controller, legacy.id(), &[address])
+            .await
+            .is_err()
+    );
+    legacy.close().await;
+    controller.close().await;
+    Ok(())
+}
+
+#[tokio::test]
+async fn geometry_metadata_is_not_released_to_an_unapproved_identity() -> Result<()> {
+    let controller = crate::bind_workspace_controller(SecretKey::generate()).await?;
+    let listener = bind_input_geometry(SecretKey::generate(), "127.0.0.1:0".parse()?).await?;
+    let address = listener
+        .bound_sockets()
+        .into_iter()
+        .find(SocketAddr::is_ipv4)
+        .context("Missing loopback")?;
+    let (tx, mut rx) = mpsc::channel(1);
+    let server = listener.clone();
+    let approved = SecretKey::generate().public();
+    let task = tokio::spawn(async move {
+        serve_input_geometry(
+            &server,
+            approved,
+            20,
+            tx,
+            Display {
+                width: 1920,
+                height: 1080,
+                scale: 100,
+                rotation: 0,
+            },
+        )
+        .await
+    });
+    assert!(
+        InputConnection::connect_geometry(&controller, listener.id(), &[address])
+            .await
+            .is_err()
+    );
+    assert!(task.await?.is_err());
+    assert!(rx.recv().await.is_none());
+    listener.close().await;
+    controller.close().await;
+    Ok(())
 }
 
 #[tokio::test]
@@ -121,41 +276,71 @@ async fn multi_host(count: usize) -> Result<()> {
 
 #[tokio::test]
 async fn real_quic_topology_transfers_keep_exact_entry_and_one_active_owner() -> Result<()> {
-    use intralink_core::screen_topology::{Screen, Topology};
-    let topology = Topology::new(&[
-        Screen {
-            id: 0,
-            x: 0,
-            y: 0,
-            width: 1920,
-            height: 1080,
+    topology_transfers(false).await
+}
+
+#[tokio::test]
+async fn real_quic_authenticated_displays_drive_topology_transfers() -> Result<()> {
+    topology_transfers(true).await
+}
+
+async fn topology_transfers(authenticated: bool) -> Result<()> {
+    use intralink_core::display_geometry::{Placement, topology};
+    let base = Display {
+        width: 1920,
+        height: 1080,
+        scale: 100,
+        rotation: 0,
+    };
+    let actual = [
+        Display {
+            width: 1080,
+            height: 1920,
+            scale: 125,
+            rotation: 90,
         },
-        Screen {
-            id: 1,
-            x: 1920,
-            y: 200,
-            width: 864,
-            height: 1536,
-        },
-        Screen {
-            id: 2,
-            x: 2784,
-            y: 300,
+        Display {
             width: 1280,
             height: 720,
+            scale: 100,
+            rotation: 0,
         },
-    ])
-    .context("Mixed logical topology")?;
+    ];
     let controller = crate::bind_workspace_controller(SecretKey::generate()).await?;
     let mut hosts = Vec::new();
     let mut sessions = Vec::new();
-    for _ in 0..2 {
-        let host = host(controller.id()).await?;
-        sessions.push(
-            InputConnection::connect(&controller, host.endpoint.id(), &[host.address]).await?,
-        );
+    let mut placements = vec![Placement {
+        id: 0,
+        x: 0,
+        y: 0,
+        display: base,
+    }];
+    let mut x = i32::from(base.logical().unwrap().0);
+    for (index, display) in actual.into_iter().enumerate() {
+        let host = host_mode(controller.id(), authenticated.then_some(display)).await?;
+        let session = if authenticated {
+            InputConnection::connect_geometry(&controller, host.endpoint.id(), &[host.address])
+                .await?
+        } else {
+            InputConnection::connect(&controller, host.endpoint.id(), &[host.address]).await?
+        };
+        assert_eq!(session.display(), authenticated.then_some(display));
+        let received = if authenticated {
+            session.display().context("Missing authenticated display")?
+        } else {
+            display
+        };
+        placements.push(Placement {
+            id: (index + 1) as u8,
+            x,
+            y: 200 + index as i32 * 100,
+            display: received,
+        });
+        x += i32::from(received.logical().unwrap().0);
         hosts.push(host);
+        sessions.push(session);
     }
+    let topology = topology(&placements).context("Mixed logical topology")?;
     let mut expected = [Vec::new(), Vec::new()];
     let mut focus = Focus::default();
     for (source, from, to) in [

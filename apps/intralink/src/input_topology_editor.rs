@@ -1,6 +1,5 @@
-//! Offline geometric topology editor. No endpoint, listener or capture.
+//! Geometric topology editor. It never owns an input endpoint or capture.
 use super::{
-    portal::Mode,
     topology_canvas::{self as ui, Cards, EDIT_AREA, Projection},
     topology_store::{self, Config, Store},
 };
@@ -91,45 +90,31 @@ struct Editor {
     editing: Option<usize>,
     replace: bool,
     status: &'static str,
+    authenticated: bool,
 }
 
 impl Editor {
     fn fresh(store: &Store) -> Self {
-        // Clearly labelled placeholder geometry only. It cannot be saved
-        // until every CLIENT is explicitly confirmed by Apply.
-        let base = store.observed().display;
-        let mut x = i32::from(base.logical().expect("validated BASE").0);
-        let mut placements = vec![Placement {
-            id: 0,
-            x: 0,
-            y: 0,
-            display: base,
-        }];
-        for i in 1..store.slots() {
-            placements.push(Placement {
-                id: i as u8,
-                x,
-                y: 0,
-                display: Display {
-                    width: 1280,
-                    height: 720,
-                    scale: 100,
-                    rotation: 0,
-                },
-            });
-            x += 1280;
-        }
+        let config = store.defaults();
+        let authenticated = store.authenticated();
+        let confirmed = if authenticated {
+            (1 << config.placements.len()) - 1
+        } else {
+            1
+        };
         let mut editor = Self {
-            config: Config {
-                placements,
-                portal: Mode::Full,
-            },
-            confirmed: 1,
+            config,
+            confirmed,
             selected: 1,
             fields: std::array::from_fn(|_| String::new()),
             editing: None,
             replace: false,
-            status: "CONFIRM THE ACTUAL CLIENT DIMENSIONS",
+            status: if authenticated {
+                "CLIENT DIMENSIONS RECEIVED / ARRANGE AND SAVE"
+            } else {
+                "CONFIRM THE ACTUAL CLIENT DIMENSIONS"
+            },
+            authenticated,
         };
         editor.select(1);
         editor
@@ -186,6 +171,11 @@ impl Editor {
                 rotation: self.fields[3].parse()?,
             },
         };
+        ensure!(
+            !self.authenticated
+                || p.display == self.config.placements[usize::from(self.selected)].display,
+            "Authenticated geometry is read-only"
+        );
         let mut trial = self.config.placements.clone();
         trial[usize::from(self.selected)] = p;
         let t = display_geometry::topology(&trial)
@@ -296,7 +286,11 @@ impl Editor {
                 }
             }
             Key::Tab => {
-                self.editing = Some((index + 1) % 6);
+                self.editing = Some(if self.authenticated {
+                    4 + (index + 1) % 2
+                } else {
+                    (index + 1) % 6
+                });
                 self.replace = true;
             }
             _ => return false,
@@ -316,7 +310,7 @@ impl Editor {
         }
         if self.selected != 0 {
             for i in 0..6 {
-                if field(i).contains(at.0, at.1) {
+                if (!self.authenticated || i >= 4) && field(i).contains(at.0, at.1) {
                     return Some(Action::Field(i));
                 }
             }
@@ -357,7 +351,11 @@ impl Editor {
             canvas,
             16,
             38,
-            "DRAG CLIENTS TO TOUCH EDGES / CONFIGURE EXACT PIXELS AND SCALE",
+            if self.authenticated {
+                "AUTHENTICATED CLIENT DISPLAY DATA / DRAG TO ARRANGE"
+            } else {
+                "DRAG CLIENTS TO TOUCH EDGES / CONFIGURE EXACT PIXELS AND SCALE"
+            },
             1,
             ui::MUTED,
         );
@@ -393,7 +391,9 @@ impl Editor {
             overview::fill(
                 canvas,
                 r,
-                if self.editing == Some(i) {
+                if self.selected == 0 || (self.authenticated && i < 4) {
+                    ui::DISABLED
+                } else if self.editing == Some(i) {
                     0x174c40
                 } else {
                     ui::CARD
@@ -404,7 +404,16 @@ impl Editor {
         if self.selected == 0 {
             ui::label(canvas, 640, 366, "BASE MEASURED / LOCKED", 2, ui::ACCENT);
         } else {
-            ui::button(canvas, APPLY, "APPLY CLIENT", true);
+            ui::button(
+                canvas,
+                APPLY,
+                if self.authenticated {
+                    "APPLY POSITION"
+                } else {
+                    "APPLY CLIENT"
+                },
+                true,
+            );
         }
         ui::label(
             canvas,
@@ -487,10 +496,22 @@ fn draw_ghost(canvas: &mut [u32], rect: Rect) {
 /// Explicit Save writes the identity-bound local preference. Escape, cancel,
 /// focus loss during a click, or invalid/unconfirmed geometry never saves.
 pub(super) fn edit(store: &Store, names: &[&str]) -> Result<Config> {
+    edit_checked(store, names, || Ok(()))
+}
+
+pub(super) fn edit_checked(
+    store: &Store,
+    names: &[&str],
+    check: impl Fn() -> Result<()>,
+) -> Result<Config> {
     ensure!(names.len() == store.slots(), "Missing topology names");
     let mut editor = Editor::load(store);
     let mut window = super::window(
-        "IntraLink | Configure displays (offline)",
+        if store.authenticated() {
+            "IntraLink | Review authenticated displays (input SAFE)"
+        } else {
+            "IntraLink | Configure displays (offline)"
+        },
         WIDTH,
         HEIGHT,
         false,
@@ -506,7 +527,8 @@ pub(super) fn edit(store: &Store, names: &[&str]) -> Result<Config> {
     let mut projection = Projection::new(&t, EDIT_AREA).context("Editor topology too small")?;
     let mut geometry_dirty = false;
     let mut ghost = None;
-    while window.is_open() && !window.is_key_down(Key::Escape) {
+    while window.is_open() && !window.is_key_down(Key::Escape) && !window.is_key_down(Key::F12) {
+        check()?;
         if geometry_dirty {
             t = display_geometry::topology(&editor.config.placements)
                 .context("Invalid editor state")?;
@@ -525,7 +547,7 @@ pub(super) fn edit(store: &Store, names: &[&str]) -> Result<Config> {
         } else {
             window.update();
         }
-        if !window.is_open() || window.is_key_down(Key::Escape) {
+        if !window.is_open() || window.is_key_down(Key::Escape) || window.is_key_down(Key::F12) {
             break;
         }
         let point = super::pad::pointer(&window);
@@ -604,6 +626,7 @@ pub(super) fn edit(store: &Store, names: &[&str]) -> Result<Config> {
                         } else if topology_store::observe_base()? != store.observed() {
                             anyhow::bail!("BASE monitor changed; reopen topology editor");
                         } else {
+                            check()?;
                             store.save(&editor.config)?;
                             return Ok(editor.config);
                         }
@@ -649,106 +672,5 @@ pub(super) fn edit(store: &Store, names: &[&str]) -> Result<Config> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use iroh::SecretKey;
-    #[test]
-    #[ignore = "requires local native graphical desktop; generated peer only"]
-    fn native_topology_editor_observes_base_and_presents_generated_layout() -> Result<()> {
-        let observed = topology_store::observe_base()?;
-        let dir = tempfile::tempdir()?;
-        let id = |n: u8| SecretKey::from_bytes(&[n; 32]).public();
-        let store = Store::new(&dir.path().join("test"), id(1), vec![id(2)], observed)?;
-        let mut editor = Editor::fresh(&store);
-        let mut canvas = vec![0; WIDTH * HEIGHT];
-        let mut window = super::super::window(
-            "IntraLink | Generated geometry test",
-            WIDTH,
-            HEIGHT,
-            false,
-            ui::BG,
-        )?;
-        window.set_target_fps(30);
-        for confirmed in [false, true] {
-            if confirmed {
-                // Generated portrait CLIENT fixture; only BASE is observed.
-                editor.fields[0] = "1080".into();
-                editor.fields[1] = "1920".into();
-                editor.fields[2] = "125".into();
-                editor.fields[3] = "90".into();
-                editor.fields[4] = "-864".into();
-                editor.fields[5] = "0".into();
-                editor.apply()?;
-                assert!(editor.save_ready());
-                store.save(&editor.config)?;
-                assert!(store.load()?.is_some());
-            }
-            let topology =
-                display_geometry::topology(&editor.config.placements).context("Test topology")?;
-            let projection = Projection::new(&topology, EDIT_AREA).context("Test projection")?;
-            editor.render(
-                &mut canvas,
-                &["BASE", "GENERATED CLIENT"],
-                &topology,
-                projection,
-            );
-            for _ in 0..8 {
-                window
-                    .update_with_buffer(&canvas, WIDTH, HEIGHT)
-                    .map_err(|e| anyhow::anyhow!("{e}"))?;
-                assert!(window.is_open());
-            }
-        }
-        println!(
-            "NATIVE_TOPOLOGY_PASS base={}x{} scale={} rotation={} submissions=16; generated CLIENT only",
-            observed.display.width,
-            observed.display.height,
-            observed.display.scale,
-            observed.display.rotation
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn placeholders_cannot_be_saved_and_edits_are_atomic() -> Result<()> {
-        let dir = tempfile::tempdir()?;
-        let id = |n: u8| SecretKey::from_bytes(&[n; 32]).public();
-        let store = Store::new(
-            &dir.path().join("test"),
-            id(1),
-            vec![id(2)],
-            topology_store::Observed {
-                monitor: 1,
-                display: Display {
-                    width: 1920,
-                    height: 1080,
-                    scale: 100,
-                    rotation: 0,
-                },
-            },
-        )?;
-        let mut e = Editor::fresh(&store);
-        assert!(!e.save_ready());
-        e.fields[0] = "1080".into();
-        e.fields[1] = "1920".into();
-        e.fields[2] = "125".into();
-        e.fields[3] = "90".into();
-        e.fields[4] = "-864".into();
-        e.fields[5] = "100".into();
-        e.apply()?;
-        assert!(e.save_ready());
-        let previous = e.config.placements[1];
-        e.fields[4] = "0".into();
-        assert!(e.apply().is_err());
-        assert_eq!(e.config.placements[1], previous);
-        e.select(1);
-        e.editing = Some(0);
-        e.replace = true;
-        e.key(Key::Key1);
-        assert!(!e.save_ready());
-        e.select(0);
-        assert!(e.apply().is_err());
-        assert!(store.load()?.is_none());
-        Ok(())
-    }
-}
+#[path = "input_topology_editor_tests.rs"]
+mod tests;

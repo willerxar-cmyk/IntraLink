@@ -25,6 +25,8 @@ pub enum Protocol {
         all(feature = "input-x11-preview", target_os = "linux")
     ))]
     Input,
+    #[cfg(all(feature = "input-preview", target_os = "windows"))]
+    InputGeometry,
 }
 
 impl Protocol {
@@ -36,6 +38,8 @@ impl Protocol {
                 all(feature = "input-x11-preview", target_os = "linux")
             ))]
             Self::Input => "input-1",
+            #[cfg(all(feature = "input-preview", target_os = "windows"))]
+            Self::InputGeometry => "input-2",
         }
     }
 }
@@ -294,4 +298,18 @@ mod tests {
         assert_eq!(collector.hints[&id], vec![addr]);
         Ok(())
     }
+}
+
+#[cfg(all(test, target_os = "windows", feature = "input-preview"))]
+#[test]
+fn geometry_discovery_is_capability_specific_and_never_uses_input_1() -> Result<()> {
+    let id = SecretKey::from_bytes(&[5; 32]).public();
+    let text = id.to_string();
+    let mut c = Collector::new(&[id], Protocol::InputGeometry)?;
+    let address: SocketAddr = "192.168.1.3:45100".parse()?;
+    c.collect(Some(&text), Some("input-1"), [address].into_iter());
+    assert!(c.hints.is_empty());
+    c.collect(Some(&text), Some("input-2"), [address].into_iter());
+    assert_eq!(c.hints[&id], vec![address]);
+    Ok(())
 }

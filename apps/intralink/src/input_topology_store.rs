@@ -18,14 +18,14 @@ const MAGIC: &str = "ILGEOM1";
 const MAX_BYTES: u64 = 3072;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Observed {
+pub(crate) struct Observed {
     pub monitor: u32,
     pub display: Display,
 }
 
 /// Read only metadata for the single primary monitor, never capture pixels.
 /// Dimensions and scale are the OS/backend's reported values.
-pub(super) fn observe_base() -> Result<Observed> {
+pub(crate) fn observe_base() -> Result<Observed> {
     let monitors = xcap::Monitor::all().map_err(|e| anyhow::anyhow!("Monitor enumeration: {e}"))?;
     let mut selected = None;
     for monitor in monitors {
@@ -85,6 +85,7 @@ pub(super) struct Store {
     path: PathBuf,
     identities: Vec<EndpointId>, // BASE first; slot order is not persistence authority
     observed: Observed,
+    displays: Option<Vec<Display>>,
 }
 
 impl Store {
@@ -121,6 +122,82 @@ impl Store {
             path: parent.join(filename),
             identities,
             observed,
+            displays: None,
+        })
+    }
+
+    /// Only the current authenticated input/2 session can supply this list.
+    /// It is never restored as trusted from the preference file.
+    pub fn with_displays(mut self, displays: Vec<Display>) -> Result<Self> {
+        ensure!(
+            displays.len() + 1 == self.slots(),
+            "Missing authenticated CLIENT geometry"
+        );
+        ensure!(
+            displays.iter().all(|display| display.logical().is_some()),
+            "Invalid authenticated CLIENT geometry"
+        );
+        self.displays = Some(displays);
+        self.validate(&self.defaults())?;
+        Ok(self)
+    }
+
+    pub fn authenticated(&self) -> bool {
+        self.displays.is_some()
+    }
+
+    pub fn defaults(&self) -> Config {
+        let base = self.observed.display;
+        let mut placements = vec![Placement {
+            id: 0,
+            x: 0,
+            y: 0,
+            display: base,
+        }];
+        let mut right = i32::from(base.logical().expect("validated BASE").0);
+        let mut left = 0;
+        for index in 1..self.slots() {
+            let display = self.displays.as_ref().map_or(
+                Display {
+                    width: 1280,
+                    height: 720,
+                    scale: 100,
+                    rotation: 0,
+                },
+                |values| values[index - 1],
+            );
+            let width = i32::from(display.logical().expect("validated display").0);
+            // Alternating sides keeps eight maximum-size screens inside
+            // the signed logical coordinate bounds.
+            let x = if self.displays.is_none() || index % 2 == 1 {
+                let x = right;
+                right += width;
+                x
+            } else {
+                left -= width;
+                left
+            };
+            placements.push(Placement {
+                id: index as u8,
+                x,
+                y: 0,
+                display,
+            });
+        }
+        Config {
+            placements,
+            portal: Mode::Full,
+        }
+    }
+
+    fn matches_displays(&self, config: &Config) -> bool {
+        self.displays.as_ref().is_none_or(|displays| {
+            config
+                .placements
+                .iter()
+                .skip(1)
+                .map(|p| p.display)
+                .eq(displays.iter().copied())
         })
     }
 
@@ -246,6 +323,9 @@ impl Store {
             })
             .collect::<Vec<_>>();
         let config = Config { placements, portal };
+        if !self.matches_displays(&config) {
+            return Ok(None);
+        }
         self.validate(&config)?;
         Ok(Some(config))
     }
@@ -258,6 +338,10 @@ impl Store {
         ensure!(
             config.placements[0].display == self.observed.display,
             "BASE monitor geometry changed"
+        );
+        ensure!(
+            self.matches_displays(config),
+            "Authenticated CLIENT geometry changed; review again"
         );
         let topology = display_geometry::topology(&config.placements)
             .context("Invalid or overlapping topology")?;
@@ -331,6 +415,38 @@ mod tests {
             scale,
             rotation,
         }
+    }
+
+    #[test]
+    fn authenticated_dimensions_override_stale_local_geometry_only_after_explicit_save()
+    -> Result<()> {
+        let dir = tempfile::tempdir()?;
+        let path = dir.path().join("test.vault");
+        let base = Observed {
+            monitor: 1,
+            display: display(1920, 1080, 100, 0),
+        };
+        let old = Store::new(&path, id(1), vec![id(2), id(3)], base)?;
+        old.save(&old.defaults())?;
+        let original = fs::read(&old.path)?;
+        let displays = vec![display(1080, 1920, 125, 90), display(2560, 1440, 150, 0)];
+        let store =
+            Store::new(&path, id(1), vec![id(2), id(3)], base)?.with_displays(displays.clone())?;
+        assert!(store.authenticated());
+        assert!(store.load()?.is_none());
+        assert_eq!(fs::read(&old.path)?, original);
+        assert!(store.save(&old.defaults()).is_err());
+        let config = store.defaults();
+        assert_eq!(config.placements[1].display, displays[0]);
+        assert_eq!(config.placements[2].display, displays[1]);
+        store.save(&config)?;
+        let reordered = Store::new(&path, id(1), vec![id(3), id(2)], base)?
+            .with_displays(vec![displays[1], displays[0]])?
+            .load()?
+            .unwrap();
+        assert_eq!(reordered.placements[1].x, config.placements[2].x);
+        assert_eq!(reordered.placements[2].display, displays[0]);
+        Ok(())
     }
 
     #[test]

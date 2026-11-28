@@ -16,7 +16,36 @@ pub struct Display {
     pub rotation: u16,
 }
 
+pub const DISPLAY_BYTES: usize = 8;
+
 impl Display {
+    /// Canonical fixed-size record: four big-endian u16 values in the
+    /// already oriented pixel coordinate space. No strings or allocation.
+    pub fn encode(self) -> Option<[u8; DISPLAY_BYTES]> {
+        self.logical()?;
+        let mut bytes = [0; DISPLAY_BYTES];
+        for (chunk, value) in
+            bytes
+                .chunks_exact_mut(2)
+                .zip([self.width, self.height, self.scale, self.rotation])
+        {
+            chunk.copy_from_slice(&value.to_be_bytes());
+        }
+        Some(bytes)
+    }
+
+    pub fn decode(bytes: &[u8]) -> Option<Self> {
+        let bytes: [u8; DISPLAY_BYTES] = bytes.try_into().ok()?;
+        let display = Self {
+            width: u16::from_be_bytes([bytes[0], bytes[1]]),
+            height: u16::from_be_bytes([bytes[2], bytes[3]]),
+            scale: u16::from_be_bytes([bytes[4], bytes[5]]),
+            rotation: u16::from_be_bytes([bytes[6], bytes[7]]),
+        };
+        display.logical()?;
+        Some(display)
+    }
+
     pub fn logical(self) -> Option<(u16, u16)> {
         if !(2..=16384).contains(&self.width)
             || !(2..=16384).contains(&self.height)
@@ -239,6 +268,37 @@ mod tests {
                 rotation,
             },
         }
+    }
+
+    #[test]
+    fn fixed_display_record_rejects_truncation_and_invalid_geometry() {
+        let display = Display {
+            width: 3840,
+            height: 2160,
+            scale: 175,
+            rotation: 90,
+        };
+        let encoded = display.encode().unwrap();
+        assert_eq!(encoded, [15, 0, 8, 112, 0, 175, 0, 90]);
+        assert_eq!(Display::decode(&encoded), Some(display));
+        for length in 0..encoded.len() {
+            assert_eq!(Display::decode(&encoded[..length]), None);
+        }
+        assert!(Display::decode(&[0; 9]).is_none());
+        for (index, value) in [(0, 0), (2, 0), (4, 0), (6, 45)] {
+            let mut changed = encoded;
+            changed[index..index + 2].copy_from_slice(&u16::to_be_bytes(value));
+            assert!(Display::decode(&changed).is_none());
+        }
+        assert!(
+            Display {
+                width: 16384,
+                scale: 50,
+                ..display
+            }
+            .encode()
+            .is_none()
+        );
     }
 
     #[test]

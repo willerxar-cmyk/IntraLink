@@ -321,7 +321,7 @@ fn render(
 pub(crate) enum Kind {
     Screen,
     #[cfg(all(target_os = "windows", feature = "input-preview"))]
-    Input,
+    Input(Protocol),
 }
 
 impl Kind {
@@ -329,10 +329,10 @@ impl Kind {
         match self {
             Self::Screen => None,
             #[cfg(all(target_os = "windows", feature = "input-preview"))]
-            Self::Input => {
+            Self::Input(protocol) => {
                 let ids = _devices.iter().map(|device| device.id).collect::<Vec<_>>();
                 Some(tokio::spawn(async move {
-                    discovery::find_many(&ids, Protocol::Input).await
+                    discovery::find_many(&ids, protocol).await
                 }))
             }
         }

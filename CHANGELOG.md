@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - authenticated input/2 display geometry
+
+- Add an explicit geometry handshake and distinct LAN announcement tag; retain the exact input/1 wire and authorization boundary.
+- Populate read-only CLIENT dimensions from current pinned sessions, require every selected host, validate saved topology against received geometry, and cancel on detected monitor changes.
+- Preserve offline manual geometry and prior candidates. Qualify malformed metadata, version isolation, identity pinning and actual QUIC handoffs.
+
 ## Unreleased - DPI-aware topology and geometry pad
 
 - Add bounded oriented pixel geometry, effective scale, proportional viewport, exact shared-edge tracing and snap validation.

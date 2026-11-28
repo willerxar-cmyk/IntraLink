@@ -470,3 +470,43 @@ fn topology_editor_and_geometry_workspace_reject_unattended_or_conflicting_modes
         }
     }
 }
+
+#[cfg(all(target_os = "windows", feature = "input-preview"))]
+#[test]
+fn display_negotiation_requires_explicit_geometry_and_local_interaction() {
+    assert!(stdout(&["input", "host", "--help"]).contains("--display-geometry"));
+    assert!(stdout(&["input", "workspace", "--help"]).contains("--detect-displays"));
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("profile.vault");
+    for args in [
+        vec![
+            "input",
+            "host",
+            "--bind",
+            "192.168.1.20:45100",
+            "--controller",
+            "base",
+            "--display-geometry",
+        ],
+        vec![
+            "input",
+            "workspace",
+            "--choose",
+            "--geometry",
+            "--detect-displays",
+        ],
+        vec!["input", "workspace", "--choose", "--detect-displays"],
+    ] {
+        let result = Command::new(env!("CARGO_BIN_EXE_intralink"))
+            .arg("--vault")
+            .arg(&path)
+            .args(&args)
+            .output()
+            .unwrap();
+        assert!(!result.status.success(), "{args:?}");
+        assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 0);
+        if args.contains(&"--geometry") || args.contains(&"--display-geometry") {
+            assert!(String::from_utf8_lossy(&result.stderr).contains("local interactive terminal"));
+        }
+    }
+}
