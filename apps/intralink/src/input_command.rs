@@ -73,6 +73,14 @@ pub enum Action {
         #[cfg(target_os = "windows")]
         #[arg(long, requires = "detect_displays")]
         desktop_edges: bool,
+        /// Foreground-only relative Raw Input mouse motion (experimental).
+        #[cfg(target_os = "windows")]
+        #[arg(long, requires = "desktop_edges")]
+        raw_motion: bool,
+        /// Use a 640x360 physical-pixel control panel instead of covering BASE.
+        #[cfg(target_os = "windows")]
+        #[arg(long, requires = "raw_motion")]
+        compact_control: bool,
     },
 }
 
@@ -138,10 +146,20 @@ impl Action {
                 geometry,
                 detect_displays,
                 desktop_edges,
+                raw_motion,
+                compact_control,
             } => {
                 use super::input_ui::WorkspaceMode;
                 let mode = if desktop_edges {
-                    WorkspaceMode::DesktopEdges
+                    WorkspaceMode::DesktopEdges {
+                        source: if compact_control {
+                            super::input_ui::SourceMode::CompactRaw
+                        } else if raw_motion {
+                            super::input_ui::SourceMode::Raw
+                        } else {
+                            super::input_ui::SourceMode::Polled
+                        },
+                    }
                 } else if geometry {
                     WorkspaceMode::Geometry { detect_displays }
                 } else if spatial || choose {

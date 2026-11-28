@@ -5,8 +5,10 @@ mod entry_portal;
 mod foreground_capture;
 pub use foreground_capture::{ForegroundCapture, neutral_for_handoff};
 mod physical;
+mod raw_motion;
 pub use entry_portal::{EntryPortal, PortalStyle};
 pub use physical::{indicator_visible, physical_cursor, physical_primary, with_physical_dpi};
+pub use raw_motion::{Batch as RawMotionBatch, RawMotion};
 
 use anyhow::{Context, Result, ensure};
 use intralink_core::input::{Button, Event, Key, Record, State};

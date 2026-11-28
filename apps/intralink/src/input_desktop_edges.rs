@@ -8,16 +8,16 @@ use super::{
 };
 use anyhow::{Context, Result, ensure};
 use intralink_core::{
-    display_geometry,
+    display_geometry::{self, Display},
     input::{Event, Focus, Key as RemoteKey},
     overview::{self, HEIGHT, Rect, WIDTH},
     physical_edge::{EdgeDetector, PhysicalScreen},
-    screen_topology::Transfer,
+    screen_topology::{Topology, Transfer},
     virtual_pointer::{Motion, VirtualPointer},
 };
 use intralink_input_win::{
-    ForegroundCapture, indicator_visible, neutral_for_handoff, physical_cursor, physical_primary,
-    with_physical_dpi,
+    ForegroundCapture, RawMotion, indicator_visible, neutral_for_handoff, physical_cursor,
+    physical_primary, with_physical_dpi,
 };
 use minifb::{Key, MouseButton, MouseMode, ScaleMode, Window, WindowOptions};
 use std::{
@@ -30,6 +30,26 @@ const POLL: Duration = Duration::from_millis(8);
 const SESSION_LIMIT: Duration = Duration::from_secs(300);
 const ARM_LIMIT: Duration = Duration::from_secs(60);
 const MAX_MOTION_GAP: Duration = Duration::from_millis(100);
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum SourceMode {
+    Polled,
+    Raw,
+    CompactRaw,
+}
+
+impl SourceMode {
+    fn raw(self) -> bool {
+        self != Self::Polled
+    }
+    fn label(self) -> &'static str {
+        match self {
+            Self::Polled => "FULL SCREEN / POLLED MOTION",
+            Self::Raw => "FULL SCREEN / RAW MOUSE MOTION",
+            Self::CompactRaw => "COMPACT PANEL / RAW MOUSE MOTION",
+        }
+    }
+}
 const START: Rect = Rect {
     x: 32,
     y: 420,
@@ -77,7 +97,7 @@ fn indicator() -> Result<Window> {
     Ok(window)
 }
 
-fn paint_indicator(canvas: &mut [u32], armed: bool, remaining: u64) {
+fn paint_indicator(canvas: &mut [u32], armed: bool, remaining: u64, source: SourceMode) {
     canvas.fill(ui::BG);
     ui::label(
         canvas,
@@ -115,14 +135,7 @@ fn paint_indicator(canvas: &mut [u32], armed: bool, remaining: u64) {
         2,
         ui::INK,
     );
-    ui::label(
-        canvas,
-        32,
-        256,
-        "CAPTURE SURFACE OPENS ONLY WHILE REMOTE",
-        2,
-        ui::MUTED,
-    );
+    ui::label(canvas, 32, 256, source.label(), 2, ui::MUTED);
     ui::label(
         canvas,
         32,
@@ -171,6 +184,9 @@ impl SessionPermit {
 }
 
 struct Surface {
+    // Drop the reader before destroying its HWND; keep the backing canvas
+    // alive through final WM_PAINT.
+    raw: Option<RawMotion>,
     // The buffer outlives the native window, including its final WM_PAINT.
     window: Window,
     native: ForegroundCapture,
@@ -187,11 +203,13 @@ impl Surface {
         name: &str,
         slots: &[Slot],
         permit: SessionPermit,
+        source: SourceMode,
     ) -> Result<Self> {
         ensure!(
             permit.valid() && neutral_for_handoff(),
             "Release all local keys and buttons before transfer"
         );
+        let entry = physical_cursor()?;
         let mut canvas = vec![0; WIDTH * HEIGHT];
         let mut window = with_physical_dpi(|| {
             Window::new(
@@ -215,10 +233,15 @@ impl Surface {
         window
             .update_with_buffer(&canvas, WIDTH, HEIGHT)
             .map_err(|e| anyhow::anyhow!("Desktop capture: {e}"))?;
-        let native = ForegroundCapture::prepare(window.get_window_handle() as usize, screen)?;
+        let handle = window.get_window_handle() as usize;
+        let native = if source == SourceMode::CompactRaw {
+            ForegroundCapture::prepare_compact(handle, screen, entry)?
+        } else {
+            ForegroundCapture::prepare(handle, screen)?
+        };
         let focused = native.request_focus();
         window.update();
-        if !focused || !window.is_active() || !native.ready() {
+        if !focused || !window.is_active() || !native.owns_current_pointer() {
             // Windows may deny a foreground request from the background.
             // Require a fresh local confirmation. Never relay input here.
             paint_focus_confirmation(&mut canvas, name);
@@ -285,8 +308,14 @@ impl Surface {
                 && native.owns_current_pointer(),
             "Windows foreground capture refused or input changed"
         );
+        let raw = if source.raw() {
+            Some(RawMotion::open(&native)?)
+        } else {
+            None
+        };
         // No cursor movement until the remote activation and entry Move ACK.
         Ok(Self {
+            raw,
             window,
             native,
             canvas,
@@ -295,6 +324,46 @@ impl Surface {
             sampled_at: Instant::now(),
         })
     }
+    fn raw_healthy(&self) -> bool {
+        self.raw.as_ref().is_none_or(RawMotion::healthy)
+    }
+
+    fn relative_motion(
+        &mut self,
+        topology: &Topology,
+        base: Display,
+        can_cross: bool,
+        elapsed: Duration,
+    ) -> Result<Motion> {
+        ensure!(self.raw_healthy(), "Raw Input source lost");
+        // Keep the local pointer within the owned surface without clipping.
+        // Polled mode uses the physical delta; raw mode uses only the actual
+        // device count batch, not the accelerated/warped cursor delta.
+        let polled = self.native.motion()?;
+        let motion = if let Some(raw) = &self.raw {
+            let batch = raw.take()?;
+            self.pointer.motion_sequence(
+                topology,
+                base,
+                batch.samples().iter().map(|d| (d.x, d.y)),
+                can_cross && !batch.button_activity(),
+                elapsed,
+            )
+        } else {
+            self.pointer
+                .motion(topology, base, polled, can_cross, elapsed)
+        };
+        self.sampled_at = Instant::now();
+        motion.context("Invalid relative pointer sample")
+    }
+
+    fn close_raw(&mut self) -> Result<()> {
+        if let Some(raw) = self.raw.take() {
+            raw.close()?;
+        }
+        Ok(())
+    }
+
     fn display(&mut self, name: &str) -> Result<()> {
         paint_capture(&mut self.canvas, name, true);
         self.window
@@ -434,9 +503,11 @@ async fn transfer(
         );
     }
     let native = &surface.native;
+    let raw = &surface.raw;
     let guard = |window: &Window| {
         permit.valid()
             && native.owns_current_pointer()
+            && raw.as_ref().is_none_or(RawMotion::healthy)
             && !stop_requested(window)
             && neutral(window)
     };
@@ -471,12 +542,20 @@ async fn transfer(
             "Local input changed at arrival"
         );
         surface.native.center()?;
+        if let Some(raw) = &surface.raw {
+            raw.discard()?;
+        }
         surface.sampled_at = Instant::now();
     }
     Ok(())
 }
 
-pub(super) async fn run(config: Config, observed: Observed, slots: &[Slot]) -> Result<()> {
+pub(super) async fn run(
+    config: Config,
+    observed: Observed,
+    slots: &[Slot],
+    source: SourceMode,
+) -> Result<()> {
     let screen = physical_primary()?;
     ensure!(
         screen.size() == (observed.display.width, observed.display.height),
@@ -529,7 +608,9 @@ pub(super) async fn run(config: Config, observed: Observed, slots: &[Slot]) -> R
                 break;
             }
             ensure!(
-                surface.window.is_active() && surface.native.owns_current_pointer(),
+                surface.window.is_active()
+                    && surface.native.owns_current_pointer()
+                    && surface.raw_healthy(),
                 "Foreground capture lost; releasing all remote input"
             );
             let id = surface.pointer.id();
@@ -546,17 +627,15 @@ pub(super) async fn run(config: Config, observed: Observed, slots: &[Slot]) -> R
                 surface.sampled_at.elapsed() <= MAX_MOTION_GAP,
                 "Physical pointer sampling stalled; releasing remote input"
             );
-            let delta = surface.native.motion()?;
-            surface.sampled_at = Instant::now();
             // Check global neutrality only if crossing is about to happen.
-            let motion = surface
-                .pointer
-                .motion(&topology, observed.display, delta, can_cross, elapsed)
-                .context("Invalid relative pointer sample")?;
+            let motion =
+                surface.relative_motion(&topology, observed.display, can_cross, elapsed)?;
             match motion {
                 Motion::Move { x, y } => {
                     ensure!(
-                        surface.window.is_active() && surface.native.owns_current_pointer(),
+                        surface.window.is_active()
+                            && surface.native.owns_current_pointer()
+                            && surface.raw_healthy(),
                         "Capture ownership changed before forwarding"
                     );
                     surface.previous.forward_with_keys(
@@ -578,6 +657,7 @@ pub(super) async fn run(config: Config, observed: Observed, slots: &[Slot]) -> R
                     };
                     transfer(&mut focus, slots, surface, next, permit).await?;
                     if next.target == 0 {
+                        surface.close_raw()?;
                         surface.native.return_at(next.x, next.y)?;
                         // Release ACK precedes local pointer placement and
                         // destruction of the foreground surface.
@@ -598,7 +678,7 @@ pub(super) async fn run(config: Config, observed: Observed, slots: &[Slot]) -> R
             let remaining = SESSION_LIMIT.saturating_sub(elapsed).as_secs();
             let state = (armed.is_some(), remaining);
             if painted != Some(state) {
-                paint_indicator(&mut canvas, state.0, state.1);
+                paint_indicator(&mut canvas, state.0, state.1, source);
                 indicator
                     .update_with_buffer(&canvas, WIDTH, HEIGHT)
                     .map_err(|e| anyhow::anyhow!("Desktop indicator: {e}"))?;
@@ -644,9 +724,15 @@ pub(super) async fn run(config: Config, observed: Observed, slots: &[Slot]) -> R
                             indicator: indicator.get_window_handle() as usize,
                             started: start,
                         };
-                        let mut surface =
-                            Surface::open(screen, pointer, &slots[index].name, slots, permit)
-                                .await?;
+                        let mut surface = Surface::open(
+                            screen,
+                            pointer,
+                            &slots[index].name,
+                            slots,
+                            permit,
+                            source,
+                        )
+                        .await?;
                         check_geometry(&config, observed, screen, slots)?;
                         ensure!(
                             permit.valid(),
@@ -676,103 +762,5 @@ pub(super) async fn run(config: Config, observed: Observed, slots: &[Slot]) -> R
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn desktop_key_policy_does_not_forward_system_or_stop_keys() {
-        for key in [
-            Key::F12,
-            Key::Escape,
-            Key::LeftAlt,
-            Key::RightAlt,
-            Key::LeftSuper,
-            Key::RightSuper,
-            Key::CapsLock,
-            Key::NumLock,
-            Key::ScrollLock,
-        ] {
-            assert!(keys::desktop_key(key).is_none());
-        }
-        assert_eq!(keys::desktop_key(Key::F1).unwrap().usage(), 58);
-        assert_eq!(keys::desktop_key(Key::F9).unwrap().usage(), 66);
-        assert_eq!(keys::desktop_key(Key::A).unwrap().usage(), 4);
-    }
-
-    #[test]
-    #[ignore = "requires local native desktop; small generated window, no input or warp"]
-    fn native_foreground_source_verifies_only_its_owned_window_geometry() -> Result<()> {
-        let primary = physical_primary()?;
-        let (width, height) = primary.size();
-        ensure!(
-            width >= 800 && height >= 500,
-            "Native test needs a sufficiently large monitor"
-        );
-        let (x, y) = primary.origin();
-        let rectangle = PhysicalScreen::new(x + 40, y + 40, 640, 360).context("Test rectangle")?;
-        let mut canvas = vec![0; WIDTH * HEIGHT];
-        let mut w = with_physical_dpi(|| {
-            Window::new(
-                "IntraLink | Native geometry test - NO INPUT",
-                640,
-                360,
-                WindowOptions {
-                    borderless: true,
-                    none: true,
-                    title: false,
-                    topmost: true,
-                    resize: false,
-                    scale_mode: ScaleMode::AspectRatioStretch,
-                    ..WindowOptions::default()
-                },
-            )
-            .map_err(|e| anyhow::anyhow!("{e}"))
-        })?;
-        w.set_target_fps(0);
-        paint_capture(&mut canvas, "GENERATED WINDOW", false);
-        w.update_with_buffer(&canvas, WIDTH, HEIGHT)
-            .map_err(|e| anyhow::anyhow!("{e}"))?;
-        let guard = ForegroundCapture::prepare(w.get_window_handle() as usize, rectangle)?;
-        w.update();
-        assert!(guard.geometry_matches());
-        let granted = guard.request_focus();
-        w.update();
-        if granted {
-            ensure!(guard.ready(), "Granted test foreground disappeared");
-        } else {
-            assert!(!guard.ready());
-        }
-        drop(w);
-        assert!(!guard.ready() && !guard.geometry_matches());
-        // No calls to motion(), center(), return_at(), or input workers.
-        println!(
-            "NATIVE_FOREGROUND_GEOMETRY_PASS 640x360 owned window, foreground={granted}; no cursor movement or input"
-        );
-        Ok(())
-    }
-
-    #[test]
-    #[ignore = "requires native local graphical desktop; no capture or input"]
-    fn native_desktop_edge_surfaces_present_generated_status() -> Result<()> {
-        let mut canvas = vec![0; WIDTH * HEIGHT];
-        let mut w = indicator()?;
-        paint_indicator(&mut canvas, false, 300);
-        w.update_with_buffer(&canvas, WIDTH, HEIGHT)
-            .map_err(|e| anyhow::anyhow!("{e}"))?;
-        ensure!(
-            indicator_visible(w.get_window_handle() as usize),
-            "Missing local status window"
-        );
-        paint_capture(&mut canvas, "GENERATED CLIENT", true);
-        for _ in 0..8 {
-            w.update_with_buffer(&canvas, WIDTH, HEIGHT)
-                .map_err(|e| anyhow::anyhow!("{e}"))?;
-            ensure!(w.is_open(), "Status window closed");
-        }
-        // Deliberately never call ForegroundCapture::prepare or cursor placement.
-        drop(w);
-        println!(
-            "NATIVE_DESKTOP_EDGE_STATUS_PASS generated UI only; no capture, warp, listener or connection"
-        );
-        Ok(())
-    }
-}
+#[path = "input_desktop_edges_tests.rs"]
+mod tests;

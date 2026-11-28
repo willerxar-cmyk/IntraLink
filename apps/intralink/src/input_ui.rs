@@ -21,6 +21,7 @@ use crate::{
 
 #[path = "input_desktop_edges.rs"]
 mod desktop_edges;
+pub(super) use desktop_edges::SourceMode;
 #[path = "input_display_review.rs"]
 mod display_review;
 #[path = "input_edge_check.rs"]

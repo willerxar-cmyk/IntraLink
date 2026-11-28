@@ -18,7 +18,7 @@ pub(crate) enum WorkspaceMode {
     Manual,
     Spatial,
     Geometry { detect_displays: bool },
-    DesktopEdges,
+    DesktopEdges { source: SourceMode },
 }
 
 pub(crate) async fn workspace(
@@ -31,9 +31,13 @@ pub(crate) async fn workspace(
     let spatial = matches!(mode, WorkspaceMode::Spatial);
     let geometry = matches!(
         mode,
-        WorkspaceMode::Geometry { .. } | WorkspaceMode::DesktopEdges
+        WorkspaceMode::Geometry { .. } | WorkspaceMode::DesktopEdges { .. }
     );
-    let desktop_edges = matches!(mode, WorkspaceMode::DesktopEdges);
+    let desktop_source = match mode {
+        WorkspaceMode::DesktopEdges { source } => Some(source),
+        _ => None,
+    };
+    let desktop_edges = desktop_source.is_some();
     let detect_displays = desktop_edges
         || matches!(
             mode,
@@ -70,7 +74,11 @@ pub(crate) async fn workspace(
     } else {
         None
     };
-    approve(if desktop_edges {
+    approve(if matches!(desktop_source, Some(SourceMode::CompactRaw)) {
+        "Open experimental compact Raw Input KVM? The BASE stays visible. The shared edge opens a small, temporary foreground panel; only relative mouse motion from the focused panel is read, and its pointer is recentered after acknowledged activation. Keyboard/buttons use the focused window. Fast motion leaving the panel, device change, overflow, focus loss or stop cancels the session. No global hook, cursor clipping, background keyboard capture, or elevation. Each CLIENT must independently approve."
+    } else if matches!(desktop_source, Some(SourceMode::Raw)) {
+        "Open experimental foreground Raw Input KVM? The shared edge opens a temporary full-screen foreground surface. Read relative mouse motion only while it owns foreground; keyboard/buttons remain focused-window input. Unsupported mouse reports, overflow or focus loss stop the session. No global hook, cursor clipping, background keyboard capture, or elevation. Each CLIENT must independently approve."
+    } else if desktop_edges {
         "Open the explicitly armed physical-edge KVM preview? While LOCAL, only cursor position is sampled and a neutral-state check occurs at handoff. When a shared edge is reached, IntraLink requests a temporary visible full-screen foreground surface and recenters its pointer while relaying input to the approved CLIENT. F12 or Escape stops. System shortcuts and unsupported keys are not globally intercepted. No hooks, clipping, screen stream or elevation. Each CLIENT must approve independently."
     } else if detect_displays {
         "Connect to the selected input/2 CLIENTs and receive their current primary-display metadata? Each CLIENT must independently approve this session. Input remains SAFE during review and requires a separate local arm action. No downgrade, global hook or video stream."
@@ -131,8 +139,8 @@ pub(crate) async fn workspace(
             let store=store.context("Missing geometry preference store")?;
             let observed=store.observed();
             let config=super::display_review::review(store,displays,&slots)?;
-            if desktop_edges {
-                return super::desktop_edges::run(config,observed,&slots).await;
+            if let Some(source)=desktop_source {
+                return super::desktop_edges::run(config,observed,&slots,source).await;
             }
             geometry=Some(topology_pad::Pad::new(config,observed,true)?);
             window=super::window("IntraLink INPUT | AUTHENTICATED GEOMETRY SAFE",960,540,false,0x00212c3b)?;

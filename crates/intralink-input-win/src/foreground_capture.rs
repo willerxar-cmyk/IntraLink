@@ -45,6 +45,7 @@ fn owned(handle: usize) -> Option<HWND> {
 pub struct ForegroundCapture {
     handle: usize,
     screen: PhysicalScreen,
+    region: PhysicalScreen,
     anchor: (i32, i32),
     thread: std::thread::ThreadId,
 }
@@ -52,11 +53,30 @@ impl ForegroundCapture {
     /// The caller owns the visible window and has already obtained explicit
     /// local consent. Normal OS foreground activation may be refused.
     pub fn prepare(handle: usize, screen: PhysicalScreen) -> Result<Self> {
+        Self::prepare_region(handle, screen, screen)
+    }
+
+    pub fn prepare_compact(
+        handle: usize,
+        screen: PhysicalScreen,
+        point: (i32, i32),
+    ) -> Result<Self> {
+        let region = screen
+            .panel(point, 640, 360)
+            .ok_or_else(|| anyhow::anyhow!("Compact panel cannot fit approved primary monitor"))?;
+        Self::prepare_region(handle, screen, region)
+    }
+
+    fn prepare_region(
+        handle: usize,
+        screen: PhysicalScreen,
+        region: PhysicalScreen,
+    ) -> Result<Self> {
         let hwnd = owned(handle)
             .ok_or_else(|| anyhow::anyhow!("Capture window is not owned by IntraLink"))?;
         let _dpi = PhysicalDpi::enter()?;
-        let (x, y) = screen.origin();
-        let (w, h) = screen.size();
+        let (x, y) = region.origin();
+        let (w, h) = region.size();
         // SAFETY: only resize this process's explicitly created borderless
         // window. No other process's window is manipulated.
         unsafe {
@@ -73,6 +93,7 @@ impl ForegroundCapture {
         let result = Self {
             handle,
             screen,
+            region,
             anchor: (x + i32::from(w) / 2, y + i32::from(h) / 2),
             thread: std::thread::current().id(),
         };
@@ -100,6 +121,10 @@ impl ForegroundCapture {
             );
         }
         Ok(result)
+    }
+
+    pub(crate) fn handle(&self) -> usize {
+        self.handle
     }
 
     pub fn request_focus(&self) -> bool {
@@ -147,12 +172,12 @@ impl ForegroundCapture {
         if !unsafe { ClientToScreen(hwnd, &mut origin) }.as_bool() {
             return false;
         }
-        let (w, h) = self.screen.size();
+        let (w, h) = self.region.size();
         rect.left == 0
             && rect.top == 0
             && rect.right == i32::from(w)
             && rect.bottom == i32::from(h)
-            && (origin.x, origin.y) == self.screen.origin()
+            && (origin.x, origin.y) == self.region.origin()
     }
 
     fn owns_pointer(&self, point: (i32, i32)) -> bool {
@@ -162,7 +187,7 @@ impl ForegroundCapture {
         let Ok(_dpi) = PhysicalDpi::enter() else {
             return false;
         };
-        if self.screen.offset(point).is_none() {
+        if self.region.offset(point).is_none() {
             return false;
         }
         // SAFETY: read-only hit test; don't deliver remote input if another
@@ -219,7 +244,20 @@ impl ForegroundCapture {
     /// destroys its own capture window immediately after this placement.
     pub fn return_at(&self, x: u16, y: u16) -> Result<()> {
         ensure!(neutral_for_handoff(), "Local input is still held");
-        self.place(self.screen.from_normalized(x, y))
+        let point = self.screen.from_normalized(x, y);
+        if self.region == self.screen {
+            return self.place(point);
+        }
+        // Compact mode may return outside the panel only after the caller
+        // has released the old remote owner and closed Raw Input.
+        ensure!(
+            self.owns_current_pointer() && crate::physical_primary()? == self.screen,
+            "Cannot return cursor: approved primary geometry or foreground changed"
+        );
+        // SAFETY: normalized point inside the same approved physical BASE;
+        // this is cursor placement only, no click or keyboard injection.
+        unsafe { SetPhysicalCursorPos(point.0, point.1) }?;
+        Ok(())
     }
 }
 

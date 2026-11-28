@@ -52,6 +52,28 @@ impl VirtualPointer {
         self.id
     }
 
+    /// Process the ordered native samples until the first crossing. The
+    /// caller sends the last in-screen position or the ACK-gated proposal,
+    /// and discards any remainder of the batch rather than replaying it
+    /// against a different owner. Empty batches still supply a position.
+    pub fn motion_sequence(
+        &mut self,
+        t: &Topology,
+        base: Display,
+        deltas: impl IntoIterator<Item = (i32, i32)>,
+        neutral: bool,
+        now: Duration,
+    ) -> Option<Motion> {
+        let mut result = self.motion(t, base, (0, 0), neutral, now)?;
+        for delta in deltas {
+            result = self.motion(t, base, delta, neutral, now)?;
+            if matches!(result, Motion::Cross(_)) {
+                break;
+            }
+        }
+        Some(result)
+    }
+
     /// BASE physical pixel deltas are converted to common logical units
     /// with signed fractional carry. The cursor never accumulates a gap,
     /// skips another device, or transfers a held chord.
@@ -193,6 +215,26 @@ mod tests {
         assert_eq!(cursor.id(), 1);
         assert!(VirtualPointer::enter(&t, local, at(280)).is_none());
     }
+    #[test]
+    fn raw_batch_preserves_first_edge_even_when_later_motion_reverses() {
+        let (t, b) = fixture();
+        let entry = t.cross(0, Edge::Right, 400).unwrap();
+        let mut cursor = VirtualPointer::enter(&t, entry, Duration::ZERO).unwrap();
+        let Some(Motion::Cross(next)) =
+            cursor.motion_sequence(&t, b, [(750, 0), (-750, 0)], true, COOLDOWN)
+        else {
+            panic!("First edge must win");
+        };
+        assert_eq!(next.target, 2);
+        assert_eq!(cursor.id(), 1);
+        let mut cursor = VirtualPointer::enter(&t, entry, Duration::ZERO).unwrap();
+        assert!(matches!(
+            cursor.motion_sequence(&t, b, [(750, 0), (-750, 0)], false, COOLDOWN),
+            Some(Motion::Move { .. })
+        ));
+        assert_eq!(cursor.id(), 1);
+    }
+
     #[test]
     fn held_input_never_transfers_and_invalid_samples_fail_closed() {
         let (t, b) = fixture();

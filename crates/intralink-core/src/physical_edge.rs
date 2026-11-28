@@ -53,6 +53,27 @@ impl PhysicalScreen {
         let (x, y) = self.offset(point)?;
         Some((scale(x, self.width, w), scale(y, self.height, h)))
     }
+    /// Bounded visible panel around the physical entry point. Clamp to
+    /// the approved primary monitor and keep the entry point inside it.
+    pub fn panel(self, point: (i32, i32), width: u16, height: u16) -> Option<Self> {
+        let (px, py) = self.offset(point)?;
+        if width < 2 || height < 2 || width > self.width || height > self.height {
+            return None;
+        }
+        let left = i32::from(px)
+            .saturating_sub(i32::from(width) / 2)
+            .clamp(0, i32::from(self.width - width));
+        let top = i32::from(py)
+            .saturating_sub(i32::from(height) / 2)
+            .clamp(0, i32::from(self.height - height));
+        Self::new(
+            self.x.checked_add(left)?,
+            self.y.checked_add(top)?,
+            width,
+            height,
+        )
+    }
+
     pub fn from_normalized(self, x: u16, y: u16) -> (i32, i32) {
         let map = |value: u16, extent: u16| {
             ((u64::from(value) * u64::from(extent - 1) + 32767) / 65535) as i32
@@ -219,6 +240,27 @@ mod tests {
         .unwrap();
         (physical, display, topology)
     }
+    #[test]
+    fn compact_panel_contains_every_entry_corner_without_leaving_monitor() {
+        let screen = PhysicalScreen::new(-3840, 100, 3840, 2160).unwrap();
+        for point in [
+            (-3840, 100),
+            (-1, 100),
+            (-3840, 2259),
+            (-1, 2259),
+            (-1920, 1180),
+        ] {
+            let panel = screen.panel(point, 640, 360).unwrap();
+            let (x, y) = panel.origin();
+            assert_eq!(panel.size(), (640, 360));
+            assert!(panel.offset(point).is_some());
+            assert!(screen.offset((x, y)).is_some());
+            assert!(screen.offset((x + 639, y + 359)).is_some());
+        }
+        assert!(screen.panel((0, 100), 640, 360).is_none());
+        assert!(screen.panel((-1, 100), 4096, 360).is_none());
+    }
+
     #[test]
     fn physical_projection_preserves_endpoints_and_rejects_wrong_dimensions() {
         let (p, d, _) = fixture();

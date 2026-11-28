@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - Raw Input and compact control
+
+- Add optional foreground relative mouse Raw Input with bounded ordered samples, exact owned registration, and deterministic cleanup.
+- Add optional compact control surface, preserving BASE desktop visibility and existing full-screen polled mode.
+- Qualify fixed packets, ordered first-edge geometry, native registration lifecycle and compact physical rectangle; no hardware input or global capture certification.
+
 ## Unreleased - physical desktop edge handoff preview
 
 - Add opt-in Windows physical-edge handoff with a temporary owned foreground source, exact DPI geometry, local confirmation when Windows refuses focus and bounded stop/session guards.
