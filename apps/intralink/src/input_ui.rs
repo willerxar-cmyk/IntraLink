@@ -19,6 +19,8 @@ use crate::{
     local::approve,
 };
 
+#[path = "input_desktop_edges.rs"]
+mod desktop_edges;
 #[path = "input_display_review.rs"]
 mod display_review;
 #[path = "input_edge_check.rs"]
@@ -42,7 +44,7 @@ mod topology_pad;
 pub(super) mod topology_store;
 #[path = "input_workspace.rs"]
 mod workspace_run;
-pub(super) use workspace_run::{configure_topology, workspace};
+pub(super) use workspace_run::{WorkspaceMode, configure_topology, workspace};
 
 const POLL: Duration = Duration::from_millis(8);
 
@@ -171,6 +173,16 @@ fn normalized(window: &Window) -> Option<(u16, u16)> {
 
 impl Snapshot {
     fn forward(&mut self, window: &Window, slot: &Slot, position: (u16, u16)) -> Result<()> {
+        self.forward_with_keys(window, slot, position, local_keys(window))
+    }
+
+    fn forward_with_keys(
+        &mut self,
+        window: &Window,
+        slot: &Slot,
+        position: (u16, u16),
+        current: BTreeSet<Key>,
+    ) -> Result<()> {
         slot.pulse()?;
         if self.position != Some(position) {
             slot.queue(
@@ -182,7 +194,6 @@ impl Snapshot {
             )?;
             self.position = Some(position);
         }
-        let current = local_keys(window);
         // Release nonmodifiers before modifiers; press modifiers before
         // nonmodifiers so a chord has deterministic destination order.
         for key in self.keys.difference(&current).copied() {

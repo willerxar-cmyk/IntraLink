@@ -69,6 +69,10 @@ pub enum Action {
         #[cfg(target_os = "windows")]
         #[arg(long, requires = "geometry")]
         detect_displays: bool,
+        /// Opt-in physical BASE edge handoff using a temporary full-screen foreground surface.
+        #[cfg(target_os = "windows")]
+        #[arg(long, requires = "detect_displays")]
+        desktop_edges: bool,
     },
 }
 
@@ -133,17 +137,19 @@ impl Action {
                 lan,
                 geometry,
                 detect_displays,
+                desktop_edges,
             } => {
-                super::input_ui::workspace(
-                    path,
-                    &device,
-                    (spatial || choose) && !geometry,
-                    choose,
-                    lan,
-                    geometry,
-                    detect_displays,
-                )
-                .await
+                use super::input_ui::WorkspaceMode;
+                let mode = if desktop_edges {
+                    WorkspaceMode::DesktopEdges
+                } else if geometry {
+                    WorkspaceMode::Geometry { detect_displays }
+                } else if spatial || choose {
+                    WorkspaceMode::Spatial
+                } else {
+                    WorkspaceMode::Manual
+                };
+                super::input_ui::workspace(path, &device, choose, lan, mode).await
             }
             #[cfg(target_os = "linux")]
             Self::Workspace { device, lan } => {

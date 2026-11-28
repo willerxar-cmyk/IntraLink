@@ -13,15 +13,34 @@ pub(crate) async fn configure_topology(path: &Path, names: &[String]) -> Result<
     Ok(())
 }
 
+#[derive(Clone, Copy)]
+pub(crate) enum WorkspaceMode {
+    Manual,
+    Spatial,
+    Geometry { detect_displays: bool },
+    DesktopEdges,
+}
+
 pub(crate) async fn workspace(
     path: &Path,
     names: &[String],
-    spatial: bool,
     choose: bool,
     lan: bool,
-    geometry: bool,
-    detect_displays: bool,
+    mode: WorkspaceMode,
 ) -> Result<()> {
+    let spatial = matches!(mode, WorkspaceMode::Spatial);
+    let geometry = matches!(
+        mode,
+        WorkspaceMode::Geometry { .. } | WorkspaceMode::DesktopEdges
+    );
+    let desktop_edges = matches!(mode, WorkspaceMode::DesktopEdges);
+    let detect_displays = desktop_edges
+        || matches!(
+            mode,
+            WorkspaceMode::Geometry {
+                detect_displays: true
+            }
+        );
     ensure!(
         !detect_displays || geometry,
         "Authenticated displays require geometry mode"
@@ -51,7 +70,9 @@ pub(crate) async fn workspace(
     } else {
         None
     };
-    approve(if detect_displays {
+    approve(if desktop_edges {
+        "Open the explicitly armed physical-edge KVM preview? While LOCAL, only cursor position is sampled and a neutral-state check occurs at handoff. When a shared edge is reached, IntraLink requests a temporary visible full-screen foreground surface and recenters its pointer while relaying input to the approved CLIENT. F12 or Escape stops. System shortcuts and unsupported keys are not globally intercepted. No hooks, clipping, screen stream or elevation. Each CLIENT must approve independently."
+    } else if detect_displays {
         "Connect to the selected input/2 CLIENTs and receive their current primary-display metadata? Each CLIENT must independently approve this session. Input remains SAFE during review and requires a separate local arm action. No downgrade, global hook or video stream."
     } else if geometry.is_some() {
         "Open the foreground geometry-aware input pad? The configured monitor geometry applies only inside this window. Each CLIENT must approve independently. Click BASE or F9 to arm, F12 releases. No global hook or screen stream."
@@ -110,6 +131,9 @@ pub(crate) async fn workspace(
             let store=store.context("Missing geometry preference store")?;
             let observed=store.observed();
             let config=super::display_review::review(store,displays,&slots)?;
+            if desktop_edges {
+                return super::desktop_edges::run(config,observed,&slots).await;
+            }
             geometry=Some(topology_pad::Pad::new(config,observed,true)?);
             window=super::window("IntraLink INPUT | AUTHENTICATED GEOMETRY SAFE",960,540,false,0x00212c3b)?;
             println!("Authenticated primary display geometry reviewed. Click BASE or F9 to arm. F12 releases.");

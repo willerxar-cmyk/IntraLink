@@ -26,6 +26,7 @@ pub mod quality;
 pub mod resources;
 pub mod screen_topology;
 pub mod telemetry;
+pub mod virtual_pointer;
 pub mod workspace;
 pub mod yuv;
 

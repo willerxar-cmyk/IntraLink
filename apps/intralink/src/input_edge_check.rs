@@ -35,19 +35,24 @@ const WINDOW_WIDTH: usize = 640;
 const WINDOW_HEIGHT: usize = 360;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Action {
+pub(super) enum Action {
     Start,
     Close,
 }
 
 #[derive(Default)]
-struct Click {
+pub(super) struct Click {
     neutral: bool,
     down: bool,
     pressed: Option<Action>,
 }
 impl Click {
-    fn sample(&mut self, active: bool, down: bool, action: Option<Action>) -> Option<Action> {
+    pub(super) fn sample(
+        &mut self,
+        active: bool,
+        down: bool,
+        action: Option<Action>,
+    ) -> Option<Action> {
         if !active {
             *self = Self::default();
             return None;

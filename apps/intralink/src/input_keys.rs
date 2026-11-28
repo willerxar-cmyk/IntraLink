@@ -101,6 +101,29 @@ pub fn key(local: Local) -> Option<Key> {
     Key::new(usage)
 }
 
+/// Desktop-edge capture does not reserve the manual F1-F9 slot keys.
+/// OS-global modifiers and lock toggles are deliberately not forwarded
+/// by this temporary foreground-only prototype.
+pub(super) fn desktop_key(local: Local) -> Option<Key> {
+    use Local::*;
+    let usage = match local {
+        F1 => 58,
+        F2 => 59,
+        F3 => 60,
+        F4 => 61,
+        F5 => 62,
+        F6 => 63,
+        F7 => 64,
+        F8 => 65,
+        F9 => 66,
+        LeftAlt | RightAlt | LeftSuper | RightSuper | CapsLock | NumLock | ScrollLock => {
+            return None;
+        }
+        _ => return key(local),
+    };
+    Key::new(usage)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

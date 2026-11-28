@@ -41,6 +41,12 @@ impl Drop for PhysicalDpi {
     }
 }
 
+/// Create or query native resources synchronously using physical DPI.
+pub fn with_physical_dpi<T>(operation: impl FnOnce() -> Result<T>) -> Result<T> {
+    let _dpi = PhysicalDpi::enter()?;
+    operation()
+}
+
 /// For now refuse multi-monitor local desktops: an OS neighbor must never
 /// be confused with a remote target at the same physical edge.
 pub fn physical_primary() -> Result<PhysicalScreen> {

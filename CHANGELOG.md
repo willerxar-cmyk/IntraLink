@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - physical desktop edge handoff preview
+
+- Add opt-in Windows physical-edge handoff with a temporary owned foreground source, exact DPI geometry, local confirmation when Windows refuses focus and bounded stop/session guards.
+- Add relative virtual pointer, acknowledged peer switching and coordinate return to BASE. Preserve input/1 and input/2 wire formats and all earlier modes.
+- Validate generated two-CLIENT loopback transitions and native small-window geometry; physical input acceptance remains open.
+
 ## Unreleased - physical edge calibration and native arrival cue
 
 - Add DPI-correct native physical cursor/monitor metadata and a bounded read-only shared-edge intent detector.

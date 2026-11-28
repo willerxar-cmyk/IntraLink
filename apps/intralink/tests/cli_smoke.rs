@@ -560,3 +560,41 @@ fn native_edge_check_and_arrival_cue_are_explicit_and_never_unattended() {
         assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 0);
     }
 }
+
+#[cfg(all(target_os = "windows", feature = "input-preview"))]
+#[test]
+fn desktop_edge_mode_is_explicit_and_requires_authenticated_geometry() {
+    assert!(stdout(&["input", "workspace", "--help"]).contains("--desktop-edges"));
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("profile.vault");
+    for args in [
+        vec!["input", "workspace", "--choose", "--desktop-edges"],
+        vec![
+            "input",
+            "workspace",
+            "--choose",
+            "--geometry",
+            "--desktop-edges",
+        ],
+        vec![
+            "input",
+            "workspace",
+            "--choose",
+            "--geometry",
+            "--detect-displays",
+            "--desktop-edges",
+        ],
+    ] {
+        let result = Command::new(env!("CARGO_BIN_EXE_intralink"))
+            .arg("--vault")
+            .arg(&path)
+            .args(&args)
+            .output()
+            .unwrap();
+        assert!(!result.status.success(), "{args:?}");
+        assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 0);
+        if args.contains(&"--detect-displays") {
+            assert!(String::from_utf8_lossy(&result.stderr).contains("local interactive terminal"));
+        }
+    }
+}

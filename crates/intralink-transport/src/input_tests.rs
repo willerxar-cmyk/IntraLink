@@ -397,6 +397,119 @@ async fn topology_transfers(authenticated: bool) -> Result<()> {
 }
 
 #[tokio::test]
+async fn relative_pointer_crossings_use_real_quic_ack_barriers_and_return_to_base() -> Result<()> {
+    use intralink_core::{
+        display_geometry::{Placement, topology},
+        screen_topology::Edge,
+        virtual_pointer::{Motion, VirtualPointer},
+    };
+    let base = Display {
+        width: 1500,
+        height: 1200,
+        scale: 150,
+        rotation: 0,
+    };
+    let display = Display {
+        width: 500,
+        height: 800,
+        scale: 100,
+        rotation: 0,
+    };
+    let controller = crate::bind_workspace_controller(SecretKey::generate()).await?;
+    let mut hosts = Vec::new();
+    let mut sessions = Vec::new();
+    let mut placements = vec![Placement {
+        id: 0,
+        x: 0,
+        y: 0,
+        display: base,
+    }];
+    let mut x = 1000;
+    for i in 1..=2 {
+        let host = host_mode(controller.id(), Some(display)).await?;
+        let session =
+            InputConnection::connect_geometry(&controller, host.endpoint.id(), &[host.address])
+                .await?;
+        let actual = session.display().context("Missing display")?;
+        placements.push(Placement {
+            id: i,
+            x,
+            y: 0,
+            display: actual,
+        });
+        x += i32::from(actual.logical().context("Invalid display")?.0);
+        sessions.push(session);
+        hosts.push(host);
+    }
+    let t = topology(&placements).context("Invalid topology")?;
+    let start = t.cross(0, Edge::Right, 400).context("Missing first edge")?;
+    let mut cursor = VirtualPointer::enter(&t, start, Duration::ZERO).context("Invalid entry")?;
+    let mut focus = Focus::default();
+    let mut expected = [Vec::new(), Vec::new()];
+    assert_eq!(focus.begin(Some(0))?, None);
+    assert_eq!(focus.released()?, Some(0));
+    sessions[0].send(Event::Activate).await?;
+    expected[0].push(Event::Activate);
+    let entry = Event::Move {
+        x: start.x,
+        y: start.y,
+    };
+    sessions[0].send(entry).await?;
+    expected[0].push(entry);
+    focus.activated(Some(0))?;
+    let mut now = Duration::from_millis(100);
+    for delta in [(750, 0), (-6, 0), (-750, 0)] {
+        now += Duration::from_millis(200);
+        let old = focus.active().context("Missing current owner")?;
+        let motion = cursor
+            .motion(&t, base, delta, true, now)
+            .context("Invalid relative sample")?;
+        let Motion::Cross(next) = motion else {
+            anyhow::bail!("Expected shared edge crossing");
+        };
+        assert_eq!(cursor.id(), (old + 1) as u8);
+        let target = usize::from(next.target).checked_sub(1);
+        assert_eq!(focus.begin(target)?, Some(old));
+        sessions[old].send(Event::Deactivate).await?;
+        expected[old].push(Event::Deactivate);
+        assert!(sessions.iter().all(|session| !session.active()));
+        assert_eq!(focus.released()?, target);
+        if let Some(index) = target {
+            sessions[index].send(Event::Activate).await?;
+            expected[index].push(Event::Activate);
+            let move_to = Event::Move {
+                x: next.x,
+                y: next.y,
+            };
+            sessions[index].send(move_to).await?;
+            expected[index].push(move_to);
+            cursor = VirtualPointer::enter(&t, next, now).context("Invalid arrival")?;
+        } else {
+            assert_eq!(next.target, 0);
+            assert!(VirtualPointer::enter(&t, next, now).is_none());
+        }
+        focus.activated(target)?;
+        assert_eq!(
+            sessions.iter().filter(|s| s.active()).count(),
+            usize::from(target.is_some())
+        );
+    }
+    assert_eq!(focus.active(), None);
+    for (i, session) in sessions.iter_mut().enumerate() {
+        session.send(Event::End).await?;
+        expected[i].push(Event::End);
+    }
+    drop(sessions);
+    for (i, host) in hosts.into_iter().enumerate() {
+        assert_eq!(host.transport.await?? as usize, expected[i].len());
+        assert_eq!(host.consumer.await??, expected[i]);
+        host.endpoint.close().await;
+    }
+    controller.close().await;
+    Ok(())
+}
+
+#[tokio::test]
 async fn wrong_identity_never_reaches_input_sink() -> Result<()> {
     let listener = bind_input(SecretKey::generate(), "127.0.0.1:0".parse()?).await?;
     let attacker = crate::bind_workspace_controller(SecretKey::generate()).await?;
