@@ -6,6 +6,7 @@ pub mod calibration;
 pub mod canvas;
 pub mod capabilities;
 pub mod desktop;
+pub mod display_geometry;
 pub mod h264;
 pub mod host_calibration;
 pub mod input;

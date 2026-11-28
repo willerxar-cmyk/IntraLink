@@ -27,6 +27,14 @@ mod layout_store;
 mod pad;
 #[path = "input_portal.rs"]
 mod portal;
+#[path = "input_topology_canvas.rs"]
+mod topology_canvas;
+#[path = "input_topology_editor.rs"]
+mod topology_editor;
+#[path = "input_topology_pad.rs"]
+mod topology_pad;
+#[path = "input_topology_store.rs"]
+mod topology_store;
 
 const POLL: Duration = Duration::from_millis(8);
 
@@ -57,6 +65,22 @@ pub(super) fn window(
 
 impl Slot {
     async fn confirmed(&self, event: Event, window: &mut Window) -> Result<()> {
+        self.confirmed_guarded(event, window, |_| true).await
+    }
+
+    async fn confirmed_guarded(
+        &self,
+        event: Event,
+        window: &mut Window,
+        guard: impl Fn(&Window) -> bool,
+    ) -> Result<()> {
+        ensure!(
+            window.is_open()
+                && window.is_active()
+                && !window.is_key_down(LocalKey::Escape)
+                && guard(window),
+            "Local input changed before acknowledged action"
+        );
         let (acknowledgment, mut accepted) = oneshot::channel();
         self.pulse()?;
         self.queue(event, Some(acknowledgment))?;
@@ -64,12 +88,20 @@ impl Slot {
         loop {
             window.update();
             ensure!(
-                window.is_open() && window.is_active() && !window.is_key_down(LocalKey::Escape),
-                "Local input pad stopped or lost focus during switch"
+                window.is_open()
+                    && window.is_active()
+                    && !window.is_key_down(LocalKey::Escape)
+                    && guard(window),
+                "Local input pad stopped, lost focus or changed during switch"
             );
             self.pulse()?;
             tokio::select! {
-                result = &mut accepted => return result.context("Input switch not acknowledged"),
+                result = &mut accepted => {
+                    result.context("Input switch not acknowledged")?;
+                    window.update();
+                    ensure!(window.is_open() && window.is_active() && !window.is_key_down(LocalKey::Escape) && guard(window),"Local input changed at acknowledgment");
+                    return Ok(());
+                },
                 _ = tokio::time::sleep_until(deadline) => anyhow::bail!("Input switch deadline exceeded"),
                 _ = sleep(POLL) => {}
             }
@@ -558,7 +590,12 @@ impl Spatial {
     }
 }
 
-fn title(slots: &[Slot], focus: &Focus, spatial: Option<&Spatial>) -> String {
+fn title(
+    slots: &[Slot],
+    focus: &Focus,
+    spatial: Option<&Spatial>,
+    geometry: Option<&topology_pad::Pad>,
+) -> String {
     let target = focus
         .active()
         .map_or("LOCAL", |index| slots[index].name.as_str());
@@ -566,6 +603,8 @@ fn title(slots: &[Slot], focus: &Focus, spatial: Option<&Spatial>) -> String {
     let controls = match spatial {
         Some(pad) if pad.armed => "SPATIAL ARMED | 0 local, F12 disarm, ESC close",
         Some(_) => "SAFE | Drag screens | Click START or F9 | F10 portal | ESC close",
+        None if geometry.is_some_and(|pad| pad.armed()) => "GEOMETRY ARMED | F12 stop | ESC close",
+        None if geometry.is_some() => "GEOMETRY SAFE | Click BASE or F9 | ESC close",
         None => "F1-F8 select, F12 local, ESC close",
     };
     let portal = spatial.map_or(String::new(), |pad| {
@@ -581,20 +620,46 @@ fn title(slots: &[Slot], focus: &Focus, spatial: Option<&Spatial>) -> String {
     )
 }
 
+pub(super) async fn configure_topology(path: &Path, names: &[String]) -> Result<()> {
+    let (_vault, secret, targets) = load_targets(path, names, false, false).await?;
+    let observed = topology_store::observe_base()?;
+    let peers = targets.iter().map(|(_, id, _, _)| *id).collect();
+    let store = topology_store::Store::new(path, secret.public(), peers, observed)?;
+    let mut names = vec!["BASE"];
+    names.extend(targets.iter().map(|(name, _, _, _)| name.as_str()));
+    topology_editor::edit(&store, &names)?;
+    println!("Topology saved locally; no connection or input session opened.");
+    Ok(())
+}
+
 pub(super) async fn workspace(
     path: &Path,
     names: &[String],
     spatial: bool,
     choose: bool,
     lan: bool,
+    geometry: bool,
 ) -> Result<()> {
     let (_vault, secret, targets) = load_targets(path, names, choose, lan).await?;
-    approve(if spatial {
+    let mut geometry = if geometry {
+        let observed = topology_store::observe_base()?;
+        let peers = targets.iter().map(|(_, id, _, _)| *id).collect();
+        let store = topology_store::Store::new(path, secret.public(), peers, observed)?;
+        let mut names = vec!["BASE"];
+        names.extend(targets.iter().map(|(name, _, _, _)| name.as_str()));
+        let config = topology_editor::edit(&store, &names)?;
+        Some(topology_pad::Pad::new(config, observed)?)
+    } else {
+        None
+    };
+    approve(if geometry.is_some() {
+        "Open the foreground geometry-aware input pad? The configured monitor geometry applies only inside this window. Each CLIENT must approve independently. Click BASE or F9 to arm, F12 releases. No global hook or screen stream."
+    } else if spatial {
         "Open the visible spatial input pad? Review the arrangement and start from the local BASE card. START or F9 arms switching; F12 disarms and releases input. No global hook or screen stream."
     } else {
         "Open the visible input-only pad for these paired hosts? F1-F8 explicitly activate a ready host; F12 returns to local. No global hook, screen stream or unattended control."
     })?;
-    let mut spatial = if spatial {
+    let mut spatial = if spatial && geometry.is_none() {
         let peers = targets
             .iter()
             .map(|(_, identity, _, _)| *identity)
@@ -625,6 +690,11 @@ pub(super) async fn workspace(
     let mut focus = Focus::default();
     let mut previous = Snapshot::default();
     let mut last_title = String::new();
+    if geometry.is_some() {
+        println!(
+            "Geometry mode: pointer transfers only over exact shared logical edges. CLIENT dimensions are user-confirmed, not remotely measured. F12 releases. Window only."
+        );
+    }
     if spatial.is_some() {
         println!(
             "Spatial pad: drag named devices while SAFE. Changes save locally for this BASE and exact CLIENT set. Review the layout, click START or press F9 in the BASE card, cross with keys/buttons released. F12 disarms. F10 or the portal button changes intensity; RESET restores defaults."
@@ -641,7 +711,12 @@ pub(super) async fn workspace(
                     "Input pad lost focus; disconnecting rather than forwarding stale input"
                 );
             }
-            if let Some(spatial) = &mut spatial {
+            if let Some(geometry) = &mut geometry {
+                geometry
+                    .step(&mut focus, &mut previous, &slots, &mut window)
+                    .await?;
+                geometry.paint(&slots, &focus, &mut window)?;
+            } else if let Some(spatial) = &mut spatial {
                 spatial
                     .step(&mut focus, &mut previous, &slots, &mut window)
                     .await?;
@@ -678,7 +753,7 @@ pub(super) async fn workspace(
                     previous.forward(&window, &slots[index], position)?;
                 }
             }
-            let next = title(&slots, &focus, spatial.as_ref());
+            let next = title(&slots, &focus, spatial.as_ref(), geometry.as_ref());
             if next != last_title {
                 window.set_title(&next);
                 last_title = next;

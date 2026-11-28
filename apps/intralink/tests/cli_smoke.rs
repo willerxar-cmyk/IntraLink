@@ -437,3 +437,36 @@ fn graphical_screen_workspace_rejects_unattended_start_and_conflicting_options()
         }
     }
 }
+
+#[cfg(all(target_os = "windows", feature = "input-preview"))]
+#[test]
+fn topology_editor_and_geometry_workspace_reject_unattended_or_conflicting_modes() {
+    assert!(stdout(&["input", "topology", "--help"]).contains("--device"));
+    assert!(stdout(&["input", "workspace", "--help"]).contains("--geometry"));
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("profile.vault");
+    for args in [
+        vec!["input", "topology", "--device", "client"],
+        vec!["input", "workspace", "--choose", "--geometry"],
+        vec![
+            "input",
+            "workspace",
+            "--device",
+            "client",
+            "--geometry",
+            "--spatial",
+        ],
+    ] {
+        let result = Command::new(env!("CARGO_BIN_EXE_intralink"))
+            .arg("--vault")
+            .arg(&path)
+            .args(&args)
+            .output()
+            .unwrap();
+        assert!(!result.status.success(), "{args:?}");
+        assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 0);
+        if !args.contains(&"--spatial") {
+            assert!(String::from_utf8_lossy(&result.stderr).contains("local interactive terminal"));
+        }
+    }
+}

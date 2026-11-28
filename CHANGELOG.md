@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - DPI-aware topology and geometry pad
+
+- Add bounded oriented pixel geometry, effective scale, proportional viewport, exact shared-edge tracing and snap validation.
+- Add native Windows offline topology editor, identity-bound local persistence, real BASE metadata and explicit CLIENT confirmation; retain the earlier grid.
+- Add opt-in focused geometry KVM with acknowledged release, neutral dwell, guarded activation and exact initial entry coordinates; no global hook. Qualify native generated editor and real two-host loopback handoffs.
+
 ## Unreleased - Android preview.15 and screen selector
 
 - Integrate the existing signed offline invitation protocol with native Android review, encrypted vault rechecks, QR display and bounded selected-image QR import. Preserve all permissions and independent session consent.

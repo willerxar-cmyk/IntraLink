@@ -20,6 +20,12 @@ pub enum Action {
         #[arg(long)]
         advertise_lan: bool,
     },
+    /// Edit measured BASE and manually confirmed CLIENT display geometry offline.
+    #[cfg(target_os = "windows")]
+    Topology {
+        #[arg(long, required = true)]
+        device: Vec<String>,
+    },
     /// Open an input-only focused pad for up to eight paired hosts.
     Workspace {
         #[cfg_attr(
@@ -37,8 +43,12 @@ pub enum Action {
         choose: bool,
         #[cfg(target_os = "windows")]
         /// Named spatial pad with saved arrangement; START or F9 arms switching.
-        #[arg(long)]
+        #[arg(long, conflicts_with = "geometry")]
         spatial: bool,
+        /// Review proportional DPI-aware display topology, then use the focused geometry pad.
+        #[cfg(target_os = "windows")]
+        #[arg(long)]
+        geometry: bool,
     },
 }
 
@@ -56,12 +66,25 @@ impl Action {
                 advertise_lan,
             } => super::input_host::run(path, bind, &controller, seconds, advertise_lan).await,
             #[cfg(target_os = "windows")]
+            Self::Topology { device } => super::input_ui::configure_topology(path, &device).await,
+            #[cfg(target_os = "windows")]
             Self::Workspace {
                 device,
                 spatial,
                 choose,
                 lan,
-            } => super::input_ui::workspace(path, &device, spatial || choose, choose, lan).await,
+                geometry,
+            } => {
+                super::input_ui::workspace(
+                    path,
+                    &device,
+                    (spatial || choose) && !geometry,
+                    choose,
+                    lan,
+                    geometry,
+                )
+                .await
+            }
             #[cfg(target_os = "linux")]
             Self::Workspace { device, lan } => {
                 super::input_x11_ui::workspace(path, &device, lan).await

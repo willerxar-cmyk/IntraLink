@@ -120,6 +120,98 @@ async fn multi_host(count: usize) -> Result<()> {
 }
 
 #[tokio::test]
+async fn real_quic_topology_transfers_keep_exact_entry_and_one_active_owner() -> Result<()> {
+    use intralink_core::screen_topology::{Screen, Topology};
+    let topology = Topology::new(&[
+        Screen {
+            id: 0,
+            x: 0,
+            y: 0,
+            width: 1920,
+            height: 1080,
+        },
+        Screen {
+            id: 1,
+            x: 1920,
+            y: 200,
+            width: 864,
+            height: 1536,
+        },
+        Screen {
+            id: 2,
+            x: 2784,
+            y: 300,
+            width: 1280,
+            height: 720,
+        },
+    ])
+    .context("Mixed logical topology")?;
+    let controller = crate::bind_workspace_controller(SecretKey::generate()).await?;
+    let mut hosts = Vec::new();
+    let mut sessions = Vec::new();
+    for _ in 0..2 {
+        let host = host(controller.id()).await?;
+        sessions.push(
+            InputConnection::connect(&controller, host.endpoint.id(), &[host.address]).await?,
+        );
+        hosts.push(host);
+    }
+    let mut expected = [Vec::new(), Vec::new()];
+    let mut focus = Focus::default();
+    for (source, from, to) in [
+        (0, (1800, 400), (2000, 600)),
+        (1, (2700, 700), (2900, 700)),
+        (2, (2900, 800), (2700, 800)),
+        (1, (2000, 700), (1800, 700)),
+    ] {
+        let transfer = topology
+            .trace(source, from, to)
+            .context("Expected shared edge")?;
+        let target = usize::from(transfer.target).checked_sub(1);
+        let old = focus.begin(target)?;
+        if let Some(index) = old {
+            sessions[index].send(Event::Deactivate).await?;
+            expected[index].push(Event::Deactivate);
+            assert!(!sessions[index].active());
+        }
+        assert!(sessions.iter().all(|session| !session.active()));
+        assert_eq!(focus.released()?, target);
+        if let Some(index) = target {
+            sessions[index].send(Event::Activate).await?;
+            expected[index].push(Event::Activate);
+        }
+        focus.activated(target)?;
+        if let Some(index) = target {
+            let entry = Event::Move {
+                x: transfer.x,
+                y: transfer.y,
+            };
+            sessions[index].send(entry).await?;
+            expected[index].push(entry);
+        }
+        assert_eq!(
+            sessions.iter().filter(|s| s.active()).count(),
+            usize::from(target.is_some())
+        );
+    }
+    assert!(focus.active().is_none());
+    for (i, session) in sessions.iter_mut().enumerate() {
+        session.send(Event::End).await?;
+        expected[i].push(Event::End);
+    }
+    drop(sessions);
+    for (i, host) in hosts.into_iter().enumerate() {
+        let records = host.transport.await??;
+        let events = host.consumer.await??;
+        assert_eq!(records as usize, events.len());
+        assert_eq!(events, expected[i]);
+        host.endpoint.close().await;
+    }
+    controller.close().await;
+    Ok(())
+}
+
+#[tokio::test]
 async fn wrong_identity_never_reaches_input_sink() -> Result<()> {
     let listener = bind_input(SecretKey::generate(), "127.0.0.1:0".parse()?).await?;
     let attacker = crate::bind_workspace_controller(SecretKey::generate()).await?;
