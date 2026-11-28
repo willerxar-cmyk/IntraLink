@@ -11,7 +11,8 @@ use std::{
     path::Path,
 };
 
-pub fn show(path: &Path, address: Option<SocketAddrV4>) -> Result<()> {
+pub fn show(path: &Path, address: Option<SocketAddrV4>, gui: bool) -> Result<()> {
+    crate::enrollment::preflight(gui)?;
     let vault = Vault::lock(path)?;
     let password = crate::local::prompt_password()?;
     let profile = vault.load(password.as_bytes())?;
@@ -24,9 +25,15 @@ pub fn show(path: &Path, address: Option<SocketAddrV4>) -> Result<()> {
     );
     let card =
         Card::new(&profile.public_id().to_string(), address).context("Invalid private route")?;
-    println!(
-        "Copy this public connection card to the other device. It grants no access.\n{}",
-        card.encode()
+    let code = card.encode();
+    let display = crate::enrollment::CodeDisplay::new(&code, false, gui)?;
+    drop(password);
+    drop(profile);
+    display.show(
+        &code,
+        "Public connection card",
+        "Unsigned / grants no access",
+        None,
     );
     Ok(())
 }

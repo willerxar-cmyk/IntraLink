@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - graphical signed pairing
+
+- Add native desktop review and complete signed QR windows for invitation issue, acceptance and confirmation; display public connection cards separately as unsigned.
+- Require distinct focused verification and approval actions, reject mixed/held input and recheck expiry; preserve existing vault authority and terminal mode.
+- Verify exact QR raster/quiet zone, signed exchange/replay, unattended CLI rejection and generated native Windows presentation.
+
 ## Unreleased - persistent spatial KVM and Preview.14 UX
 
 - Add named Windows spatial device cards, local START/STOP, portal intensity and RESET; save and restore the arrangement by authenticated identity set in SAFE.

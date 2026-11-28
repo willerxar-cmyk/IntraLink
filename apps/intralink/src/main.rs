@@ -182,6 +182,9 @@ enum Command {
     ConnectionCard {
         #[arg(long)]
         address: Option<std::net::SocketAddrV4>,
+        /// Show the unsigned public card as a local QR window (desktop-preview).
+        #[arg(long)]
+        gui: bool,
     },
     /// Paste a peer's connection card and review its full identity before pairing.
     PairCard {
@@ -212,20 +215,29 @@ enum Command {
         port: u16,
         #[arg(long, default_value_t = 300, value_parser = clap::value_parser!(u64).range(60..=900))]
         ttl: u64,
-        #[arg(long)]
+        #[arg(long, conflicts_with = "gui")]
         qr: bool,
+        /// Local graphical review and signed QR window (desktop-preview).
+        #[arg(long)]
+        gui: bool,
     },
     /// Import a signed offer locally and return a signed acceptance code.
     AcceptInvite {
         #[arg(long)]
         name: String,
-        #[arg(long)]
+        #[arg(long, conflicts_with = "gui")]
         qr: bool,
+        /// Local graphical review and signed acceptance QR (desktop-preview).
+        #[arg(long)]
+        gui: bool,
     },
     /// Final local host approval of the controller's signed acceptance.
     ConfirmInvite {
         #[arg(long)]
         name: String,
+        /// Local graphical review before final approval (desktop-preview).
+        #[arg(long)]
+        gui: bool,
     },
     /// Cancel the outstanding local invitation.
     CancelInvite,
@@ -621,7 +633,7 @@ fn main() -> Result<()> {
         Command::RenameDevice { name } => local::rename_device(&path, &name),
         Command::Init { role } => local::initialize(&path, role.into()),
         Command::Identity => local::identity(&path),
-        Command::ConnectionCard { address } => pair_card::show(&path, address),
+        Command::ConnectionCard { address, gui } => pair_card::show(&path, address, gui),
         Command::PairCard { name } => pair_card::import(&path, &name),
         Command::Pair {
             name,
@@ -645,9 +657,10 @@ fn main() -> Result<()> {
             port,
             ttl,
             qr,
-        } => enrollment::issue(&path, controller_id, Route::new(&host, port)?, ttl, qr),
-        Command::AcceptInvite { name, qr } => enrollment::accept(&path, &name, qr),
-        Command::ConfirmInvite { name } => enrollment::confirm(&path, &name),
+            gui,
+        } => enrollment::issue(&path, controller_id, Route::new(&host, port)?, ttl, qr, gui),
+        Command::AcceptInvite { name, qr, gui } => enrollment::accept(&path, &name, qr, gui),
+        Command::ConfirmInvite { name, gui } => enrollment::confirm(&path, &name, gui),
         Command::CancelInvite => enrollment::cancel(&path),
         Command::Devices => local::devices(&path),
         #[cfg(any(

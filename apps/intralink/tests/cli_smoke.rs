@@ -42,6 +42,50 @@ fn setup_cli_exposes_base_client_and_rejects_unattended_creation() {
     assert!(String::from_utf8_lossy(&output.stderr).contains("interactive terminal"));
 }
 
+#[test]
+fn graphical_pairing_is_explicit_and_rejects_unattended_mutation() {
+    for command in [
+        "connection-card",
+        "invite",
+        "accept-invite",
+        "confirm-invite",
+    ] {
+        assert!(stdout(&[command, "--help"]).contains("--gui"));
+    }
+    let directory = tempfile::tempdir().expect("Temporary pairing directory");
+    let vault = directory.path().join("profile.vault");
+    let id = iroh::SecretKey::from_bytes(&[7; 32]).public().to_string();
+    for args in [
+        vec!["connection-card", "--gui"],
+        vec![
+            "invite",
+            "--controller-id",
+            &id,
+            "--host",
+            "192.168.10.2",
+            "--port",
+            "45100",
+            "--gui",
+        ],
+        vec!["accept-invite", "--name", "client", "--gui"],
+        vec!["confirm-invite", "--name", "base", "--gui"],
+        vec!["accept-invite", "--name", "client", "--qr", "--gui"],
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_intralink"))
+            .arg("--vault")
+            .arg(&vault)
+            .args(&args)
+            .output()
+            .expect("Run noninteractive graphical pairing");
+        assert!(!output.status.success(), "{args:?}");
+        assert_eq!(
+            std::fs::read_dir(directory.path()).unwrap().count(),
+            0,
+            "Graphical preflight must fail before creating a vault or lock"
+        );
+    }
+}
+
 #[cfg(all(target_os = "windows", feature = "nvenc-preview"))]
 #[test]
 fn h264_diagnostic_help_does_not_initialize_driver_or_network() {

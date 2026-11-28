@@ -28,6 +28,7 @@ use host_capture::{HostCapture, HostDisplay};
 #[cfg(target_os = "windows")]
 pub mod media_check;
 mod overview;
+pub(crate) mod pairing;
 #[cfg(all(target_os = "windows", feature = "input-preview"))]
 pub(crate) use overview::text as draw_label;
 mod setup;
