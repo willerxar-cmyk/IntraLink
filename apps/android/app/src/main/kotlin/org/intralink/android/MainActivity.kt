@@ -372,6 +372,11 @@ class MainActivity : Activity() {
                     action(getString(R.string.custom_connection_card)) { showClientCard(localIdentity) }
                 }
             }
+            action(getString(R.string.signed_pairing)) {
+                startActivity(android.content.Intent(this, SignedPairingActivity::class.java)
+                    .putExtra(SignedPairingActivity.ROLE, role)
+                    .putExtra(SignedPairingActivity.IDENTITY, localIdentity))
+            }
             disclosure(getString(R.string.show_identity), getString(R.string.hide_identity)) {
                 label(getString(R.string.public_identity), 15, bold = true)
                 label(localIdentity, 14, selectable = true)

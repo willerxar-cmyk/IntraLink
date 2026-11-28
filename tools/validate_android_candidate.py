@@ -7,6 +7,7 @@ from pathlib import Path
 import platform
 import re
 import tempfile
+import tomllib
 import shutil
 import struct
 import subprocess
@@ -17,7 +18,7 @@ from build_android_native import ndk_bin
 
 ABIS = {"arm64-v8a": 183, "x86_64": 62}
 EXPORTS = {"createProfile", "openProfile", "changeRole", "renameDevice", "pairDevice", "revokeDevice",
-           "initializeNetwork", "reserveProbe", "cancelProbe", "runProbe", "inspectAvc", "inspectAvcSps", "runScreen", "runInput"}
+           "initializeNetwork", "reserveProbe", "cancelProbe", "runProbe", "inspectAvc", "inspectAvcSps", "runScreen", "runInput", "inspectEnrollment", "commitEnrollment"}
 PERMISSIONS = {
     "android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE",
     "android.permission.FOREGROUND_SERVICE",
@@ -105,6 +106,59 @@ def verify_exports():
         check_exports(native)
 
 
+def verify_notice_graphs(notices):
+    """Refuse stale or mismatched graphs after dependency changes."""
+    runtime = json.loads((BUILD / "reports/runtime-dependencies.json").read_text(encoding="utf-8"))
+    expected_jvm = {
+        ":".join(row[k] for k in ("group", "name", "version")):
+            (sha(Path(row["artifact"]).read_bytes()), sha(Path(row["pom"]).read_bytes()),
+             sha(Path(row["parent_pom"]).read_bytes()) if row.get("parent_pom") else None)
+        for row in runtime
+    }
+    if len(expected_jvm) != len(runtime):
+        raise ValueError("Duplicate JVM runtime coordinates")
+    registry = {(row["name"], row["version"]) for row in
+                tomllib.loads((ROOT / "Cargo.lock").read_text(encoding="utf-8"))["package"]
+                if row.get("source")}
+    targets = {"aarch64-linux-android", "x86_64-linux-android"}
+    seen = set()
+    for path in notices:
+        with zipfile.ZipFile(path) as archive:
+            if archive.testzip() is not None or len(archive.namelist()) != len(set(archive.namelist())):
+                raise ValueError("Invalid notice archive")
+            if "jvm-runtime-inventory.json" in archive.namelist():
+                actual = json.loads(archive.read("jvm-runtime-inventory.json"))
+                actual_jvm = {row["coordinate"]: (row["sha256"], row["pom_sha256"],
+                    row.get("parent_pom_sha256")) for row in actual}
+                if actual_jvm != expected_jvm or len(actual) != len(expected_jvm) or "jvm" in seen:
+                    raise ValueError("Stale or duplicate JVM notice graph")
+                seen.add("jvm")
+            else:
+                inv = json.loads(archive.read("dependency-inventory.json"))
+                target = inv["target"]
+                if target not in targets or target in seen or inv["package"] != "intralink-android" or inv["features"] != "":
+                    raise ValueError("Unexpected native notice target or feature set")
+                output = subprocess.check_output(
+                    ["cargo", "tree", "-p", "intralink-android", "--target", target,
+                     "-e", "normal,build", "--prefix", "none", "--format", "{p}",
+                     "--charset", "ascii", "--locked", "--offline", "--no-default-features"],
+                    cwd=ROOT, encoding="utf-8")
+                selected = {tuple(match.groups()) for line in output.splitlines()
+                            if (match := re.match(r"^([\w.-]+) v([^\s]+)", line))}
+                expected = selected & registry
+                actual = {(row["name"], row["version"]) for row in inv["packages"]}
+                if actual != expected or len(actual) != len(inv["packages"]):
+                    raise ValueError(f"Stale native notice graph: {target}")
+                for row in inv["packages"]:
+                    for filename in row["notice_files"]:
+                        if f"licenses/{row['name']}-{row['version']}/{filename}" not in archive.namelist():
+                            raise ValueError("Missing original native notice")
+                seen.add(target)
+    if seen != targets | {"jvm"}:
+        raise ValueError("Incomplete Android notice graph")
+    print(f"Verified exact JVM ({len(expected_jvm)} artifacts) and both native notice graphs")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path)
@@ -150,7 +204,7 @@ def main():
             xml = run(aapt, "dump", "xmltree", apk, "AndroidManifest.xml")
             for component, kind in ((".CaptureActivity", "activity"), (".CaptureService", "service"),
                                     (".ScreenShareActivity", "activity"), (".ScreenShareService", "service"),
-                                    (".InputPreviewActivity", "activity")):
+                                    (".InputPreviewActivity", "activity"), (".SignedPairingActivity", "activity")):
                 blocks = re.split(r"(?m)^\s*E: (?:activity|service|receiver|provider) \(line=\d+\)", xml)
                 matching = [block for block in blocks
                             if re.search(r'android:name[^=]*="(?:org\.intralink\.android)?' + re.escape(component) + '"', block)]
@@ -178,10 +232,7 @@ def main():
         raise ValueError(f"Unresolved Android lint diagnostics: {unexpected}")
     if args.require_signed and (not release_signed or issues):
         raise ValueError("Distribution gate requires authorized signatures and no lint diagnostics")
-    for notice in args.notices:
-        with zipfile.ZipFile(notice) as z:
-            if z.testzip() is not None:
-                raise ValueError("Invalid notice archive")
+    verify_notice_graphs(args.notices)
     args.output.mkdir(parents=True, exist_ok=False)
     files = {
         "intralink-android-capture-debug.apk": debug,
@@ -197,7 +248,7 @@ def main():
         shutil.copy2(source, args.output / name)
     info = {
         "version": version, "version_code": version_code,
-        "scope": "encrypted onboarding, manual pairing, foreground private IPv4 diagnostics, local AVC diagnostic, separately consented v12 read-only screen preview and bounded entire-display navigation (Android 12L+); separate foreground app-canvas input preview; no system-wide input", "abis": list(ABIS),
+        "scope": "encrypted onboarding, manual and signed pairing with local QR display/image import, foreground private IPv4 diagnostics, local AVC diagnostic, separately consented v12 read-only screen preview and bounded entire-display navigation (Android 12L+); separate foreground app-canvas input preview; no system-wide input", "abis": list(ABIS),
         "permissions": sorted(PERMISSIONS),
         "debug_and_test_signed": True, "release_signed": release_signed,
         "lint_diagnostics": issues, "physical_runtime_qualified": False,

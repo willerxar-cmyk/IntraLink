@@ -16,7 +16,10 @@ use jni::{
 use serde_json::{Value, json};
 use zeroize::Zeroizing;
 
-use crate::session::{self, Registry};
+use crate::{
+    enrollment,
+    session::{self, Registry},
+};
 
 static SESSIONS: Registry = Registry::new();
 static APPLICATION_CONTEXT: Mutex<Option<GlobalRef>> = Mutex::new(None);
@@ -187,6 +190,45 @@ pub extern "system" fn Java_org_intralink_android_NativeBridge_pairDevice(
         let request: String = env.get_string(&request)?.into();
         let profile = session::pair(Path::new(&path), &password, session::decode(&request)?)?;
         Ok(summary(&profile))
+    })
+}
+
+/// Verify the signed pairing data for local review without opening a vault.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_org_intralink_android_NativeBridge_inspectEnrollment(
+    mut env: JNIEnv,
+    _receiver: JObject,
+    request: JString,
+) -> jstring {
+    reply(&mut env, |env| {
+        let request: String = env.get_string(&request)?.into();
+        enrollment::inspect(&enrollment::decode(&request)?, enrollment::now()?)
+    })
+}
+
+/// Called only after the foreground UI reviews and approves the immutable request.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_org_intralink_android_NativeBridge_commitEnrollment(
+    mut env: JNIEnv,
+    _receiver: JObject,
+    path: JString,
+    request: JString,
+    password: JByteArray,
+) -> jstring {
+    reply(&mut env, |env| {
+        let (path, secret) = inputs(env, &path, &password)?;
+        env.set_byte_array_region(&password, 0, &vec![0i8; secret.len()])?;
+        let request: String = env.get_string(&request)?.into();
+        let (profile, data) = enrollment::commit(
+            Path::new(&path),
+            &secret,
+            enrollment::decode(&request)?,
+            enrollment::now()?,
+            enrollment::now,
+        )?;
+        let mut value = summary(&profile);
+        value["enrollment"] = data;
+        Ok(value)
     })
 }
 

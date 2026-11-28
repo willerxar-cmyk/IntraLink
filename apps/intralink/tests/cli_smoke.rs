@@ -400,3 +400,40 @@ fn graphical_input_selection_is_explicit_and_never_runs_unattended() {
         }
     }
 }
+
+#[cfg(all(
+    feature = "desktop-preview",
+    any(target_os = "windows", target_os = "linux")
+))]
+#[test]
+fn graphical_screen_workspace_rejects_unattended_start_and_conflicting_options() {
+    assert!(stdout(&["workspace", "--help"]).contains("--choose"));
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path().join("profile.vault");
+    for args in [
+        vec!["workspace", "--choose"],
+        vec!["workspace", "--choose", "--device", "client"],
+        vec![
+            "workspace",
+            "--choose",
+            "--negotiate-profile",
+            "--device-limit",
+            "client=720:30",
+        ],
+        vec!["workspace"],
+    ] {
+        let result = Command::new(env!("CARGO_BIN_EXE_intralink"))
+            .arg("--vault")
+            .arg(&path)
+            .args(&args)
+            .output()
+            .unwrap();
+        assert!(!result.status.success());
+        assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 0);
+        if args == ["workspace", "--choose"] {
+            assert!(
+                String::from_utf8_lossy(&result.stderr).contains("interactive graphical terminal")
+            );
+        }
+    }
+}

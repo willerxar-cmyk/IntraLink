@@ -2,7 +2,7 @@
 use anyhow::{Context, Result, anyhow, ensure};
 use intralink_core::{
     adaptive::is_keyframe,
-    desktop::ViewPriority,
+    desktop::{CodecMode, ViewPriority},
     overview::{self, Action},
     presentation::PresentationSurface,
     telemetry::{Counters, RateSampler, SessionCounters},
@@ -378,23 +378,33 @@ fn update_priorities(sessions: &[Option<Session>], policy: &WorkspacePolicy) {
     }
 }
 
+pub enum Targets {
+    Explicit(Vec<String>, Vec<ViewMode>),
+    Choose {
+        limits: super::ReceiveProfileArgs,
+        codec: CodecMode,
+        adaptive: bool,
+        negotiated: bool,
+    },
+}
+
 /// Every target is drawn from an existing outbound grant. The vault remains
 /// locked throughout the workspace; stop the workspace before editing grants.
 pub async fn run(
     path: &Path,
-    names: &[String],
-    modes: Vec<ViewMode>,
+    selected: Targets,
     mut fullscreen: bool,
     mut monitor_id: Option<u32>,
     all_live: bool,
 ) -> Result<()> {
-    ensure!(
-        modes.len() == names.len(),
-        "Missing workspace receiver profiles"
-    );
-    require_graphical_terminal()?;
-    let mut policy =
+    if let Targets::Explicit(names, modes) = &selected {
+        ensure!(
+            modes.len() == names.len(),
+            "Missing workspace receiver profiles"
+        );
         WorkspacePolicy::new(names.len(), all_live).context("Select 1-8 distinct hosts")?;
+    }
+    require_graphical_terminal()?;
     let vault = Vault::lock(path)?;
     let password = prompt_password()?;
     let profile = vault.load(password.as_bytes())?;
@@ -403,6 +413,22 @@ pub async fn run(
         profile.role().can_initiate(),
         "This profile cannot initiate sessions"
     );
+    let (names, modes) = match selected {
+        Targets::Explicit(names, modes) => (names, modes),
+        Targets::Choose {
+            limits,
+            codec,
+            adaptive,
+            negotiated,
+        } => {
+            let (names, _) =
+                super::device_picker::choose(&profile, super::device_picker::Kind::Screen).await?;
+            let modes = limits.workspace_modes(codec, adaptive, negotiated, &names, &[])?;
+            (names, modes)
+        }
+    };
+    let mut policy =
+        WorkspacePolicy::new(names.len(), all_live).context("Select 1-8 distinct hosts")?;
     let mut targets: Vec<Target> = Vec::with_capacity(names.len());
     for (name, mode) in names.iter().zip(modes) {
         let peer = profile.peer(name, Direction::Outbound)?;

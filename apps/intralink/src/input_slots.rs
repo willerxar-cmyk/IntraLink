@@ -58,7 +58,11 @@ pub(super) async fn load_targets(
     let chosen_names;
     #[cfg(target_os = "windows")]
     let names = if choose {
-        let (selected, found) = crate::desktop::device_picker::choose(&profile).await?;
+        let (selected, found) = crate::desktop::device_picker::choose(
+            &profile,
+            crate::desktop::device_picker::Kind::Input,
+        )
+        .await?;
         chosen_names = selected;
         hints = found;
         chosen_names.as_slice()

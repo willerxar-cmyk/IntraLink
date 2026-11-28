@@ -1755,6 +1755,7 @@ dependencies = [
  "intralink-vault",
  "iroh",
  "jni 0.21.1",
+ "qrcode",
  "serde",
  "serde_json",
  "tempfile",

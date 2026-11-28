@@ -1,7 +1,9 @@
-//! Foreground selector for previously paired input hosts. Discovery supplies
-//! routing hints only; the vault and the separate input handshake own authority.
+//! Foreground selector for paired screen or input hosts. Discovery hints
+//! never grant authority; each capability uses its own pinned handshake.
 use super::overview::text;
-use crate::discovery::{self, Hints, Protocol};
+use crate::discovery::Hints;
+#[cfg(all(target_os = "windows", feature = "input-preview"))]
+use crate::discovery::{self, Protocol};
 use anyhow::{Context, Result, ensure};
 use intralink_core::{
     input::MAX_SLOTS,
@@ -168,6 +170,7 @@ impl Click {
 
 #[derive(Clone, Copy)]
 enum Scan {
+    SavedRoutes,
     Running,
     Complete,
     Failed,
@@ -176,6 +179,7 @@ enum Scan {
 impl Scan {
     fn label(self) -> &'static str {
         match self {
+            Self::SavedRoutes => "SCREEN ONLY / EACH CLIENT MUST APPROVE ITS SESSION",
             Self::Running => "LOOKING FOR INPUT HOSTS ON YOUR LAN",
             Self::Complete => "LAN SCAN COMPLETE / HINTS ARE NOT AUTHENTICATION",
             Self::Failed => "LAN SCAN FAILED / SAVED ROUTES REMAIN AVAILABLE",
@@ -215,7 +219,18 @@ fn render(
     scan: Scan,
 ) {
     canvas.fill(BG);
-    label(canvas, 32, 15, "INTRALINK / INPUT WORKSPACE", 2, ACCENT);
+    label(
+        canvas,
+        32,
+        15,
+        if matches!(scan, Scan::SavedRoutes) {
+            "INTRALINK / SCREEN WORKSPACE"
+        } else {
+            "INTRALINK / INPUT WORKSPACE"
+        },
+        2,
+        ACCENT,
+    );
     label(canvas, 32, 41, "SELECT YOUR DEVICES", 3, INK);
     label(canvas, 32, 72, scan.label(), 2, MUTED);
     for (slot, device) in devices
@@ -249,7 +264,9 @@ fn render(
             (rect.w - 52) / (6 * scale),
             INK,
         );
-        let status = if hints.contains_key(&device.id) {
+        let status = if matches!(scan, Scan::SavedRoutes) {
+            "SAVED ROUTE / SCREEN APPROVAL REQUIRED"
+        } else if hints.contains_key(&device.id) {
             "INPUT ANNOUNCEMENT FOUND"
         } else if matches!(scan, Scan::Running) {
             "CHECKING LAN"
@@ -289,7 +306,9 @@ fn render(
     button(canvas, BACK, "CANCEL", true);
     button(canvas, PREVIOUS, "PREV", selection.page > 0);
     button(canvas, NEXT, "NEXT", selection.page + 1 < selection.pages());
-    button(canvas, REFRESH, "REFRESH", !matches!(scan, Scan::Running));
+    if !matches!(scan, Scan::SavedRoutes) {
+        button(canvas, REFRESH, "REFRESH", !matches!(scan, Scan::Running));
+    }
     button(
         canvas,
         START,
@@ -298,14 +317,31 @@ fn render(
     );
 }
 
-fn scan_devices(devices: &[Device]) -> JoinHandle<Result<Hints>> {
-    let ids = devices.iter().map(|device| device.id).collect::<Vec<_>>();
-    tokio::spawn(async move { discovery::find_many(&ids, Protocol::Input).await })
+#[derive(Clone, Copy)]
+pub(crate) enum Kind {
+    Screen,
+    #[cfg(all(target_os = "windows", feature = "input-preview"))]
+    Input,
 }
 
-/// The existing exclusive vault lock remains held by the caller. No input
-/// endpoint is created until this window closes and the operator approves it.
-pub(crate) async fn choose(profile: &Profile) -> Result<(Vec<String>, Hints)> {
+impl Kind {
+    fn scan(self, _devices: &[Device]) -> Option<JoinHandle<Result<Hints>>> {
+        match self {
+            Self::Screen => None,
+            #[cfg(all(target_os = "windows", feature = "input-preview"))]
+            Self::Input => {
+                let ids = _devices.iter().map(|device| device.id).collect::<Vec<_>>();
+                Some(tokio::spawn(async move {
+                    discovery::find_many(&ids, Protocol::Input).await
+                }))
+            }
+        }
+    }
+}
+
+/// The existing exclusive vault lock remains held by the caller. No session
+/// endpoint is created by the selector; each capability keeps its own policy.
+pub(crate) async fn choose(profile: &Profile, kind: Kind) -> Result<(Vec<String>, Hints)> {
     super::require_graphical_terminal()?;
     let devices = profile
         .peers()
@@ -320,10 +356,10 @@ pub(crate) async fn choose(profile: &Profile) -> Result<(Vec<String>, Hints)> {
         .collect::<Result<Vec<_>>>()?;
     ensure!(
         !devices.is_empty(),
-        "Pair a CLIENT before opening the input workspace"
+        "Pair a CLIENT before opening the workspace"
     );
     let mut window = Window::new(
-        "IntraLink | Select input devices",
+        "IntraLink | Select paired devices",
         WIDTH,
         HEIGHT,
         WindowOptions::default(),
@@ -333,8 +369,12 @@ pub(crate) async fn choose(profile: &Profile) -> Result<(Vec<String>, Hints)> {
     let mut canvas = vec![0; WIDTH * HEIGHT];
     let mut selection = Selection::new(devices.len());
     let mut hints = Hints::new();
-    let mut scan = Scan::Running;
-    let mut worker = Some(scan_devices(&devices));
+    let mut worker = kind.scan(&devices);
+    let mut scan = if worker.is_some() {
+        Scan::Running
+    } else {
+        Scan::SavedRoutes
+    };
     let mut click = Click::default();
     let mut dirty = true;
     let result = async {
@@ -368,7 +408,10 @@ pub(crate) async fn choose(profile: &Profile) -> Result<(Vec<String>, Hints)> {
                 .get_mouse_pos(MouseMode::Discard)
                 .and_then(|point| overview::map_point(window.get_size(), point))
                 .and_then(|(x, y)| selection.hit(x, y))
-                .filter(|action| selection.enabled(*action, matches!(scan, Scan::Running)));
+                .filter(|action| {
+                    !(matches!(scan, Scan::SavedRoutes) && *action == Action::Refresh)
+                        && selection.enabled(*action, matches!(scan, Scan::Running))
+                });
             match click.step(
                 window.is_active(),
                 window.get_mouse_down(MouseButton::Left),
@@ -389,7 +432,7 @@ pub(crate) async fn choose(profile: &Profile) -> Result<(Vec<String>, Hints)> {
                 Some(Action::Refresh) if worker.is_none() => {
                     hints.clear();
                     scan = Scan::Running;
-                    worker = Some(scan_devices(&devices));
+                    worker = kind.scan(&devices);
                     dirty = true;
                 }
                 Some(Action::Start) if !selection.selected.is_empty() && worker.is_none() => {
@@ -485,6 +528,19 @@ mod tests {
                 .map_err(|e| anyhow::anyhow!("{e}"))?;
             assert!(window.is_open());
         }
+        render(
+            &mut canvas,
+            &devices,
+            &selection,
+            &Hints::new(),
+            Scan::SavedRoutes,
+        );
+        for _ in 0..8 {
+            window
+                .update_with_buffer(&canvas, WIDTH, HEIGHT)
+                .map_err(|e| anyhow::anyhow!("{e}"))?;
+            assert!(window.is_open());
+        }
         let mut hints = Hints::new();
         hints.insert(devices[0].id, vec!["192.168.10.2:45100".parse()?]);
         selection.toggle(0);
@@ -497,8 +553,27 @@ mod tests {
                 .map_err(|e| anyhow::anyhow!("{e}"))?;
             assert!(window.is_open());
         }
-        println!("DEVICE_PICKER_NATIVE_PASS 8+8 submissions; generated cards only");
+        println!("DEVICE_PICKER_NATIVE_PASS 8+8+8 submissions; generated cards only");
         Ok(())
+    }
+
+    #[test]
+    fn screen_mode_never_starts_input_discovery_or_displays_refresh() {
+        let devices = vec![Device {
+            name: "screen".into(),
+            id: SecretKey::from_bytes(&[9; 32]).public(),
+        }];
+        assert!(Kind::Screen.scan(&devices).is_none());
+        let mut canvas = vec![0; WIDTH * HEIGHT];
+        let selection = Selection::new(1);
+        render(
+            &mut canvas,
+            &devices,
+            &selection,
+            &Hints::new(),
+            Scan::SavedRoutes,
+        );
+        assert_eq!(canvas[REFRESH.y * WIDTH + REFRESH.x], BG);
     }
 
     #[test]

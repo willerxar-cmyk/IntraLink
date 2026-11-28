@@ -13,6 +13,8 @@ internal object NativeBridge {
     external fun changeRole(path: String, role: Int, password: ByteArray): String
     external fun renameDevice(path: String, name: String, password: ByteArray): String
     external fun pairDevice(path: String, request: String, password: ByteArray): String
+    external fun inspectEnrollment(request: String): String
+    external fun commitEnrollment(path: String, request: String, password: ByteArray): String
     external fun revokeDevice(path: String, name: String, password: ByteArray): String
     external fun initializeNetwork(context: Context): Boolean
     external fun inspectAvc(buffer: java.nio.ByteBuffer, size: Int, framing: Int): Int

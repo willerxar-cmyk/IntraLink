@@ -11,3 +11,6 @@ mod portable_bridge;
 
 #[cfg(any(target_os = "android", test))]
 mod session;
+
+#[cfg(any(target_os = "android", test))]
+mod enrollment;

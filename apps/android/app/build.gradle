@@ -25,6 +25,10 @@ if (signingRequested && !signingEnvironment.values().every { it.isPresent() && !
     throw new GradleException('Android signing requires all four INTRALINK_ANDROID_* variables.')
 }
 
+dependencies {
+    implementation('com.google.zxing:core:3.5.3') { transitive = false }
+}
+
 android {
     namespace = 'org.intralink.android'
     compileSdk = 36
@@ -32,8 +36,8 @@ android {
         applicationId = 'org.intralink.android'
         minSdk = 26
         targetSdk = 36
-        versionCode = 220014
-        versionName = '0.22.0-preview.14'
+        versionCode = 220015
+        versionName = '0.22.0-preview.15'
         testInstrumentationRunner = 'org.intralink.android.OnboardingInstrumentation'
         ndk { abiFilters 'arm64-v8a', 'x86_64' }
     }
@@ -113,7 +117,14 @@ tasks.register('writeRuntimeDependencyInventory') {
             def dependency = dependencies.create(id.group + ':' + id.module + ':' + id.version + '@pom')
             def pom = configurations.detachedConfiguration(dependency)
             pom.transitive = false
+            def parentPom = null
+            if (id.group == 'com.google.zxing' && id.module == 'core' && id.version == '3.5.3') {
+                def parentConfiguration = configurations.detachedConfiguration(dependencies.create('com.google.zxing:zxing-parent:3.5.3@pom'))
+                parentConfiguration.transitive = false
+                parentPom = parentConfiguration.singleFile.absolutePath
+            }
             [
+                parent_pom: parentPom,
                 group: id.group,
                 name: id.module,
                 version: id.version,

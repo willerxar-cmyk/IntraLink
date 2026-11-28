@@ -475,8 +475,11 @@ enum Command {
     ))]
     Workspace {
         /// Repeat --device for up to eight distinct paired hosts.
-        #[arg(long, required = true)]
+        #[arg(long, required_unless_present = "choose", conflicts_with = "choose")]
         device: Vec<String>,
+        /// Choose previously paired devices in the local screen-only selector.
+        #[arg(long, conflicts_with = "device_limit")]
+        choose: bool,
         /// Request v10 adaptive resolution for every explicitly selected host.
         #[arg(long)]
         adaptive_resolution: bool,
@@ -859,6 +862,7 @@ fn main() -> Result<()> {
         ))]
         Command::Workspace {
             device,
+            choose,
             codec,
             adaptive_resolution,
             negotiate_codec,
@@ -868,15 +872,25 @@ fn main() -> Result<()> {
             local_monitor,
             all_live,
         } => {
-            let modes = limits.workspace_modes(
-                codec.into(),
-                adaptive_resolution,
-                negotiate_codec,
-                &device,
-                &device_limit,
-            )?;
+            let selected = if choose {
+                desktop::workspace::Targets::Choose {
+                    limits,
+                    codec: codec.into(),
+                    adaptive: adaptive_resolution,
+                    negotiated: negotiate_codec,
+                }
+            } else {
+                let modes = limits.workspace_modes(
+                    codec.into(),
+                    adaptive_resolution,
+                    negotiate_codec,
+                    &device,
+                    &device_limit,
+                )?;
+                desktop::workspace::Targets::Explicit(device, modes)
+            };
             run_async(|| {
-                desktop::workspace::run(&path, &device, modes, fullscreen, local_monitor, all_live)
+                desktop::workspace::run(&path, selected, fullscreen, local_monitor, all_live)
             })
         }
         Command::Diagnose { device, wan_ip } => {

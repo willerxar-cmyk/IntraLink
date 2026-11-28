@@ -21,6 +21,7 @@ intralink-transport.workspace = true
 iroh.workspace = true
 tokio.workspace = true
 serde.workspace = true
+qrcode.workspace = true
 
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "=0.21.1"

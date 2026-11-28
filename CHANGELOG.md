@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - Android preview.15 and screen selector
+
+- Integrate the existing signed offline invitation protocol with native Android review, encrypted vault rechecks, QR display and bounded selected-image QR import. Preserve all permissions and independent session consent.
+- Pin QR decoder artifact/POM hashes and original notices, verify exact native and JVM candidate dependency graphs.
+- Extend the shared device picker to screen-only desktop workspaces without scanning input advertisements or changing receiver ceilings.
+
 ## Unreleased - LAN input discovery and device selector
 
 - Add bounded batch discovery for locally paired devices and separate opt-in input-specific DNS-SD announcements.
