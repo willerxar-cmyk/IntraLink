@@ -16,11 +16,25 @@ pub enum Action {
         controller: String,
         #[arg(long, default_value_t = 300, value_parser = clap::value_parser!(u16).range(1..=3600))]
         seconds: u16,
+        /// Advertise this separately approved input listener on the private LAN.
+        #[arg(long)]
+        advertise_lan: bool,
     },
     /// Open an input-only focused pad for up to eight paired hosts.
     Workspace {
-        #[arg(long, required = true)]
+        #[cfg_attr(
+            target_os = "windows",
+            arg(long, required_unless_present = "choose", conflicts_with = "choose")
+        )]
+        #[cfg_attr(target_os = "linux", arg(long, required = true))]
         device: Vec<String>,
+        /// Find private-LAN input announcements for the selected paired hosts.
+        #[arg(long)]
+        lan: bool,
+        /// Choose paired CLIENTs graphically; includes one bounded LAN scan.
+        #[cfg(target_os = "windows")]
+        #[arg(long)]
+        choose: bool,
         #[cfg(target_os = "windows")]
         /// Named spatial pad with saved arrangement; START or F9 arms switching.
         #[arg(long)]
@@ -39,13 +53,19 @@ impl Action {
                 bind,
                 controller,
                 seconds,
-            } => super::input_host::run(path, bind, &controller, seconds).await,
+                advertise_lan,
+            } => super::input_host::run(path, bind, &controller, seconds, advertise_lan).await,
             #[cfg(target_os = "windows")]
-            Self::Workspace { device, spatial } => {
-                super::input_ui::workspace(path, &device, spatial).await
-            }
+            Self::Workspace {
+                device,
+                spatial,
+                choose,
+                lan,
+            } => super::input_ui::workspace(path, &device, spatial || choose, choose, lan).await,
             #[cfg(target_os = "linux")]
-            Self::Workspace { device } => super::input_x11_ui::workspace(path, &device).await,
+            Self::Workspace { device, lan } => {
+                super::input_x11_ui::workspace(path, &device, lan).await
+            }
         }
     }
 }

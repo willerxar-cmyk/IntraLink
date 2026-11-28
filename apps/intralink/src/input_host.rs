@@ -1,4 +1,5 @@
 //! Common consent, pinned peer, bounded input transport and release lifecycle.
+use crate::discovery::{Advertisement, Protocol};
 use crate::local::{approve, prompt_password};
 use anyhow::{Result, ensure};
 use intralink_core::input::MAX_SECONDS;
@@ -11,7 +12,7 @@ use tokio::{sync::mpsc, time::sleep};
 
 const POLL: Duration = Duration::from_millis(8);
 
-/// Only explicit private IPv4 LANs. No public bind, loopback injection or discovery.
+/// Only explicit private IPv4 LANs. No public bind or loopback injection.
 pub(super) fn private_lan(address: SocketAddr) -> bool {
     matches!(address.ip(), std::net::IpAddr::V4(ip) if ip.is_private()) && address.port() != 0
 }
@@ -67,6 +68,7 @@ pub(super) async fn run(
     address: SocketAddr,
     controller: &str,
     seconds: u16,
+    advertise_lan: bool,
 ) -> Result<()> {
     ensure!(
         private_lan(address),
@@ -87,12 +89,28 @@ pub(super) async fn run(
     println!(
         "Controller: {controller} ({peer})\nInput-only session: primary display, keyboard, mouse, wheel; no screen stream."
     );
+    if advertise_lan {
+        println!(
+            "LAN announcement exposes this public identity and private IP/port, not a grant. Only the approved BASE can authenticate."
+        );
+    }
     approve(CONSENT)?;
     // Native initialization and the visible local stop control must succeed
     // before a listening endpoint can be opened.
     let mut native = LocalInput::open()?;
     ensure!(native.poll()?, "Local input indicator is not ready");
     let endpoint = bind_input(secret, address).await?;
+    let advertisement = if advertise_lan {
+        match Advertisement::for_protocol(endpoint.id(), address, Protocol::Input) {
+            Ok(advertisement) => Some(advertisement),
+            Err(error) => {
+                endpoint.close().await;
+                return Err(error.context("Could not advertise approved input listener"));
+            }
+        }
+    } else {
+        None
+    };
     let (sender, mut receiver) = mpsc::channel::<Delivery>(1);
     let listener = endpoint.clone();
     let mut task = tokio::spawn(async move { serve_input(&listener, peer, seconds, sender).await });
@@ -128,6 +146,9 @@ pub(super) async fn run(
     let released = native.release_all();
     let joined = (&mut task).await;
     endpoint.close().await;
+    if let Some(advertisement) = advertisement {
+        advertisement.stop().await;
+    }
     local?;
     released?;
     if completed {

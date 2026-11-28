@@ -581,15 +581,24 @@ fn title(slots: &[Slot], focus: &Focus, spatial: Option<&Spatial>) -> String {
     )
 }
 
-pub(super) async fn workspace(path: &Path, names: &[String], spatial: bool) -> Result<()> {
-    let (_vault, secret, targets) = load_targets(path, names)?;
+pub(super) async fn workspace(
+    path: &Path,
+    names: &[String],
+    spatial: bool,
+    choose: bool,
+    lan: bool,
+) -> Result<()> {
+    let (_vault, secret, targets) = load_targets(path, names, choose, lan).await?;
     approve(if spatial {
         "Open the visible spatial input pad? Review the arrangement and start from the local BASE card. START or F9 arms switching; F12 disarms and releases input. No global hook or screen stream."
     } else {
         "Open the visible input-only pad for these paired hosts? F1-F8 explicitly activate a ready host; F12 returns to local. No global hook, screen stream or unattended control."
     })?;
     let mut spatial = if spatial {
-        let peers = targets.iter().map(|(_, identity, _)| *identity).collect();
+        let peers = targets
+            .iter()
+            .map(|(_, identity, _, _)| *identity)
+            .collect();
         let store = layout_store::Store::new(path, secret.public(), peers)?;
         Some(Spatial::new(store))
     } else {
@@ -605,7 +614,7 @@ pub(super) async fn workspace(path: &Path, names: &[String], spatial: bool) -> R
     let endpoint = bind_workspace_controller(secret).await?;
     let mut slots: Vec<_> = targets
         .into_iter()
-        .map(|(name, identity, route)| start_slot(&endpoint, name, identity, route))
+        .map(|(name, identity, route, hints)| start_slot(&endpoint, name, identity, route, hints))
         .collect();
     for (index, slot) in slots.iter().enumerate() {
         println!("F{}: {}", index + 1, slot.name);

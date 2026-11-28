@@ -149,8 +149,8 @@ fn decide(poll: Poll, active: bool) -> Decision {
     }
 }
 
-pub(super) async fn workspace(path: &Path, names: &[String]) -> Result<()> {
-    let (_vault, secret, targets) = load_targets(path, names)?;
+pub(super) async fn workspace(path: &Path, names: &[String], lan: bool) -> Result<()> {
+    let (_vault, secret, targets) = load_targets(path, names, lan).await?;
     approve(
         "Open the focused local X11 input pad for these paired hosts? F1-F8 select on key release; F12 releases input; Escape closes. Leaving or obscuring the window disconnects an active host. No global hook or screen stream.",
     )?;
@@ -158,7 +158,7 @@ pub(super) async fn workspace(path: &Path, names: &[String]) -> Result<()> {
     let endpoint = bind_workspace_controller(secret).await?;
     let mut slots: Vec<_> = targets
         .into_iter()
-        .map(|(name, identity, route)| start_slot(&endpoint, name, identity, route))
+        .map(|(name, identity, route, hints)| start_slot(&endpoint, name, identity, route, hints))
         .collect();
     for (index, slot) in slots.iter().enumerate() {
         println!("F{}: {}", index + 1, slot.name);

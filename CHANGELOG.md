@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - LAN input discovery and device selector
+
+- Add bounded batch discovery for locally paired devices and separate opt-in input-specific DNS-SD announcements.
+- Add a native Windows selector with pagination, selection limit, Refresh and explicit Continue into the SAFE spatial workspace.
+- Retain pinned identities and private saved-route candidates; reject unknown identities, wrong capabilities and public routes. No new grants or persistent background scans.
+
 ## Unreleased - graphical signed pairing
 
 - Add native desktop review and complete signed QR windows for invitation issue, acceptance and confirmation; display public connection cards separately as unsigned.

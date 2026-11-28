@@ -25,6 +25,8 @@ mod pipeline_check;
 mod precise_timer;
 pub use host_capture::CaptureBackend;
 use host_capture::{HostCapture, HostDisplay};
+#[cfg(all(target_os = "windows", feature = "input-preview"))]
+pub(crate) mod device_picker;
 #[cfg(target_os = "windows")]
 pub mod media_check;
 mod overview;

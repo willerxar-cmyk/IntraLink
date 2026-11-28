@@ -343,11 +343,18 @@ fn input_host_is_explicit_and_rejects_unattended_start() {
     assert!(help.contains("host"));
     assert!(help.contains("workspace"));
     let workspace = stdout(&["input", "workspace", "--help"]);
-    assert!(workspace.contains("--device"));
+    assert!(workspace.contains("--device") && workspace.contains("--lan"));
     #[cfg(target_os = "linux")]
-    assert!(!workspace.contains("--spatial"));
+    assert!(!workspace.contains("--spatial") && !workspace.contains("--choose"));
+    #[cfg(target_os = "windows")]
+    assert!(workspace.contains("--choose") && workspace.contains("--spatial"));
     let host = stdout(&["input", "host", "--help"]);
-    assert!(host.contains("--bind") && host.contains("--controller") && host.contains("--seconds"));
+    assert!(
+        host.contains("--bind")
+            && host.contains("--controller")
+            && host.contains("--seconds")
+            && host.contains("--advertise-lan")
+    );
     let temporary = tempfile::tempdir().expect("Temporary local profile");
     let path = temporary.path().join("profile.vault");
     let output = Command::new(env!("CARGO_BIN_EXE_intralink"))
@@ -360,10 +367,36 @@ fn input_host_is_explicit_and_rejects_unattended_start() {
             "192.168.1.20:45100",
             "--controller",
             "test",
+            "--advertise-lan",
         ])
         .output()
         .expect("Run noninteractive input command");
     assert!(!output.status.success());
     assert!(!path.exists());
     assert!(String::from_utf8_lossy(&output.stderr).contains("local interactive terminal"));
+}
+
+#[cfg(all(target_os = "windows", feature = "input-preview"))]
+#[test]
+fn graphical_input_selection_is_explicit_and_never_runs_unattended() {
+    let temp = tempfile::tempdir().expect("Temporary selector directory");
+    let path = temp.path().join("profile.vault");
+    for args in [
+        vec!["input", "workspace", "--choose"],
+        vec!["input", "workspace", "--choose", "--device", "test"],
+        vec!["input", "workspace"],
+        vec!["input", "workspace", "--device", "test", "--lan"],
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_intralink"))
+            .arg("--vault")
+            .arg(&path)
+            .args(&args)
+            .output()
+            .unwrap();
+        assert!(!output.status.success(), "{args:?}");
+        assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 0);
+        if args.len() == 3 || args.contains(&"--lan") {
+            assert!(String::from_utf8_lossy(&output.stderr).contains("local interactive terminal"));
+        }
+    }
 }
