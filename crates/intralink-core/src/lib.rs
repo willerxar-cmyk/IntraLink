@@ -17,6 +17,7 @@ pub mod network;
 pub mod overview;
 pub mod pacing;
 pub mod pair_card;
+pub mod physical_edge;
 pub mod portable_capture;
 mod portable_motion;
 pub mod presentation;

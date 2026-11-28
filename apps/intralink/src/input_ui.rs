@@ -21,6 +21,9 @@ use crate::{
 
 #[path = "input_display_review.rs"]
 mod display_review;
+#[path = "input_edge_check.rs"]
+mod edge_check;
+pub(super) use edge_check::run as edge_check;
 #[path = "input_keys.rs"]
 mod keys;
 #[path = "input_layout_store.rs"]

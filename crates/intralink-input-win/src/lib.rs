@@ -1,6 +1,11 @@
 //! Windows input boundary; no hooks, elevation, services, or screen capture.
 #![cfg(target_os = "windows")]
 
+mod entry_portal;
+mod physical;
+pub use entry_portal::{EntryPortal, PortalStyle};
+pub use physical::{indicator_visible, physical_cursor, physical_primary};
+
 use anyhow::{Context, Result, ensure};
 use intralink_core::input::{Button, Event, Key, Record, State};
 use std::collections::BTreeSet;

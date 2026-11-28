@@ -8,7 +8,7 @@ publish.workspace = true
 [target.'cfg(target_os = "windows")'.dependencies]
 anyhow.workspace = true
 intralink-core.workspace = true
-windows = { workspace = true, features = ["Win32_UI_Input_KeyboardAndMouse"] }
+windows = { workspace = true, features = ["Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging", "Win32_UI_HiDpi", "Win32_Graphics_Gdi"] }
 
 [lints.rust]
 unsafe_op_in_unsafe_fn = "deny"

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - physical edge calibration and native arrival cue
+
+- Add DPI-correct native physical cursor/monitor metadata and a bounded read-only shared-edge intent detector.
+- Add explicit Windows edge-check against saved topology; visible stop, no input authority or network.
+- Add optional local native input/2 arrival portal after first accepted movement, reused premultiplied surface, nonactivating click-through popup.
+
 ## Unreleased - authenticated input/2 display geometry
 
 - Add an explicit geometry handshake and distinct LAN announcement tag; retain the exact input/1 wire and authorization boundary.

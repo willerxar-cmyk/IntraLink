@@ -510,3 +510,53 @@ fn display_negotiation_requires_explicit_geometry_and_local_interaction() {
         }
     }
 }
+
+#[cfg(all(target_os = "windows", feature = "input-preview"))]
+#[test]
+fn native_edge_check_and_arrival_cue_are_explicit_and_never_unattended() {
+    assert!(stdout(&["input", "edge-check", "--help"]).contains("--seconds"));
+    assert!(stdout(&["input", "host", "--help"]).contains("--entry-portal"));
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("profile.vault");
+    for args in [
+        vec!["input", "edge-check", "--device", "client"],
+        vec![
+            "input",
+            "edge-check",
+            "--device",
+            "client",
+            "--seconds",
+            "121",
+        ],
+        vec![
+            "input",
+            "host",
+            "--bind",
+            "192.168.1.20:45100",
+            "--controller",
+            "base",
+            "--display-geometry",
+            "--entry-portal",
+            "full",
+        ],
+        vec![
+            "input",
+            "host",
+            "--bind",
+            "192.168.1.20:45100",
+            "--controller",
+            "base",
+            "--entry-portal",
+            "reduced",
+        ],
+    ] {
+        let result = Command::new(env!("CARGO_BIN_EXE_intralink"))
+            .arg("--vault")
+            .arg(&path)
+            .args(&args)
+            .output()
+            .unwrap();
+        assert!(!result.status.success(), "{args:?}");
+        assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 0);
+    }
+}

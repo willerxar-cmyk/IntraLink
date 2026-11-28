@@ -23,6 +23,18 @@ pub enum Action {
         #[cfg(target_os = "windows")]
         #[arg(long)]
         display_geometry: bool,
+        /// Show a local click-through arrival cue after authorized input/2 activation.
+        #[cfg(target_os = "windows")]
+        #[arg(long, requires = "display_geometry")]
+        entry_portal: Option<EntryPortalMode>,
+    },
+    /// Calibrate physical BASE edges against a saved topology; read-only, no connections.
+    #[cfg(target_os = "windows")]
+    EdgeCheck {
+        #[arg(long, required = true)]
+        device: Vec<String>,
+        #[arg(long, default_value_t = 30, value_parser = clap::value_parser!(u16).range(5..=120))]
+        seconds: u16,
     },
     /// Edit measured BASE and manually confirmed CLIENT display geometry offline.
     #[cfg(target_os = "windows")]
@@ -60,6 +72,23 @@ pub enum Action {
     },
 }
 
+#[cfg(target_os = "windows")]
+#[derive(Clone, Copy, Debug, clap::ValueEnum)]
+pub enum EntryPortalMode {
+    Full,
+    Reduced,
+}
+
+#[cfg(target_os = "windows")]
+impl From<EntryPortalMode> for intralink_input_win::PortalStyle {
+    fn from(value: EntryPortalMode) -> Self {
+        match value {
+            EntryPortalMode::Full => Self::Full,
+            EntryPortalMode::Reduced => Self::Reduced,
+        }
+    }
+}
+
 impl Action {
     pub async fn run(self, path: &Path) -> Result<()> {
         ensure!(
@@ -74,6 +103,8 @@ impl Action {
                 advertise_lan,
                 #[cfg(target_os = "windows")]
                 display_geometry,
+                #[cfg(target_os = "windows")]
+                entry_portal,
             } => {
                 super::input_host::run(
                     path,
@@ -83,8 +114,14 @@ impl Action {
                     advertise_lan,
                     #[cfg(target_os = "windows")]
                     display_geometry,
+                    #[cfg(target_os = "windows")]
+                    entry_portal.map(Into::into),
                 )
                 .await
+            }
+            #[cfg(target_os = "windows")]
+            Self::EdgeCheck { device, seconds } => {
+                super::input_ui::edge_check(path, &device, seconds).await
             }
             #[cfg(target_os = "windows")]
             Self::Topology { device } => super::input_ui::configure_topology(path, &device).await,
